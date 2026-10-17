@@ -188,7 +188,19 @@ function registerServiceWorker() {
   if (globalThis.__RAMKI_PREVIEW__ || !('serviceWorker' in navigator)) return;
   const local = ['localhost', '127.0.0.1'].includes(location.hostname);
   if (location.protocol !== 'https:' && !local) return;
+  const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.register('sw.js').catch(() => { /* без офлайна — тоже работает */ });
+  // Новая версия встала в кэш — один раз перезапустить экран, чтобы не приходилось закрывать приложение дважды.
+  // Если человек печатает или открыта шторка — не трогаем: новая версия подхватится при следующем запуске.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || typing() || sheetIsOpen()) return;
+    try {
+      if (sessionStorage.getItem('ramki.reloaded')) return;
+      sessionStorage.setItem('ramki.reloaded', '1');
+    } catch { return; }
+    persistNow();
+    location.reload();
+  });
 }
 
 function start() {

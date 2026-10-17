@@ -5,7 +5,7 @@
 
 import { CONFIG, EVENT_TYPES, PREP } from '../config.js';
 import { commit, store } from '../store.js';
-import { buildTodayPlan, defaultNeedMin, eventProgress, plannedByEvent, splitNeed, subjectOf } from '../planner.js';
+import { buildTodayPlan, defaultNeedMin, eventProgress, plannedByEvent, prepStartOf, splitNeed, subjectOf } from '../planner.js';
 import { parseDeadlines } from '../parse.js';
 import { esc, fmtDur, round5, shortDate, uid } from '../util.js';
 import { closeSheet, confirmSheet, icon, openSheet, toast } from '../ui.js';
@@ -53,6 +53,7 @@ export function howToHtml(ev) {
   const short = getSim().shortages.find((s) => s.eventId === ev.id);
   const factor = CONFIG.levelFactor[Number(subj?.level) || 3];
   const pct = need ? Math.min(100, Math.round((prog.done / need) * 100)) : 0;
+  const prepStart = prepStartOf(st, ev);
   return `<section>
     <div class="sec-row"><h3 class="sec">Как готовиться</h3></div>
     ${need ? `<p class="lead small">Закладываю на подготовку <b>${fmtDur(need)}</b>${ev.prepMin != null && ev.prepMin !== '' ? ' (ты задал сам)' : ` — ${String(p.hours).replace('.', ',')} ч × ${String(factor).replace('.', ',')} за уровень предмета ${subj?.level ?? 3}`}.
@@ -60,7 +61,7 @@ export function howToHtml(ev) {
       ${heavy ? `Тяжёлая — ${fmtDur(heavy)}: ${esc(p.heavy)}, дома.` : ''}</p>
       <div class="progress ${pct >= 100 ? 'ok' : ''}"><i style="width:${pct}%"></i></div>
       <p class="small muted">Сделано ${fmtDur(prog.done)} из ${fmtDur(need)} · в плане ещё ${fmtDur(planned)}${short ? ` · <b style="color:var(--danger)">не хватает ~${fmtDur(short.short)}</b>` : ''}</p>` : ''}
-    ${ev.prepFrom ? `<p class="small" style="margin:0">Подготовка начнётся ${esc(shortDate(ev.prepFrom))} — раньше в план не ставлю.</p>` : ''}
+    ${prepStart ? `<p class="small" style="margin:0">${ev.type === 'lab' && !ev.prepFrom ? 'Отчёт можно делать' : 'Подготовка начнётся'} ${esc(shortDate(prepStart))}${ev.type === 'lab' && !ev.prepFrom ? ' — после прошлой лабы' : ''} — раньше в план не ставлю.</p>` : ''}
     <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:6px">${p.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
   </section>`;
 }

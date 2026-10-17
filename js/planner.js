@@ -15,8 +15,8 @@
    ===================================================================== */
 
 import { CONFIG, PREP, EVENT_TYPES } from './config.js';
-import { baseTimes, classesOn, daySkeleton } from './schedule.js';
-import { addDays, daysBetween, floor5, fmtTime, mondayOf, plural, round5, shortDate, toMin } from './util.js';
+import { baseTimes, classOccurs, classesOn, daySkeleton } from './schedule.js';
+import { addDays, daysBetween, floor5, fmtTime, mondayOf, plural, round5, shortDate, toMin, weekdayOf } from './util.js';
 
 export const subjectOf = (state, id) => state.subjects.find((s) => s.id === id) || null;
 export const isWeak = (s) => !!s && !s.noStudy && Number(s.level) <= CONFIG.weakLevelMax;
@@ -147,6 +147,25 @@ function reserveTopics(state, items, b) {
   c.minLeft = Math.max(0, c.minLeft - (b.min || 0));
 }
 
+/* ---------- С какого дня можно готовиться ---------- */
+
+/**
+ * Лаба — это сдача отчёта по прошлой лабе: раньше, чем та состоялась, отчёт не сделать.
+ * Возвращает следующий день после предыдущей лабы предмета (если такая была в расписании).
+ */
+function labReportFrom(state, ev) {
+  if (ev.type !== 'lab') return null;
+  const labs = state.classes.filter((c) => c.subject === ev.subject && c.kind === 'lab');
+  if (!labs.length) return null;
+  for (let k = addDays(ev.date, -1), n = 0; n < 70; k = addDays(k, -1), n += 1) {
+    if (labs.some((c) => c.weekday === weekdayOf(k) && classOccurs(c, k))) return addDays(k, 1);
+  }
+  return null;
+}
+
+/** «Готовиться не раньше»: дата, заданная вручную, иначе — после прошлой лабы (для лаб), иначе без ограничений. */
+export const prepStartOf = (state, ev) => ev.prepFrom || labReportFrom(state, ev) || null;
+
 /* ---------- Пул задач ---------- */
 
 /** Сколько осталось сделать; хвост меньше 10 минут не считаем — это погрешность округления, а не отдельный блок. */
@@ -167,7 +186,7 @@ export function buildItems(state, today) {
         remaining: restMin(total, state.progress?.[key] || 0),
         eventId: ev.id, subject: ev.subject, type: ev.type,
         deadline: ev.date, deadlineMin: toMin(ev.time),
-        from: ev.prepFrom || null, // «готовиться не раньше»
+        from: prepStartOf(state, ev), // «готовиться не раньше»
         activeFrom: addDays(ev.date, -(PREP[ev.type]?.leadDays ?? 10)),
         weight: EVENT_TYPES[ev.type]?.weight ?? 1, maint: false,
       });

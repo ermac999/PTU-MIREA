@@ -7,7 +7,7 @@ import { CONFIG, PREP } from '../js/config.js';
 import { addDays, fmtDur, fmtTime, mondayOf, plural, relDays, toMin, weekdayOf } from '../js/util.js';
 import { baseTimes, classesOn, dayInfo } from '../js/schedule.js';
 import {
-  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, plannedCatchUp, recordDone, simulate, splitNeed, streakInfo, undoRecord, wallFor,
+  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, plannedCatchUp, prepStartOf, recordDone, simulate, splitNeed, streakInfo, undoRecord, wallFor,
 } from '../js/planner.js';
 import { buildQueue, checkAnswer, gradeCard, nextTopicStatus, normalize, parseNumber, requeue } from '../js/practice.js';
 import { parseCards, parseDeadlines, parseTasks } from '../js/parse.js';
@@ -193,6 +193,25 @@ test('лабы по физике: готовиться к допуску не н
   const study = Object.values(now.plans).flatMap((p) => p.blocks).filter((b) => b.type === 'study');
   assert.ok(!study.some((b) => b.eventId === 'ev-phys-lab1'), 'хвост лабы меньше 10 минут не ставится');
   assert.ok(now.plans[TODAY].blocks.some((b) => b.eventId === 'ev-de-pres' && b.min >= 60), 'сегодня вечером — немецкий');
+});
+
+test('отчёт по лабе можно делать только после прошлой лабы — не раньше', () => {
+  const st = defaultState();
+  const sim = simulate(st, TODAY, 7 * 60, 90);
+  const days = (id) => Object.keys(sim.plans).sort().filter((k) => sim.plans[k].blocks.some((b) => b.eventId === id));
+  const first = (id) => days(id)[0];
+  assert.equal(first('ev-phys-lab1'), TODAY, 'отчёт к 20.10 — по прошлой лабе, можно сразу');
+  assert.ok(first('ev-phys-lab2') >= '2026-10-21', `лаба 17.11: отчёт по лабе 20.10, начало ${first('ev-phys-lab2')}`);
+  assert.ok(first('ev-phys-lab3') >= '2026-11-18', `лаба 15.12: отчёт по лабе 17.11, начало ${first('ev-phys-lab3')}`);
+  assert.ok(first('ev-phys-lab4') >= '2026-12-16', `лаба 12.01: отчёт по лабе 15.12, начало ${first('ev-phys-lab4')}`);
+  for (const id of ['ev-phys-lab2', 'ev-phys-lab3', 'ev-phys-lab4']) {
+    const planned = Object.values(sim.plans).flatMap((p) => p.blocks).filter((b) => b.eventId === id).reduce((a, b) => a + b.min, 0);
+    assert.equal(planned, 100, `${id}: весь отчёт в плане до срока`);
+  }
+  assert.equal(prepStartOf(st, st.events.find((e) => e.id === 'ev-phys-lab3')), '2026-11-18');
+  const own = st.events.find((e) => e.id === 'ev-phys-lab3');
+  own.prepFrom = '2026-11-25'; // дату вручную не перебиваем
+  assert.equal(prepStartOf(st, own), '2026-11-25');
 });
 
 test('пересборка дня во время блока дома: следующий блок — после перерыва в 10 минут', () => {

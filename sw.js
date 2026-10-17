@@ -1,7 +1,7 @@
 /* Service worker: приложение открывается и работает без интернета (в электричке).
    При обновлении сайта поменяйте VERSION — старый кэш удалится. */
 
-const VERSION = 'ramki-v5';
+const VERSION = 'ramki-v6';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/schedule.js', 'js/planner.js', 'js/practice.js',
