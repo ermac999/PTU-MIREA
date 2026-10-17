@@ -30,7 +30,7 @@
 1. Залить файлы в ветку `main` репозитория.
 2. На GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch →
    Branch: `main`, папка `/ (root)` → Save**.
-3. Через минуту-две сайт будет по адресу `https://ermac999.github.io/ptu-mirea/`.
+3. Через минуту-две сайт будет по адресу `https://ermac999.github.io/PTU-MIREA/`.
 4. На iPhone: открыть адрес в Safari → «Поделиться» → «На экран „Домой“».
 
 ## Настройки
