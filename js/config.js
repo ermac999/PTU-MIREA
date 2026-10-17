@@ -14,7 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 2,
+  dataVersion: 3,
+  noteVersion: 2,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -215,7 +216,7 @@ export const DEFAULT_DATA = {
     sundayExtra: false,
     pauseMaintenance: false,
     quiet: { classes: true, game: true, morningTrain: true },
-    sessionStart: '2026-12-01',
+    sessionStart: '2026-12-22',
     sessionApprox: true,
     lastBackupAt: null,
     backupSnoozeUntil: null,
@@ -289,8 +290,8 @@ export const DEFAULT_DATA = {
       format: 'две пары подряд', phone: '?', confirmed: true, note: '' },
     { id: 'ev-phys-lab4', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2027-01-12', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: '' },
-    { id: 'ev-session', subject: null, type: 'session', title: 'Начало сессии (примерно)', date: '2026-12-01', time: null,
-      format: '', phone: '?', confirmed: false, note: 'Точной даты нет — поменяй, когда узнаешь.' },
+    { id: 'ev-session', subject: null, type: 'session', title: 'Начало сессии (конец декабря, примерно)', date: '2026-12-22', time: null,
+      format: '', phone: '?', confirmed: false, note: 'Сессия в конце декабря, точной даты нет — поменяй, когда узнаешь.' },
   ],
 
   /* Правки конкретных дней. Воскресенье 18.10 — готовимся к КР по линалу (договорились 17.10). */

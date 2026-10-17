@@ -433,6 +433,27 @@ test('копия: импорт проверяет файл и дополняет
   assert.deepEqual(m.done, {});
 });
 
+test('сессия — в конце декабря: у старых данных дата сдвигается, ручную правку не трогаем', () => {
+  assert.equal(defaultState().events.find((e) => e.id === 'ev-session').date, '2026-12-22');
+  assert.equal(defaultState().settings.sessionStart, '2026-12-22');
+  const old = defaultState();
+  old.version = 2;
+  const ev = old.events.find((e) => e.id === 'ev-session');
+  ev.date = '2026-12-01';
+  old.settings.sessionStart = '2026-12-01';
+  const m = migrate(JSON.parse(JSON.stringify(old)));
+  assert.equal(m.events.find((e) => e.id === 'ev-session').date, '2026-12-22');
+  assert.equal(m.settings.sessionStart, '2026-12-22');
+  assert.equal(m.settings.updateSeen, old.settings.updateSeen, 'заметка «что нового» не повторяется');
+  // дату поправили сами (например, на 25.12) — остаётся как есть
+  const mine = JSON.parse(JSON.stringify(old));
+  mine.events.find((e) => e.id === 'ev-session').date = '2026-12-25';
+  mine.settings.sessionStart = '2026-12-25';
+  const m2 = migrate(mine);
+  assert.equal(m2.events.find((e) => e.id === 'ev-session').date, '2026-12-25');
+  assert.equal(m2.settings.sessionStart, '2026-12-25');
+});
+
 /** Данные с телефона в формате версии 1 (до отставания и тем докладов). */
 function stateV1() {
   const v1 = defaultState();

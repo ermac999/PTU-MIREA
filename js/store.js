@@ -64,6 +64,7 @@ export function migrate(raw) {
   if (!st.week || typeof st.week !== 'object') st.week = base.week;
   const from = Number(raw.version) || 1;
   if (from < 2) upgradeTo2(st);
+  if (from < 3) upgradeTo3(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -104,6 +105,19 @@ function upgradeTo2(st) {
     st.dayOverrides[day] = { ...ov, ...(st.dayOverrides[day] || {}) };
   }
   st.settings.updateSeen = 1; // показать заметку «что нового»
+}
+
+/** Версия 3 (17.10): сессия — в конце декабря, а не 1 декабря. Если дату уже правили руками — не трогаем. */
+function upgradeTo3(st) {
+  const d = DEFAULT_DATA;
+  const ev = st.events.find((e) => e.id === 'ev-session');
+  const evNew = d.events.find((e) => e.id === 'ev-session');
+  if (ev && ev.date === '2026-12-01' && !ev.confirmed) {
+    ev.date = evNew.date;
+    ev.title = evNew.title;
+    ev.note = evNew.note;
+  }
+  if (st.settings.sessionStart === '2026-12-01' && st.settings.sessionApprox !== false) st.settings.sessionStart = d.settings.sessionStart;
 }
 
 export const store = {

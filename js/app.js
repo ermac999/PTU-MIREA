@@ -49,7 +49,7 @@ const TABS = [
 const actions = {
   go: (el) => go(el.dataset.to),
   'intro-dismiss': () => commit((st) => { st.settings.introSeen = true; }),
-  'update-dismiss': () => commit((st) => { st.settings.updateSeen = CONFIG.dataVersion; }),
+  'update-dismiss': () => commit((st) => { st.settings.updateSeen = CONFIG.noteVersion; }),
   ...blockActionHandlers, ...calendarActions, ...eventActions, ...dayActions,
   ...todayActions, ...topicsActions, ...settingsActions,
 };
@@ -83,7 +83,7 @@ function updateNote() {
 
 function introNote() {
   const s = store.state.settings;
-  if ((Number(s.updateSeen) || 0) < CONFIG.dataVersion) return updateNote(); // что изменилось — важнее приветствия
+  if ((Number(s.updateSeen) || 0) < CONFIG.noteVersion) return updateNote(); // что изменилось — важнее приветствия
   if (s.introSeen) return '';
   return `<div class="note"><b>Данные из опроса уже внутри:</b> режим недели, пары, предметы, дедлайны, отставание по предметам и темы истории по докладам. Мои предположения — отбой в чт и пт, подъём в вс, «иностранный = немецкий», дата сессии — поправь в «Настройках», если не так. Задания и карточки с пометкой «пример» — для старта.
     <button class="btn quiet small" type="button" data-act="intro-dismiss">Понятно</button></div>`;
