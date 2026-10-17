@@ -268,15 +268,21 @@ function eligible(it, key, slotEnd) {
  */
 const rankOf = (it, key) => (it.catchUp ? 1 : it.maint ? 2 : key < it.activeFrom ? 3 : 0);
 
+/** «Горит» на день — одно событие или список по важности (первое — самое важное). */
+export const hotList = (hot) => (Array.isArray(hot) ? hot : hot ? [hot] : []);
+
 /** Порядок: ранг → «горит» → ближайший дедлайн → тяжёлое дома → вес → слабый предмет. */
 function compareItems(a, b, ctx) {
   const ra = rankOf(a, ctx.key);
   const rb = rankOf(b, ctx.key);
   if (ra !== rb) return ra - rb;
-  if (ctx.hot) {
-    const ah = a.eventId === ctx.hot;
-    const bh = b.eventId === ctx.hot;
-    if (ah !== bh) return ah ? -1 : 1;
+  const hl = hotList(ctx.hot);
+  if (hl.length) {
+    const ai = hl.indexOf(a.eventId);
+    const bi = hl.indexOf(b.eventId);
+    const ah = ai < 0 ? hl.length : ai;
+    const bh = bi < 0 ? hl.length : bi;
+    if (ah !== bh) return ah - bh;
   }
   if (a.deadline !== b.deadline) return a.deadline < b.deadline ? -1 : 1;
   const am = a.deadlineMin ?? 9999;
@@ -594,6 +600,28 @@ function layoutRest(state, info, w, start, items, ctx, mk, ef) {
     t = b.end;
     netLeft -= chunk.min;
     studied += 1;
+  }
+  // Учебный выходной с большим лимитом: после обеда влезает не всё — добавляем окно до обеда
+  // (после плана на неделю). Важнее всего идёт в послеобеденные блоки, следующее по важности — утром.
+  let morning = 0;
+  if (info.ov?.study && netLeft >= CONFIG.minChunkMin) {
+    const planBlock = out.find((b) => b.type === 'plan');
+    const mEnd = (lunch ? lunch.start : toMin(M.lunchAt)) - 10;
+    let mt = Math.max(start, (planBlock ? planBlock.end : w.start + M.breakfast) + 10);
+    while (netLeft >= CONFIG.minChunkMin && morning < CONFIG.restMorningChunks) {
+      const capNet = Math.min(netLeft, netFor(mEnd - mt));
+      const chunk = pickChunk(items, ctx, 'any', mEnd, capNet);
+      if (!chunk) break;
+      const s = firstFree(occ, mt, wallFor(chunk.min), mEnd);
+      if (s == null) break;
+      commit(chunk, ctx);
+      const b = studyBlock(state, chunk, 'home', s, s + wallFor(chunk.min), mk, items);
+      out.push(b);
+      occ.push({ start: b.start, end: b.end });
+      mt = b.end + CONFIG.breakBetweenChunksMin;
+      netLeft -= chunk.min;
+      morning += 1;
+    }
   }
   ctx.preferHeavy = false;
 

@@ -7,7 +7,7 @@ import { CONFIG, PREP } from '../js/config.js';
 import { addDays, fmtDur, fmtTime, mondayOf, plural, relDays, toMin, weekdayOf } from '../js/util.js';
 import { baseTimes, classesOn, dayInfo } from '../js/schedule.js';
 import {
-  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, plannedCatchUp, prepStartOf, recordDone, simulate, splitNeed, streakInfo, undoRecord, wallFor,
+  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, hotList, plannedCatchUp, prepStartOf, recordDone, simulate, splitNeed, streakInfo, undoRecord, wallFor,
 } from '../js/planner.js';
 import { buildQueue, checkAnswer, gradeCard, nextTopicStatus, normalize, parseNumber, requeue } from '../js/practice.js';
 import { parseCards, parseDeadlines, parseTasks } from '../js/parse.js';
@@ -228,6 +228,32 @@ test('КР по информатике в пятницу: событие в пл
   // воскресенье 18.10 уже учебное — «взять воскресенье» ничего бы не дало и не предлагается
   const matan = sim.shortages.find((s) => s.eventId === 'ev-matan-kr');
   assert.ok(matan && !matan.options.some((o) => o.kind === 'sunday'));
+});
+
+test('воскресенье 18.10: до обеда информатика (КР в пятницу), после обеда линал, вечер свободен', () => {
+  const st = defaultState();
+  const sim = simulate(st, TODAY, 7 * 60, 3);
+  const sun = sim.plans['2026-10-18'];
+  const study = sun.blocks.filter((b) => b.type === 'study');
+  const lunch = sun.blocks.find((b) => b.type === 'meal' && b.title === 'Обед');
+  const dinner = sun.blocks.find((b) => b.type === 'meal' && b.title === 'Ужин');
+  const before = study.filter((b) => b.end <= lunch.start);
+  const after = study.filter((b) => b.start >= lunch.end);
+  assert.equal(before.length, 1, 'до обеда один блок');
+  assert.equal(before[0].eventId, 'ev-inf-kr', 'до обеда — информатика');
+  assert.ok(before[0].min >= 60 && before[0].start >= sun.blocks.find((b) => b.type === 'plan').end, 'после плана на неделю');
+  assert.ok(after.length >= 1 && after.every((b) => b.eventId === 'ev-linal-kr'), 'после обеда — линал');
+  assert.ok(study.length <= CONFIG.maxTasksPerDay);
+  assert.ok(study.reduce((a, b) => a + b.min, 0) <= 300, 'не больше лимита дня');
+  assert.ok(after.every((b) => b.end <= dinner.start), 'вечер после ужина свободен от учёбы');
+  assert.ok(sun.blocks.some((b) => b.type === 'game'), 'игра в воскресенье остаётся');
+  // «горит» — список по важности: меняем порядок — меняется, что идёт после обеда
+  st.dayOverrides['2026-10-18'].hot = ['ev-inf-kr', 'ev-linal-kr'];
+  const swapped = simulate(st, TODAY, 7 * 60, 3).plans['2026-10-18'].blocks.filter((b) => b.type === 'study');
+  assert.equal(swapped.find((b) => b.start >= 13 * 60 + 30)?.eventId, 'ev-inf-kr', 'первая по важности — после обеда');
+  assert.deepEqual(hotList(['a', 'b']), ['a', 'b']);
+  assert.deepEqual(hotList('a'), ['a']);
+  assert.deepEqual(hotList(null), []);
 });
 
 test('подготовка к КР по предмету, который догоняем, засчитывается и в догоняние (и отменяется вместе с отметкой)', () => {
@@ -588,6 +614,20 @@ test('обновление до версии 5: заметки к лабам о�
   assert.equal(migrate(m).events.find((e) => e.id === 'ev-phys-lab1').note, note('ev-phys-lab1'), 'повторный запуск ничего не меняет');
   assert.equal(m.settings.updateSeen, v4.settings.updateSeen);
   assert.ok(m.settings.updateSeen < CONFIG.noteVersion || v4.settings.updateSeen >= CONFIG.noteVersion);
+});
+
+test('обновление до версии 7: воскресенье 18.10 — информатика + линал, свои правки дня не трогаем', () => {
+  const v6 = defaultState();
+  v6.version = 6;
+  v6.dayOverrides['2026-10-18'] = { study: true, studyMin: 180, hot: 'ev-linal-kr' }; // как было
+  const m = migrate(JSON.parse(JSON.stringify(v6)));
+  assert.equal(m.dayOverrides['2026-10-18'].studyMin, 300);
+  assert.deepEqual(m.dayOverrides['2026-10-18'].hot, ['ev-linal-kr', 'ev-inf-kr']);
+  assert.equal(migrate(m).dayOverrides['2026-10-18'].studyMin, 300, 'повторный запуск ничего не меняет');
+  const mine = JSON.parse(JSON.stringify(v6));
+  mine.dayOverrides['2026-10-18'] = { study: true, studyMin: 150, hot: 'ev-linal-kr', wake: '11:00' }; // сам поправил день
+  const m2 = migrate(mine);
+  assert.deepEqual([m2.dayOverrides['2026-10-18'].studyMin, m2.dayOverrides['2026-10-18'].hot, m2.dayOverrides['2026-10-18'].wake], [150, 'ev-linal-kr', '11:00']);
 });
 
 test('обновление до версии 6: КР по информатике добавляется один раз', () => {

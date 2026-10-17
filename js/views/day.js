@@ -6,7 +6,7 @@
 import { CONFIG } from '../config.js';
 import { store, commit } from '../store.js';
 import { baseTimes } from '../schedule.js';
-import { buildTodayPlan } from '../planner.js';
+import { buildTodayPlan, hotList } from '../planner.js';
 import { addDays, esc, fmtDur, fmtTime, humanDate, toMin, WD_LONG } from '../util.js';
 import { closeSheet, icon, openSheet, toast } from '../ui.js';
 import { go } from '../nav.js';
@@ -42,9 +42,9 @@ export function renderDay([keyParam]) {
 
     ${info.notes.map((n) => `<div class="note ${n.kind === 'sleepShort' ? 'warn' : ''}">${esc(n.text)}</div>`).join('')}
     ${(() => {
-      const hotEv = info.ov.hot ? store.state.events.find((e) => e.id === info.ov.hot) : null;
-      if (!hotEv && !info.ov.study) return '';
-      return `<div class="note">${info.ov.study ? `Учебный выходной: до ${fmtDur(Number(info.ov.studyMin) || CONFIG.sundayExtraMin)} учёбы после обеда, остальное — отдых. ` : ''}${hotEv ? `В приоритете — ${esc(eventTitle(hotEv))}.` : ''}</div>`;
+      const hotEvs = hotList(info.ov.hot).map((id) => store.state.events.find((e) => e.id === id)).filter(Boolean);
+      if (!hotEvs.length && !info.ov.study) return '';
+      return `<div class="note">${info.ov.study ? `Учебный выходной: до ${fmtDur(Number(info.ov.studyMin) || CONFIG.sundayExtraMin)} учёбы с перерывами, остальное — отдых. ` : ''}${hotEvs.length ? `В приоритете — ${hotEvs.map((e) => esc(eventTitle(e))).join(', ')}.` : ''}</div>`;
     })()}
     ${shortages.length ? `<div class="note danger">До ${esc(evs.find((e) => e.id === shortages[0].eventId) ? eventTitle(evs.find((e) => e.id === shortages[0].eventId)) : 'события')} не хватает ~${fmtDur(shortages[0].short)} подготовки. <button class="btn quiet small" type="button" data-act="go" data-to="burning">Что можно сократить →</button></div>` : ''}
     ${isPast && !plan.blocks.length ? '<p class="lead small">Плана на этот день не сохранилось — показываю только режим.</p>' : ''}
@@ -84,17 +84,20 @@ function openBuild(key) {
         ${segButtons('energy', [['low', 'мало'], ['mid', 'нормально'], ['high', 'много']], ov.energy || plan.energy || 'mid')}</div>
       <div class="field"><span class="eyebrow">Что горит в ближайшие дни?</span>
         <div class="seg col" role="group" data-seg="hot">
-          ${hot.map((e) => `<button type="button" data-v="${esc(e.id)}" aria-pressed="${(ov.hot ?? plan.hot) === e.id}">${esc(eventTitle(e))} · ${esc(humanDate(e.date))}</button>`).join('')}
-          <button type="button" data-v="" aria-pressed="${!(ov.hot ?? plan.hot)}">ничего особенного</button>
+          ${hot.map((e) => `<button type="button" data-v="${esc(e.id)}" aria-pressed="${hotList(ov.hot ?? plan.hot).includes(e.id)}">${esc(eventTitle(e))} · ${esc(humanDate(e.date))}</button>`).join('')}
+          <button type="button" data-v="" aria-pressed="${!hotList(ov.hot ?? plan.hot).length}">ничего особенного</button>
         </div></div>
       <p class="small muted">Сон не трогаю, игра — после учебных блоков. Если времени не хватает, покажу, что можно сократить.</p>
       <button class="btn block" type="button" id="build-go">Собрать</button>`,
     onMount: (body) => {
       wireControls(body);
+      let hotTouched = false;
+      body.querySelector('[data-seg="hot"]')?.addEventListener('click', () => { hotTouched = true; });
       body.querySelector('#build-go').addEventListener('click', () => {
         const shift = Number(segValue(body, 'shift') || 0);
         const energy = segValue(body, 'energy') || 'mid';
-        const hotId = segValue(body, 'hot') || null;
+        // если «горит» не трогали — оставляем как было (там может быть список из нескольких событий)
+        const hotId = hotTouched ? (segValue(body, 'hot') || null) : (ov.hot ?? plan.hot ?? null);
         commit((s) => {
           const o = { ...(s.dayOverrides[key] || {}), energy, hot: hotId };
           if (shift) o.homeShift = shift;

@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 6,
-  noteVersion: 5,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 7,
+  noteVersion: 6,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -46,6 +46,7 @@ export const CONFIG = {
   minChunkMin: 20,             // меньше нет смысла садиться
   maxTasksPerDay: 3,           // экран «Сегодня»: максимум 3 задачи
   maxHomeChunks: 2,
+  restMorningChunks: 1,        // учебный выходной: сколько блоков добавить до обеда, если после обеда не влезает
   breakBetweenChunksMin: 10,
   breakBeforeGameMin: 15,
   reviewMin: 15,               // повторение перед сном
@@ -227,7 +228,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 5,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 6,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -304,7 +305,7 @@ export const DEFAULT_DATA = {
 
   /* Правки конкретных дней. Воскресенье 18.10 — готовимся к КР по линалу (договорились 17.10). */
   dayOverrides: {
-    '2026-10-18': { study: true, studyMin: 180, hot: 'ev-linal-kr' },
+    '2026-10-18': { study: true, studyMin: 300, hot: ['ev-linal-kr', 'ev-inf-kr'] }, // вс: до обеда информатика, после — линал
   },
 
   /* Темы. Строка — примерная тема (замените по программе), объект — настоящая тема с курса. */

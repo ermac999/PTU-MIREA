@@ -32,7 +32,7 @@ export function defaultState() {
     classes: d.classes,
     events: d.events,
     topics: defaultTopics(),
-    dayOverrides: d.dayOverrides || {}, // 'дата' → правки дня: wake, leave, classStart, classEnd, home, sleep, morningStudy, noClasses, study, noGame, energy, hot
+    dayOverrides: d.dayOverrides || {}, // 'дата' → правки дня: wake, leave, classStart, classEnd, home, sleep, morningStudy, noClasses, study, noGame, energy, hot (id события или список id по важности)
     plans: {},        // 'дата' → сохранённый план дня (только сегодня и прошлые дни)
     done: {},         // 'дата' → { blockId: { status: 'done'|'skipped', min, itemKey, type, at } }
     progress: {},     // 'eventId:light|heavy', 'c:subject:kind' (догоняю), 'm:subject:monday:kind' → сделано минут
@@ -68,6 +68,7 @@ export function migrate(raw) {
   if (from < 4) upgradeTo4(st);
   if (from < 5) upgradeTo5(st);
   if (from < 6) upgradeTo6(st);
+  if (from < 7) upgradeTo7(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -150,6 +151,15 @@ function upgradeTo6(st) {
   const fresh = DEFAULT_DATA.events.find((e) => e.id === 'ev-inf-kr');
   const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
   if (!has) st.events.push(clone(fresh));
+}
+
+/** Версия 7 (17.10): воскресенье 18.10 — до обеда информатика (КР в пятницу), после — линал. Если день правили руками — не трогаем. */
+function upgradeTo7(st) {
+  const ov = st.dayOverrides['2026-10-18'];
+  const fresh = DEFAULT_DATA.dayOverrides['2026-10-18'];
+  if (ov && ov.study === true && Number(ov.studyMin) === 180 && ov.hot === 'ev-linal-kr') {
+    st.dayOverrides['2026-10-18'] = { ...ov, studyMin: fresh.studyMin, hot: [...fresh.hot] };
+  }
 }
 
 export const store = {
