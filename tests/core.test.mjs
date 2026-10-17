@@ -3,11 +3,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { CONFIG } from '../js/config.js';
+import { CONFIG, PREP } from '../js/config.js';
 import { addDays, fmtDur, fmtTime, mondayOf, plural, relDays, toMin, weekdayOf } from '../js/util.js';
 import { baseTimes, classesOn, dayInfo } from '../js/schedule.js';
 import {
-  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, plannedCatchUp, recordDone, simulate, streakInfo, undoRecord, wallFor,
+  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, plannedCatchUp, recordDone, simulate, splitNeed, streakInfo, undoRecord, wallFor,
 } from '../js/planner.js';
 import { buildQueue, checkAnswer, gradeCard, nextTopicStatus, normalize, parseNumber, requeue } from '../js/practice.js';
 import { parseCards, parseDeadlines, parseTasks } from '../js/parse.js';
@@ -167,6 +167,42 @@ test('отставание: физика и информатика — боль�
   for (const k of ['2026-10-19', '2026-10-20', '2026-10-21']) {
     assert.equal(minutesFor(sim.plans[k], (b) => b.catchUp && b.place === 'home'), 0, `${k}: дома — подготовка к КР`);
   }
+});
+
+test('лабы по физике: готовиться к допуску не нужно — один блок «досчитать и ответить на контрольные»', () => {
+  const st = defaultState();
+  const lab1 = st.events.find((e) => e.id === 'ev-phys-lab1');
+  assert.deepEqual(splitNeed(st, lab1), { need: 100, light: 0, heavy: 100 });
+  assert.equal(PREP.lab.light, '', 'лёгкой части (вопросы к допуску) нет');
+  assert.ok(![PREP.lab.heavy, PREP.lab.first.heavy, ...PREP.lab.steps].some((t) => /допуск/i.test(t)), 'в нормах лабы нет подготовки к допуску');
+  assert.ok(/контрольн/.test(PREP.lab.heavy) && /расч/.test(PREP.lab.heavy));
+  for (const e of st.events.filter((x) => x.type === 'lab')) assert.ok(/не нужно/.test(e.note), `${e.id}: заметка про то, что к допуску не готовятся`);
+
+  const sim = simulate(st, TODAY, 7 * 60, 7);
+  const labBlocks = Object.values(sim.plans).flatMap((p) => p.blocks).filter((b) => b.eventId === 'ev-phys-lab1');
+  assert.equal(labBlocks.length, 1, 'лаба — один блок');
+  assert.equal(labBlocks[0].place, 'home');
+  assert.equal(labBlocks[0].kind, 'heavy');
+  assert.equal(labBlocks[0].min, 100);
+  assert.ok(labBlocks[0].title.startsWith('Физика: досчитать расчёты'));
+
+  // вечер как у тебя: 17:30, блок по лабе почти сделан (95 из 100) — хвост в 5 минут отдельным блоком не появляется,
+  // а во втором слоте дома — презентация по немецкому
+  st.progress['ev-phys-lab1:heavy'] = 95;
+  const now = simulate(st, TODAY, 17 * 60 + 30, 5);
+  const study = Object.values(now.plans).flatMap((p) => p.blocks).filter((b) => b.type === 'study');
+  assert.ok(!study.some((b) => b.eventId === 'ev-phys-lab1'), 'хвост лабы меньше 10 минут не ставится');
+  assert.ok(now.plans[TODAY].blocks.some((b) => b.eventId === 'ev-de-pres' && b.min >= 60), 'сегодня вечером — немецкий');
+});
+
+test('пересборка дня во время блока дома: следующий блок — после перерыва в 10 минут', () => {
+  const st = defaultState();
+  st.plans[TODAY] = buildTodayPlan(st, TODAY, 7 * 60);
+  const first = st.plans[TODAY].blocks.find((b) => b.type === 'study' && b.place === 'home');
+  const now = first.start + 30; // блок идёт
+  const next = buildTodayPlan(st, TODAY, now).blocks.filter((b) => b.type === 'study' && b.place === 'home' && b.start >= first.end);
+  assert.ok(next.length, 'после идущего блока в окне дома есть ещё учёба');
+  assert.ok(next[0].start - first.end >= CONFIG.breakBetweenChunksMin, `между блоками ${next[0].start - first.end} мин`);
 });
 
 test('история: темы докладов по очереди, без повторов, все 30 — до 11 декабря, по неделям ровно', () => {
@@ -480,6 +516,21 @@ test('обновление до версии 4: история — 8 недел�
   const mine2 = JSON.parse(JSON.stringify(v3));
   mine2.subjects.find((s) => s.id === 'hist').catchUpMin = 600; // сам поменял объём
   assert.equal(migrate(mine2).subjects.find((s) => s.id === 'hist').catchUpWeeks, 6);
+});
+
+test('обновление до версии 5: заметки к лабам обновляются, свои — нет', () => {
+  const v4 = defaultState();
+  v4.version = 4;
+  const old = { 'ev-phys-lab1': 'Допуск и подготовка — уточнить.', 'ev-phys-lab2': 'Каждые 4 недели после 20 октября.', 'ev-phys-lab3': '', 'ev-phys-lab4': '' };
+  for (const [id, note] of Object.entries(old)) v4.events.find((e) => e.id === id).note = note;
+  v4.events.find((e) => e.id === 'ev-phys-lab3').note = 'сдавать лично препу'; // свою заметку не трогаем
+  const m = migrate(JSON.parse(JSON.stringify(v4)));
+  const note = (id) => m.events.find((e) => e.id === id).note;
+  assert.ok(/не нужно/.test(note('ev-phys-lab1')) && /не нужно/.test(note('ev-phys-lab2')) && /не нужно/.test(note('ev-phys-lab4')));
+  assert.equal(note('ev-phys-lab3'), 'сдавать лично препу');
+  assert.equal(migrate(m).events.find((e) => e.id === 'ev-phys-lab1').note, note('ev-phys-lab1'), 'повторный запуск ничего не меняет');
+  assert.equal(m.settings.updateSeen, v4.settings.updateSeen);
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion || v4.settings.updateSeen >= CONFIG.noteVersion);
 });
 
 /** Данные с телефона в формате версии 1 (до отставания и тем докладов). */

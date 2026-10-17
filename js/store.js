@@ -66,6 +66,7 @@ export function migrate(raw) {
   if (from < 2) upgradeTo2(st);
   if (from < 3) upgradeTo3(st);
   if (from < 4) upgradeTo4(st);
+  if (from < 5) upgradeTo5(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -126,6 +127,21 @@ function upgradeTo4(st) {
   const hist = st.subjects.find((s) => s.id === 'hist');
   const dh = DEFAULT_DATA.subjects.find((s) => s.id === 'hist');
   if (hist?.catchUpByTopic && Number(hist.catchUpWeeks) === 6 && Number(hist.catchUpMin) === Number(dh.catchUpMin)) hist.catchUpWeeks = dh.catchUpWeeks;
+}
+
+/** Версия 5 (17.10): к лабам не готовятся — дома доделывают прошлую (расчёты и контрольные вопросы). Свои заметки не трогаем. */
+const OLD_LAB_NOTES = {
+  'ev-phys-lab1': 'Допуск и подготовка — уточнить.',
+  'ev-phys-lab2': 'Каждые 4 недели после 20 октября.',
+  'ev-phys-lab3': '',
+  'ev-phys-lab4': '',
+};
+
+function upgradeTo5(st) {
+  for (const fresh of DEFAULT_DATA.events.filter((e) => e.type === 'lab')) {
+    const ev = st.events.find((e) => e.id === fresh.id);
+    if (ev && (ev.note || '') === (OLD_LAB_NOTES[ev.id] ?? '')) ev.note = fresh.note;
+  }
 }
 
 export const store = {

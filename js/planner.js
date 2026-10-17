@@ -149,6 +149,9 @@ function reserveTopics(state, items, b) {
 
 /* ---------- Пул задач ---------- */
 
+/** Сколько осталось сделать; хвост меньше 10 минут не считаем — это погрешность округления, а не отдельный блок. */
+const restMin = (total, done) => (total - done < 10 ? 0 : total - done);
+
 /** Всё, к чему нужно готовиться, с остатком минут. */
 export function buildItems(state, today) {
   const items = [];
@@ -161,7 +164,7 @@ export function buildItems(state, today) {
       const key = `${ev.id}:${kind}`;
       items.push({
         key, kind, total,
-        remaining: Math.max(0, total - (state.progress?.[key] || 0)),
+        remaining: restMin(total, state.progress?.[key] || 0),
         eventId: ev.id, subject: ev.subject, type: ev.type,
         deadline: ev.date, deadlineMin: toMin(ev.time),
         from: ev.prepFrom || null, // «готовиться не раньше»
@@ -477,7 +480,9 @@ function layoutHome(state, info, w, start, items, ctx, mk, ef, flags) {
 
   ctx.preferHeavy = true;
   while (chunks < CONFIG.maxHomeChunks) {
-    const gapBefore = studied ? CONFIG.breakBetweenChunksMin : 0;
+    // между блоками — перерыв; после уже идущего блока — остаток перерыва, если новый встаёт вплотную
+    const sinceKept = flags.keptHomeChunks ? t - (flags.keptEnd ?? 0) : Infinity;
+    const gapBefore = studied ? CONFIG.breakBetweenChunksMin : Math.max(0, CONFIG.breakBetweenChunksMin - sinceKept);
     const capNet = Math.min(netLeft, netFor(studyEndMax - t - gapBefore));
     const chunk = pickChunk(items, ctx, 'any', studyEndMax, capNet);
     if (!chunk) break;
@@ -664,6 +669,7 @@ export function planDay(state, key, items, opts = {}) {
         keptGame: keptIn.some((b) => b.type === 'game'),
         keptHomeChunks: keptHome.length,
         keptStudyMin: keptHome.reduce((s, b) => s + (b.min || 0), 0),
+        keptEnd,
       }));
     } else if (w.kind === 'rest') {
       out.push(...layoutRest(state, info, w, start, items, ctx, mk, ef));
@@ -696,7 +702,7 @@ export function buildTodayPlan(state, today, now, answers = {}) {
     // блок идёт прямо сейчас и не отмечен — его минуты и темы заняты
     if (b.type === 'study' && b.itemKey && !b.status && b.end > now) {
       const it = items.find((i) => i.key === b.itemKey);
-      if (it) it.remaining = Math.max(0, it.remaining - (b.min || 0));
+      if (it) it.remaining = restMin(it.remaining, b.min || 0);
       reserveTopics(state, items, b);
     }
   }
@@ -725,7 +731,7 @@ export function simulate(state, today, now, days = CONFIG.horizonDays) {
       for (const b of stored.blocks) {
         if (b.type !== 'study' || !b.itemKey || doneToday[b.id]?.status || b.end <= now) continue;
         const it = byKey.get(b.itemKey);
-        if (it) it.remaining = Math.max(0, it.remaining - (b.min || 0));
+        if (it) it.remaining = restMin(it.remaining, b.min || 0);
         reserveTopics(state, items, b);
       }
       const sk = daySkeleton(state, key);

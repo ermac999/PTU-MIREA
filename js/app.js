@@ -87,6 +87,9 @@ function updateNote() {
     const until = hist ? ` до ${humanDate(catchUpWindow(hist, today()).until)}` : '';
     parts.push(`Сессия — в конце декабря (дата примерная, 22.12), поэтому историю растянул${until}: около 1,5 ч в неделю.`);
   }
+  if (seen < 4) {
+    parts.push('Лабы по физике: к допуску готовиться не нужно, в плане только доделать прошлую лабу — досчитать и ответить на контрольные вопросы (~1,5 ч). Время можно поправить в карточке события.');
+  }
   return `<div class="note"><b>Обновление плана.</b> ${parts.join(' ')} Поправить — «Настройки → Предметы».
     <button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div>`;
 }

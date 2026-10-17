@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 4,
-  noteVersion: 3,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 5,
+  noteVersion: 4,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -135,19 +135,22 @@ export const PREP = {
       'Накануне: одна пробная КР на время и разбор ошибок. Сон по плану.',
     ],
   },
+  // Лаба делается на паре, дома её доделывают: к следующей лабе нужны расчёты и ответы на контрольные вопросы.
+  // Допуска и подготовки к самой лабе нет.
   lab: {
-    hours: 2, lightShare: 0.4, leadDays: 7,
-    light: 'методичка и вопросы к допуску',
-    heavy: 'таблицы, расчёты, отчёт',
+    hours: 1.25, lightShare: 0, leadDays: 7,
+    light: '',
+    heavy: 'досчитать расчёты и ответить на контрольные вопросы',
     first: {
-      light: 'Найди методичку и выпиши цель работы и главную формулу.',
-      heavy: 'Начерти в тетради таблицу для измерений.',
+      light: '',
+      heavy: 'Достань свои измерения с лабы и досчитай первую строку по формуле из методички.',
     },
     steps: [
-      'Прочитай методичку: цель, схема установки, расчётные формулы.',
-      'Заранее подготовь в тетради таблицы для измерений.',
-      'Ответь на контрольные вопросы к допуску — их удобно сделать карточками.',
-      'После лабы добавь в календарь сдачу отчёта: расчёты, погрешности, вывод.',
+      'Лаба делается на паре, дома — доделать: к следующей лабе нужны готовые расчёты и ответы на контрольные вопросы.',
+      'Достань свои измерения и методичку (удобно сфотографировать их ещё на паре).',
+      'Досчитай по формулам из методички; погрешности и вывод — в конце.',
+      'Потом ответь на контрольные вопросы короткими ответами, своими словами.',
+      'К самой лабе готовиться не нужно — только сдать прошлую.',
     ],
   },
   zachet: {
@@ -203,6 +206,8 @@ export const PREP = {
 };
 
 /* Стартовые данные из опроса. */
+const LAB_NOTE = 'К лабе — доделать прошлую: досчитать и ответить на контрольные вопросы. Готовиться к допуску не нужно.';
+
 export const DEFAULT_DATA = {
   settings: {
     minSleepHours: CONFIG.minSleepHours,
@@ -222,7 +227,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 3,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 4,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -278,7 +283,7 @@ export const DEFAULT_DATA = {
     { id: 'ev-linal-kr', subject: 'linal', type: 'kr', title: 'Контрольная', date: '2026-10-19', time: '09:00', timeAssumed: true,
       format: 'на бумаге', phone: 'no', confirmed: true, prepFrom: '2026-10-18', note: 'Готовимся в воскресенье.' },
     { id: 'ev-phys-lab1', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-10-20', time: '12:40',
-      format: 'две пары подряд', phone: '?', confirmed: true, note: 'Допуск и подготовка — уточнить.' },
+      format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-de-pres', subject: 'de', type: 'dz', title: 'Презентация (ДЗ)', date: '2026-10-21', time: '10:40', timeAssumed: true,
       format: 'на флешке или в СДО', phone: '?', confirmed: true, note: 'Тема и объём — уточнить.' },
     { id: 'ev-matlog-kr', subject: 'matlog', type: 'kr', title: 'Контрольная', date: '2026-10-22', time: '14:20', timeAssumed: true,
@@ -286,11 +291,11 @@ export const DEFAULT_DATA = {
     { id: 'ev-matan-kr', subject: 'matan', type: 'kr', title: 'Контрольная', date: '2026-10-22', time: '18:00', timeAssumed: true,
       format: 'на бумаге', phone: 'no', confirmed: true, note: '' },
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
-      format: 'две пары подряд', phone: '?', confirmed: true, note: 'Каждые 4 недели после 20 октября.' },
+      format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab3', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-12-15', time: '12:40',
-      format: 'две пары подряд', phone: '?', confirmed: true, note: '' },
+      format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab4', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2027-01-12', time: '12:40',
-      format: 'две пары подряд', phone: '?', confirmed: true, note: '' },
+      format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-session', subject: null, type: 'session', title: 'Начало сессии (конец декабря, примерно)', date: '2026-12-22', time: null,
       format: '', phone: '?', confirmed: false, note: 'Сессия в конце декабря, точной даты нет — поменяй, когда узнаешь.' },
   ],
