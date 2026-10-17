@@ -60,6 +60,7 @@ export function howToHtml(ev) {
       ${heavy ? `Тяжёлая — ${fmtDur(heavy)}: ${esc(p.heavy)}, дома.` : ''}</p>
       <div class="progress ${pct >= 100 ? 'ok' : ''}"><i style="width:${pct}%"></i></div>
       <p class="small muted">Сделано ${fmtDur(prog.done)} из ${fmtDur(need)} · в плане ещё ${fmtDur(planned)}${short ? ` · <b style="color:var(--danger)">не хватает ~${fmtDur(short.short)}</b>` : ''}</p>` : ''}
+    ${ev.prepFrom ? `<p class="small" style="margin:0">Подготовка начнётся ${esc(shortDate(ev.prepFrom))} — раньше в план не ставлю.</p>` : ''}
     <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:6px">${p.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
   </section>`;
 }
@@ -86,6 +87,7 @@ export function openEventSheet(id, presetDate) {
         <div class="field"><label for="ev-date">Дата</label><input class="inp" type="date" id="ev-date" value="${esc(draft.date)}"></div>
         <div class="field"><label for="ev-time">Время</label><input class="inp" type="time" id="ev-time" value="${esc(draft.time || '')}"></div>
       </div>
+      <div class="field"><label for="ev-from">Готовиться не раньше (необязательно)</label><input class="inp" type="date" id="ev-from" value="${esc(draft.prepFrom || '')}"></div>
       <div class="field"><label for="ev-format">Формат</label><input class="inp" id="ev-format" value="${esc(draft.format || '')}" placeholder="на бумаге, на компьютере, устно, в СДО"></div>
       <div class="field"><span class="eyebrow">Телефон</span>${segButtons('phone', [['no', 'нельзя'], ['yes', 'можно'], ['?', 'не знаю']], draft.phone || '?')}</div>
       ${switchBtn('confirmed', 'Точно известно (дата и формат)', draft.confirmed !== false)}
@@ -123,6 +125,7 @@ export function openEventSheet(id, presetDate) {
           phone: segValue(body, 'phone') || '?',
           confirmed: switchValue(body, 'confirmed'),
           prepMin: prepH == null ? null : round5(prepH * 60),
+          prepFrom: body.querySelector('#ev-from').value || null,
           note: body.querySelector('#ev-note').value.trim(),
           done: ev ? switchValue(body, 'done') : false,
         };

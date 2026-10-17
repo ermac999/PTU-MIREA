@@ -8,7 +8,7 @@ import { commit, loadState, onChange, persistNow, store } from './store.js';
 import { loadBank } from './bank.js';
 import { go, initNav, route, setRenderer } from './nav.js';
 import { closeSheet, icon, sheetIsOpen } from './ui.js';
-import { streakInfo } from './planner.js';
+import { buildTodayPlan, streakInfo } from './planner.js';
 import { daysBetween, esc, minutesNow, plural } from './util.js';
 import { blockActionHandlers, ensureTodayPlan, today } from './views/shared.js';
 import { calendarActions, renderCalendar } from './views/calendar.js';
@@ -16,7 +16,7 @@ import { eventActions } from './views/events.js';
 import { dayActions, renderDay } from './views/day.js';
 import { ensureTicker, paintTimer, renderBurning, renderToday, todayActions } from './views/today.js';
 import {
-  renderCards, renderDrill, renderImport, renderPractice, renderTopic, renderTopics, topicsActions, topicsInputs,
+  rememberToggle, renderCards, renderDrill, renderImport, renderPractice, renderTopic, renderTopics, topicsActions, topicsInputs,
 } from './views/topics.js';
 import {
   applyLook, mountSettings, renderAttendance, renderClasses, renderSettings, renderSubjects, settingsActions,
@@ -49,6 +49,7 @@ const TABS = [
 const actions = {
   go: (el) => go(el.dataset.to),
   'intro-dismiss': () => commit((st) => { st.settings.introSeen = true; }),
+  'update-dismiss': () => commit((st) => { st.settings.updateSeen = CONFIG.dataVersion; }),
   ...blockActionHandlers, ...calendarActions, ...eventActions, ...dayActions,
   ...todayActions, ...topicsActions, ...settingsActions,
 };
@@ -75,9 +76,16 @@ function renderNav(tab) {
     <a href="#${id}" data-act="go" data-to="${id}" ${tab === id ? 'aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></a>`).join('')}</div>`;
 }
 
+function updateNote() {
+  return `<div class="note"><b>Обновление плана.</b> Учёл отставание: физика и информатика — около 8 дней (догоняем по ~4,5 ч за 3 недели), остальные предметы — 1–2 дня, история — с нуля, по темам докладов (~12,5 ч до сессии). Воскресенье 18.10 — подготовка к КР по линалу. Поправить — «Настройки → Предметы».
+    <button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div>`;
+}
+
 function introNote() {
-  if (store.state.settings.introSeen) return '';
-  return `<div class="note"><b>Данные из опроса уже внутри:</b> режим недели, пары, предметы, дедлайны. Мои предположения — отбой в чт и пт, подъём в вс, «иностранный = немецкий», дата сессии — поправь в «Настройках», если не так. Задания и карточки с пометкой «пример» — для старта.
+  const s = store.state.settings;
+  if ((Number(s.updateSeen) || 0) < CONFIG.dataVersion) return updateNote(); // что изменилось — важнее приветствия
+  if (s.introSeen) return '';
+  return `<div class="note"><b>Данные из опроса уже внутри:</b> режим недели, пары, предметы, дедлайны, отставание по предметам и темы истории по докладам. Мои предположения — отбой в чт и пт, подъём в вс, «иностранный = немецкий», дата сессии — поправь в «Настройках», если не так. Задания и карточки с пометкой «пример» — для старта.
     <button class="btn quiet small" type="button" data-act="intro-dismiss">Понятно</button></div>`;
 }
 
@@ -155,6 +163,7 @@ document.addEventListener('submit', (e) => {
   e.preventDefault();
   actions[f.dataset.submit]?.(f, e);
 });
+document.addEventListener('toggle', (e) => rememberToggle(e.target), true); // toggle не всплывает — ловим на погружении
 document.addEventListener('input', (e) => {
   const el = e.target.closest('[data-input]');
   if (el) inputs[el.dataset.input]?.(el, e);
@@ -171,6 +180,11 @@ function registerServiceWorker() {
 
 function start() {
   loadState();
+  if (store.migratedFrom) {
+    // данные обновились — пересобрать остаток сегодняшнего плана (отметки и прошедшие блоки остаются)
+    const t = today();
+    if (store.state.plans[t]) commit((st) => { st.plans[t] = buildTodayPlan(st, t, minutesNow()); }, { silent: true });
+  }
   applyLook();
   document.documentElement.classList.add('motion');
   initNav('calendar');

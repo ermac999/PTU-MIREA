@@ -5,7 +5,9 @@
 
 import { CONFIG, EVENT_TYPES } from '../config.js';
 import { commit, store } from '../store.js';
-import { buildTodayPlan, eventById, eventProgress, plannedByEvent, streakInfo, subjectOf } from '../planner.js';
+import {
+  buildTodayPlan, catchUpDone, catchUpTotal, catchUpWindow, eventById, eventProgress, plannedByEvent, plannedCatchUp, streakInfo, subjectOf,
+} from '../planner.js';
 import { addDays, daysBetween, esc, fmtDur, fmtHours, fmtTime, humanDate, mondayOf, pad2, plural, relDays, WD_LONG } from '../util.js';
 import { icon, toast } from '../ui.js';
 import { bank } from '../bank.js';
@@ -302,12 +304,35 @@ export function renderToday() {
 
 /* ---------- «Горит» ---------- */
 
+function catchUpSection(st, sim) {
+  const planned = plannedCatchUp(sim, st);
+  const rows = st.subjects.map((s) => ({ s, total: catchUpTotal(st, s), done: catchUpDone(st, s) })).filter((x) => x.total > 0);
+  if (!rows.length) return '';
+  const left = rows.filter((x) => x.done < x.total).length;
+  return `<section>
+    <div class="sec-row"><h2 class="sec">Догоняю</h2><span class="small muted">${left ? `${left} ${plural(left, 'предмет', 'предмета', 'предметов')}` : 'всё догнано'}</span></div>
+    ${rows.map(({ s, total, done }) => {
+      const d = Math.min(total, done);
+      const pct = Math.round((d / total) * 100);
+      const short = sim.catchUpShort.find((x) => x.subject === s.id);
+      const until = catchUpWindow(s, sim.today).until;
+      return `<div class="stack" style="gap:6px;padding-block:10px;border-bottom:1px solid var(--line-soft)">
+        <div class="row" style="justify-content:space-between"><b>${esc(s.short)}</b><span class="small muted">${d >= total ? 'догнано' : `осталось ${fmtDur(total - d)} · до ${esc(humanDate(until))}`}</span></div>
+        <div class="progress ${pct >= 100 ? 'ok' : ''}"><i style="width:${pct}%"></i></div>
+        ${d < total ? `<span class="tiny muted">${s.catchUpByTopic ? 'по темам докладов · ' : s.behindDays ? `отставание ${s.behindDays} ${plural(s.behindDays, 'день', 'дня', 'дней')} · ` : ''}в плане на 3 недели: ${fmtDur(planned[s.id] || 0)}${short ? ` · <b style="color:var(--danger)">к сроку не хватает ~${fmtDur(short.short)}</b>` : ''}</span>
+          ${short ? `<button class="btn small ghost" type="button" data-act="catchup-extend" data-id="${esc(s.id)}">Дать ещё неделю</button>` : ''}` : ''}
+      </div>`;
+    }).join('')}
+    <p class="small muted" style="margin:0">Блоки «Догоняю» идут сразу после ближайших дедлайнов. Отставание меняется в «Настройках → Предметы».</p>
+  </section>`;
+}
+
 const OPTION_TEXT = {
   shrink: (o) => [`Сократить до минимума (−${fmtDur(o.gain)})`, 'Только типовые задачи и главные формулы.'],
   nogame: (o) => [`Без игры до дедлайна (+${fmtDur(o.gain)})`, `${o.days.length} ${plural(o.days.length, 'вечер', 'вечера', 'вечеров')}. Решаешь ты — сам план игру не убирает.`],
   sunday: (o) => [`Взять воскресенье (+${fmtDur(o.gain)})`, 'Пара часов после обеда, остальное — выходной.'],
   morning: (o) => [`Учиться в утренней дороге (+${fmtDur(o.gain)})`, `${o.days.map((k) => WD_LONG[new Date(`${k}T12:00`).getDay()]).join(', ')}: в эти дни встаёшь позже и, возможно, не досыпаешь в поезде.`],
-  pause: () => ['Пауза поддержки слабых предметов', 'Информатика, физика, история подождут до конца завала.'],
+  pause: (o) => ['Пауза поддержки слабых предметов', `${o.subjects.join(', ')} — ${o.subjects.length > 1 ? 'подождут' : 'подождёт'} до конца завала.`],
 };
 
 export function renderBurning() {
@@ -361,6 +386,8 @@ export function renderBurning() {
         }).join('')}</div>
       </section>`;
     }).join('')}
+
+    ${catchUpSection(st, sim)}
 
     <section>
       <div class="sec-row"><h2 class="sec">Дедлайны</h2><span class="small muted">${list.length}</span></div>
@@ -445,6 +472,15 @@ export const todayActions = {
     commit((st) => { st.checkins[t].evening.reason = el.dataset.v === 'skip' ? 'none' : el.dataset.v; });
   },
   'short-apply': (el) => applyShortage(el.dataset.ev, el.dataset.i),
+  'catchup-extend': (el) => {
+    const t = today();
+    commit((st) => {
+      const s = st.subjects.find((x) => x.id === el.dataset.id);
+      if (s) s.catchUpWeeks = (Number(s.catchUpWeeks) || CONFIG.catchUp.weeks) + 1;
+      if (st.plans[t]) st.plans[t] = buildTodayPlan(st, t, nowMin());
+    });
+    toast('Срок продлён на неделю, план пересчитан.');
+  },
   'backup-snooze': () => {
     commit((st) => { st.settings.backupSnoozeUntil = Date.now() + 86400000; });
   },

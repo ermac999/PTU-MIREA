@@ -10,6 +10,15 @@
 import { CONFIG, DEFAULT_DATA } from './config.js';
 import { addDays, clone, todayKey } from './util.js';
 
+/** Темы из DEFAULT_DATA: строка — примерная тема, объект — настоящая тема с курса. */
+export function defaultTopics(onlySubject = null) {
+  return clone(DEFAULT_DATA.topics)
+    .filter(([subject]) => !onlySubject || subject === onlySubject)
+    .flatMap(([subject, list]) => list.map((t, i) => (typeof t === 'string'
+      ? { id: `${subject}-${i + 1}`, subject, name: t, status: 'new', note: '', example: true }
+      : { subject, status: 'new', note: '', example: false, ...t })));
+}
+
 /** Состояние «с нуля» — данные из опроса. */
 export function defaultState() {
   const d = clone(DEFAULT_DATA);
@@ -22,13 +31,11 @@ export function defaultState() {
     subjects: d.subjects,
     classes: d.classes,
     events: d.events,
-    topics: d.topics.flatMap(([subject, names]) => names.map((name, i) => ({
-      id: `${subject}-${i + 1}`, subject, name, status: 'new', note: '', example: true,
-    }))),
-    dayOverrides: {}, // 'дата' → правки дня: wake, leave, classStart, classEnd, home, sleep, morningStudy, noClasses, energy, hot
+    topics: defaultTopics(),
+    dayOverrides: d.dayOverrides || {}, // 'дата' → правки дня: wake, leave, classStart, classEnd, home, sleep, morningStudy, noClasses, study, noGame, energy, hot
     plans: {},        // 'дата' → сохранённый план дня (только сегодня и прошлые дни)
     done: {},         // 'дата' → { blockId: { status: 'done'|'skipped', min, itemKey, type, at } }
-    progress: {},     // 'eventId:light|heavy' или 'm:subject:monday:kind' → сделано минут
+    progress: {},     // 'eventId:light|heavy', 'c:subject:kind' (догоняю), 'm:subject:monday:kind' → сделано минут
     practice: {},     // taskId → { seen, correct, wrong, streak, due, lastAt, lastOk }
     topicHist: {},    // topicId → последние ответы [{ at, ok }]
     cardStats: {},    // cardId → { box, due, seen, wrong }
@@ -55,9 +62,48 @@ export function migrate(raw) {
     if (!Array.isArray(st[k])) st[k] = base[k];
   }
   if (!st.week || typeof st.week !== 'object') st.week = base.week;
+  const from = Number(raw.version) || 1;
+  if (from < 2) upgradeTo2(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
+}
+
+/**
+ * Версия 2 (17.10): отставание по предметам, темы истории по докладам, воскресенье — линал.
+ * Дописываем только то, чего у пользователя ещё нет: его правки и отметки не трогаем.
+ */
+function upgradeTo2(st) {
+  const d = DEFAULT_DATA;
+  for (const ds of d.subjects) {
+    const s = st.subjects.find((x) => x.id === ds.id);
+    if (!s) continue;
+    for (const k of ['behindDays', 'behindSince', 'catchUpWeeks', 'catchUpMin', 'catchUpLight', 'catchUpByTopic', 'noStudy']) {
+      if (s[k] === undefined && ds[k] !== undefined) s[k] = ds[k];
+    }
+    if (ds.id === 'hist') {
+      if (Number(s.level) === 2) s.level = ds.level; // «вообще не учил» — уровень 1
+      if (!s.note) s.note = ds.note;
+    }
+  }
+  // История: примерные темы → темы докладов. Если примерные темы уже правили — новые просто добавляем.
+  const untouched = (t) => t.example && t.status === 'new' && !t.note;
+  const histNow = st.topics.filter((t) => t.subject === 'hist');
+  if (histNow.every(untouched)) st.topics = st.topics.filter((t) => t.subject !== 'hist');
+  const have = new Set(st.topics.map((t) => t.id));
+  st.topics.push(...defaultTopics('hist').filter((t) => !have.has(t.id)));
+  // КР по линалу подтверждена, готовимся с воскресенья.
+  const kr = st.events.find((e) => e.id === 'ev-linal-kr');
+  const krNew = d.events.find((e) => e.id === 'ev-linal-kr');
+  if (kr && kr.prepFrom === undefined) {
+    kr.prepFrom = krNew.prepFrom;
+    kr.confirmed = true;
+    if (!kr.note || kr.note.startsWith('Точно не известно')) kr.note = krNew.note;
+  }
+  for (const [day, ov] of Object.entries(d.dayOverrides || {})) {
+    st.dayOverrides[day] = { ...ov, ...(st.dayOverrides[day] || {}) };
+  }
+  st.settings.updateSeen = 1; // показать заметку «что нового»
 }
 
 export const store = {
@@ -65,6 +111,7 @@ export const store = {
   rev: 0,          // растёт при каждом изменении — для кэша расчётов
   storageOk: true,
   firstRun: false,
+  migratedFrom: null, // данные обновились с этой версии при запуске
   lastError: null,
   listeners: new Set(),
 };
@@ -90,7 +137,12 @@ export function loadState() {
     let raw = null;
     try {
       raw = ls.getItem(CONFIG.storageKey);
-      if (raw) st = migrate(JSON.parse(raw));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const v = Number(parsed.version) || 1;
+        if (v < CONFIG.dataVersion) store.migratedFrom = v; // приложение пересоберёт сегодняшний план
+        st = migrate(parsed);
+      }
     } catch {
       try { ls.setItem(`${CONFIG.storageKey}.broken.${Date.now()}`, raw || ''); } catch { /* места нет — ничего страшного */ }
       store.lastError = 'Сохранённые данные оказались повреждены. Я начал с чистого листа, а старую копию отложил. Если есть файл копии — импортируй его в настройках.';

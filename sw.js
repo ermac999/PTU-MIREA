@@ -1,7 +1,7 @@
 /* Service worker: приложение открывается и работает без интернета (в электричке).
    При обновлении сайта поменяйте VERSION — старый кэш удалится. */
 
-const VERSION = 'ramki-v1';
+const VERSION = 'ramki-v2';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/schedule.js', 'js/planner.js', 'js/practice.js',
@@ -15,7 +15,8 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' — мимо HTTP-кэша браузера, чтобы новая версия не собралась из старых файлов
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

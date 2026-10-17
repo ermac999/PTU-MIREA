@@ -6,10 +6,10 @@
 
 import { CONFIG, EVENT_TYPES } from '../config.js';
 import { commit, defaultState, exportPayload, parseBackup, replaceState, store } from '../store.js';
-import { buildTodayPlan, subjectOf } from '../planner.js';
+import { buildTodayPlan, catchUpDone, catchUpTotal, subjectOf } from '../planner.js';
 import { classOccurs } from '../schedule.js';
 import { buildIcs } from '../ics.js';
-import { addDays, esc, humanDate, plural, toMin, uid, WD_LONG, WD_SHORT } from '../util.js';
+import { addDays, esc, fmtDur, humanDate, plural, toMin, uid, WD_LONG, WD_SHORT } from '../util.js';
 import { closeSheet, confirmSheet, copyText, icon, isPreview, openSheet, shareOrSave, textFallbackSheet, toast } from '../ui.js';
 import { go } from '../nav.js';
 import { bank } from '../bank.js';
@@ -191,25 +191,34 @@ export function renderSubjects() {
   return `
     <header class="head">
       <button class="back" type="button" data-act="go" data-to="settings">${icon('back', 's')}Настройки</button>
-      <span class="eyebrow">Уровень 1–5, отметки, лимит пропусков</span>
+      <span class="eyebrow">Уровень, отставание, отметки, лимит пропусков</span>
       <h1 class="display m">Предметы</h1>
     </header>
     <ul class="list">${st.subjects.map((s) => `<li><button class="li" type="button" data-act="subj-edit" data-id="${esc(s.id)}">
-      <span class="grow"><span class="t">${esc(s.name)}</span><span class="m">${levelDots(s.level)} ${Number(s.level) <= CONFIG.weakLevelMax ? '· слабый' : ''}${s.marked === true ? ' · отмечают' : ''}${s.missLimit != null && s.missLimit !== '' ? ` · лимит ${s.missLimit}` : ''}${s.note ? ` · ${esc(s.note)}` : ''}</span></span>${icon('chev', 'chev s')}</button></li>`).join('')}</ul>
+      <span class="grow"><span class="t">${esc(s.name)}</span><span class="m">${levelDots(s.level)} ${Number(s.level) <= CONFIG.weakLevelMax && !s.noStudy ? '· слабый' : ''}${s.noStudy ? '· только посещаемость' : ''}${(() => { const tot = catchUpTotal(st, s); const left = Math.max(0, tot - catchUpDone(st, s)); return left ? ` · догнать ещё ${fmtDur(left)}` : ''; })()}${s.marked === true ? ' · отмечают' : ''}${s.missLimit != null && s.missLimit !== '' ? ` · лимит ${s.missLimit}` : ''}${s.note ? ` · ${esc(s.note)}` : ''}</span></span>${icon('chev', 'chev s')}</button></li>`).join('')}</ul>
     <button class="btn ghost block" type="button" data-act="subj-edit" data-id="">${icon('plus', 's')}Предмет</button>`;
 }
 
 function openSubject(id) {
   const st = store.state;
   const s = id ? subjectOf(st, id) : { id: uid('subj'), name: '', short: '', level: 3, marked: null, missLimit: null };
+  const total = catchUpTotal(st, s);
+  const done = Math.min(total, catchUpDone(st, s));
   openSheet({
     title: id ? s.short || 'Предмет' : 'Новый предмет',
     body: `<div class="field"><label for="sj-name">Название</label><input class="inp" id="sj-name" value="${esc(s.name)}"></div>
       <div class="field"><label for="sj-short">Коротко</label><input class="inp" id="sj-short" value="${esc(s.short)}" placeholder="Матан, Линал…"></div>
       <div class="field"><span class="eyebrow">Уровень: 1 — плаваю, 5 — уверенно</span>${segButtons('lvl', [[1, '1'], [2, '2'], [3, '3'], [4, '4'], [5, '5']], s.level)}</div>
       <p class="small muted" style="margin:0">Уровень 1–2 — «слабый»: больше часов на подготовку и немного времени каждую неделю.</p>
+
+      <div class="field"><label for="sj-behind">Отстаю на (дней материала)</label><input class="inp" id="sj-behind" inputmode="numeric" value="${esc(s.behindDays ?? '')}" placeholder="0 — не отстаю"></div>
+      <div class="field"><span class="eyebrow">Догнать за</span>${segButtons('weeks', [[1, '1 нед.'], [2, '2'], [3, '3'], [4, '4'], [6, '6']], s.catchUpWeeks || CONFIG.catchUp.weeks)}</div>
+      <div class="field"><label for="sj-cmin">Или часов на догоняние (если знаешь точнее)</label><input class="inp" id="sj-cmin" inputmode="decimal" value="${s.catchUpMin != null && s.catchUpMin !== '' ? esc(String(Math.round((s.catchUpMin / 60) * 10) / 10).replace('.', ',')) : ''}" placeholder="пусто — посчитаю по дням"></div>
+      ${total ? `<p class="small muted" style="margin:0">Догнать: ${fmtDur(total)}, сделано ${fmtDur(done)}${s.behindSince ? ` · с ${esc(humanDate(s.behindSince))}` : ''}. Если поменять отставание, отсчёт начнётся заново с сегодняшнего дня.</p>` : ''}
+
       <div class="field"><span class="eyebrow">Отмечают посещаемость?</span>${segButtons('marked', [['yes', 'да'], ['no', 'нет'], ['?', 'не знаю']], s.marked === true ? 'yes' : s.marked === false ? 'no' : '?')}</div>
       <div class="field"><label for="sj-limit">Сколько пропусков допускается (пар)</label><input class="inp" id="sj-limit" inputmode="numeric" value="${esc(s.missLimit ?? '')}" placeholder="пусто — лимита нет"></div>
+      ${switchBtn('nostudy', 'Без учёбы — только посещаемость (как физкультура)', !!s.noStudy)}
       <div class="row"><button class="btn" type="button" id="sj-save">Сохранить</button>${id ? `<button class="btn danger" type="button" id="sj-del">${icon('trash', 's')}Удалить</button>` : ''}</div>`,
     onMount: (body) => {
       wireControls(body);
@@ -218,13 +227,29 @@ function openSubject(id) {
         if (!name) return toast('Нужно название.');
         const lim = body.querySelector('#sj-limit').value.trim();
         if (lim && !/^\d+$/.test(lim)) return toast('Лимит — целое число пар или пусто.');
+        const behindRaw = body.querySelector('#sj-behind').value.trim();
+        if (behindRaw && !/^\d+$/.test(behindRaw)) return toast('Отставание — целое число дней или пусто.');
+        const cminRaw = body.querySelector('#sj-cmin').value.trim().replace(',', '.');
+        const cminH = cminRaw === '' ? null : Number(cminRaw);
+        if (cminRaw !== '' && (Number.isNaN(cminH) || cminH < 0 || cminH > 200)) return toast('Часы на догоняние — число, например 4,5.');
         const m = segValue(body, 'marked');
         const next = {
           ...s, name, short: body.querySelector('#sj-short').value.trim() || name.split(' ')[0],
           level: Number(segValue(body, 'lvl') || 3), marked: m === 'yes' ? true : m === 'no' ? false : null,
           missLimit: lim === '' ? null : Number(lim),
+          behindDays: behindRaw === '' ? 0 : Number(behindRaw),
+          catchUpWeeks: Number(segValue(body, 'weeks') || CONFIG.catchUp.weeks),
+          catchUpMin: cminH == null ? null : Math.round(cminH * 60),
+          noStudy: switchValue(body, 'nostudy'),
         };
+        // отставание поменяли — отсчитываем заново с сегодняшнего дня
+        const changed = Number(next.behindDays || 0) !== Number(s.behindDays || 0) || (next.catchUpMin ?? null) !== (s.catchUpMin ?? null);
         commit((st2) => {
+          if (changed) {
+            next.behindSince = today();
+            delete st2.progress[`c:${next.id}:light`];
+            delete st2.progress[`c:${next.id}:heavy`];
+          }
           const i = st2.subjects.findIndex((x) => x.id === next.id);
           if (i >= 0) st2.subjects[i] = next;
           else st2.subjects.push(next);

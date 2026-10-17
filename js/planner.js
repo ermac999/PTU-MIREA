@@ -16,10 +16,10 @@
 
 import { CONFIG, PREP, EVENT_TYPES } from './config.js';
 import { baseTimes, classesOn, daySkeleton } from './schedule.js';
-import { addDays, floor5, fmtTime, mondayOf, round5, shortDate, toMin } from './util.js';
+import { addDays, floor5, fmtTime, mondayOf, plural, round5, shortDate, toMin } from './util.js';
 
 export const subjectOf = (state, id) => state.subjects.find((s) => s.id === id) || null;
-export const isWeak = (s) => !!s && Number(s.level) <= CONFIG.weakLevelMax;
+export const isWeak = (s) => !!s && !s.noStudy && Number(s.level) <= CONFIG.weakLevelMax;
 export const eventById = (state, id) => state.events.find((e) => e.id === id) || null;
 
 /* ---------- Помидоры: 25 минут работы, 5 отдыха ---------- */
@@ -77,11 +77,82 @@ export function nextTopicFor(state, subjectId) {
   return ts.find((t) => t.status === 'learning') || ts.find((t) => t.status === 'new') || ts[0] || null;
 }
 
+/* ---------- Догнать отставание ---------- */
+
+/** Сколько минут в неделю идут пары предмета (с учётом «через неделю» и «раз в 4 недели»). */
+export function weeklyClassMin(state, subjectId) {
+  return state.classes
+    .filter((c) => c.subject === subjectId)
+    .reduce((sum, c) => sum + Math.max(0, (toMin(c.end) - toMin(c.start)) / (Number(c.every) || 1)), 0);
+}
+
+/** Сколько минут нужно, чтобы догнать: задано напрямую или «отстаю на N дней». */
+export function catchUpTotal(state, s) {
+  if (!s || s.noStudy) return 0;
+  if (s.catchUpMin != null && s.catchUpMin !== '' && !Number.isNaN(Number(s.catchUpMin))) {
+    return Math.max(0, round5(Number(s.catchUpMin)));
+  }
+  const days = Number(s.behindDays) || 0;
+  if (days <= 0) return 0;
+  const lvl = Number(s.level) || 3;
+  const min = days * (weeklyClassMin(state, s.id) / 7) * CONFIG.catchUp.factor * (CONFIG.levelFactor[lvl] ?? 1);
+  return Math.max(CONFIG.catchUp.minTotal, round5(min));
+}
+
+export const catchUpDone = (state, s) => (state.progress?.[`c:${s.id}:light`] || 0) + (state.progress?.[`c:${s.id}:heavy`] || 0);
+
+/** Слабые предметы на поддержке: кого сейчас догоняем, тем поддержка не нужна. */
+export const maintSubjects = (state) => state.subjects.filter((s) => isWeak(s) && catchUpTotal(state, s) - catchUpDone(state, s) <= 0);
+
+/** Окно догоняния: с какого дня и до какого. */
+export function catchUpWindow(s, today) {
+  const from = s.behindSince || today;
+  const weeks = Math.max(1, Number(s.catchUpWeeks) || CONFIG.catchUp.weeks);
+  return { from, until: addDays(from, weeks * 7 - 1) };
+}
+
+/** Темы предмета, пройденные в блоках «догнать» с отметкой «готово». */
+export function coveredTopics(state, subjectId) {
+  const ids = new Set(state.topics.filter((t) => t.subject === subjectId).map((t) => t.id));
+  const out = new Set();
+  for (const day of Object.values(state.done || {})) {
+    for (const rec of Object.values(day || {})) {
+      if (rec?.status !== 'done' || !Array.isArray(rec.topics)) continue;
+      for (const id of rec.topics) if (ids.has(id)) out.add(id);
+    }
+  }
+  return out;
+}
+
+/**
+ * Очередь тем при догонянии по темам — общая на весь расчёт (дни планируются по очереди):
+ * taken — пройденные и уже стоящие в плане, minLeft — сколько минут догоняния ещё не расписано.
+ */
+function topicCursor(state, items, subjectId) {
+  const cur = (items.cursor ||= {});
+  if (!cur[subjectId]) {
+    const s = subjectOf(state, subjectId);
+    const taken = coveredTopics(state, subjectId);
+    for (const t of state.topics) if (t.subject === subjectId && (t.status === 'understood' || t.status === 'reviewed')) taken.add(t.id);
+    cur[subjectId] = { taken, minLeft: Math.max(0, catchUpTotal(state, s) - catchUpDone(state, s)) };
+  }
+  return cur[subjectId];
+}
+
+/** Блок сегодняшнего плана ещё впереди — его темы и минуты уже заняты. */
+function reserveTopics(state, items, b) {
+  if (!b.catchUp || !b.topicIds?.length) return;
+  const c = topicCursor(state, items, b.subject);
+  for (const id of b.topicIds) c.taken.add(id);
+  c.minLeft = Math.max(0, c.minLeft - (b.min || 0));
+}
+
 /* ---------- Пул задач ---------- */
 
 /** Всё, к чему нужно готовиться, с остатком минут. */
 export function buildItems(state, today) {
   const items = [];
+  items.cursor = {}; // какая тема следующая — для предметов, которые догоняем по темам
   for (const ev of state.events) {
     if (ev.done || ev.date < today) continue;
     const { light, heavy } = splitNeed(state, ev);
@@ -93,24 +164,59 @@ export function buildItems(state, today) {
         remaining: Math.max(0, total - (state.progress?.[key] || 0)),
         eventId: ev.id, subject: ev.subject, type: ev.type,
         deadline: ev.date, deadlineMin: toMin(ev.time),
+        from: ev.prepFrom || null, // «готовиться не раньше»
         activeFrom: addDays(ev.date, -(PREP[ev.type]?.leadDays ?? 10)),
         weight: EVENT_TYPES[ev.type]?.weight ?? 1, maint: false,
       });
     }
   }
-  // Поддержка слабых предметов: недельная квота на 4 недели вперёд.
+
+  // Догнать отставание: остаток делится поровну по неделям до конца окна.
+  // Неделя — порция со своим сроком; недоделанное остаётся в работе до конца окна.
+  for (const s of state.subjects) {
+    const total = catchUpTotal(state, s);
+    const left = total - catchUpDone(state, s);
+    if (total <= 0 || left <= 0) continue;
+    const win = catchUpWindow(s, today);
+    const end = win.until < today ? addDays(mondayOf(today), 6) : win.until; // срок прошёл — догоняем на этой неделе
+    const allWeeks = [];
+    for (let m = mondayOf(today); m <= end; m = addDays(m, 7)) allWeeks.push(m);
+    // Мелкие порции дробят день: неделя — не меньше часа, иначе догоняем в первые недели.
+    const weeks = allWeeks.slice(0, Math.max(1, Math.min(allWeeks.length, Math.floor(left / 60))));
+    const share = Number(s.catchUpLight ?? CONFIG.catchUp.lightShare);
+    let rest = left;
+    weeks.forEach((monday, j) => {
+      const portion = j === weeks.length - 1 ? rest : Math.min(rest, round5(left / weeks.length));
+      rest -= portion;
+      if (portion <= 0) return;
+      const weekEnd = addDays(monday, 6) < end ? addDays(monday, 6) : end;
+      let light = round5(portion * share);
+      // теорию и задачи делим, только если обе части — осмысленный блок (от 20 минут)
+      if (light < CONFIG.minChunkMin || portion - light < CONFIG.minChunkMin) light = share >= 0.5 ? portion : 0;
+      for (const [kind, amt] of [['light', light], ['heavy', portion - light]]) {
+        if (amt <= 0) continue;
+        items.push({
+          key: `c:${s.id}:${kind}#${monday}`, progressKey: `c:${s.id}:${kind}`, kind, total: amt, remaining: amt,
+          subject: s.id, catchUp: true, maint: false,
+          from: j === 0 ? today : monday, until: end, deadline: weekEnd, deadlineMin: null, weight: 0, activeFrom: today,
+        });
+      }
+    });
+  }
+
+  // Поддержка слабых предметов: недельная квота на 4 недели вперёд (кроме тех, что догоняем).
   if (!state.settings.pauseMaintenance) {
-    const weak = state.subjects.filter(isWeak);
+    const weak = maintSubjects(state);
     for (let w = 0; w < 4; w++) {
       const monday = addDays(mondayOf(today), 7 * w);
-      for (const s of weak) {
+      for (const sj of weak) {
         for (const kind of ['light', 'heavy']) {
           const total = CONFIG.weakWeekly[kind];
-          const key = `m:${s.id}:${monday}:${kind}`;
+          const key = `m:${sj.id}:${monday}:${kind}`;
           items.push({
             key, kind, total,
             remaining: Math.max(0, total - (state.progress?.[key] || 0)),
-            subject: s.id, maint: true, from: monday, until: addDays(monday, 6),
+            subject: sj.id, maint: true, from: monday, until: addDays(monday, 6),
             deadline: addDays(monday, 6), deadlineMin: null, weight: 0, activeFrom: monday,
           });
         }
@@ -123,17 +229,18 @@ export function buildItems(state, today) {
 /** Можно ли делать задачу в этот день и в окно, которое кончается в slotEnd. */
 function eligible(it, key, slotEnd) {
   if (it.remaining <= 0) return false;
-  if (it.maint) return key >= it.from && key <= it.until;
+  if (it.maint || it.catchUp) return key >= it.from && key <= it.until;
+  if (it.from && key < it.from) return false; // «готовиться не раньше»
   if (it.deadline > key) return true;
   // в день события — только если окно заканчивается минимум за 30 минут до него
   return it.deadline === key && it.deadlineMin != null && slotEnd <= it.deadlineMin - 30;
 }
 
 /**
- * Ранг задачи в этот день: 0 — событие уже в «окне подготовки»,
- * 1 — поддержка слабого предмета, 2 — событие ещё далеко (делаем, если есть место).
+ * Ранг задачи в этот день: 0 — событие уже в «окне подготовки», 1 — догнать отставание,
+ * 2 — поддержка слабого предмета, 3 — событие ещё далеко (делаем, если есть место).
  */
-const rankOf = (it, key) => (it.maint ? 1 : key < it.activeFrom ? 2 : 0);
+const rankOf = (it, key) => (it.catchUp ? 1 : it.maint ? 2 : key < it.activeFrom ? 3 : 0);
 
 /** Порядок: ранг → «горит» → ближайший дедлайн → тяжёлое дома → вес → слабый предмет. */
 function compareItems(a, b, ctx) {
@@ -150,6 +257,12 @@ function compareItems(a, b, ctx) {
   const bm = b.deadlineMin ?? 9999;
   if (am !== bm) return am - bm;
   if (ctx.preferHeavy && a.kind !== b.kind) return a.kind === 'heavy' ? -1 : 1;
+  if (ra === 1 || ra === 2) {
+    // догоняем по очереди: первым тот предмет, у кого недельная порция сделана меньше
+    const fa = a.remaining / a.total;
+    const fb = b.remaining / b.total;
+    if (fa !== fb) return fb - fa;
+  }
   if (a.weight !== b.weight) return b.weight - a.weight;
   const lv = ctx.levelOf(a.subject) - ctx.levelOf(b.subject);
   if (lv) return lv;
@@ -179,21 +292,50 @@ function commit(chunk, ctx) {
 
 /* ---------- Тексты для учебных блоков ---------- */
 
-export function chunkTitle(state, it, topic) {
-  const name = subjectOf(state, it.subject)?.short || 'Предмет';
+const quoted = (topics) => topics.map((t) => `«${t.name}»`).join(', ');
+
+export function chunkTitle(state, it, topics = []) {
+  const subj = subjectOf(state, it.subject);
+  const name = subj?.short || 'Предмет';
+  const topic = topics[0];
+  if (it.catchUp) {
+    if (subj?.catchUpByTopic && topic) {
+      const more = topics.length - 1;
+      const what = `«${topic.name}»${more ? ` и ещё ${more} ${plural(more, 'тема', 'темы', 'тем')}` : ''}`;
+      return it.kind === 'light' ? `${name}: ${what} — прочитать и карточки` : `${name}: ${what} — конспект`;
+    }
+    return it.kind === 'light' ? `${name}: догнать пропущенное — теория` : `${name}: догнать пропущенное — задачи`;
+  }
   if (it.maint) return it.kind === 'light' ? `${name}: карточки и теория` : `${name}: отработка — ${topic?.name ?? 'слабая тема'}`;
   const ev = eventById(state, it.eventId);
   return `${name}: ${PREP[ev?.type]?.[it.kind] || 'подготовка'}`;
 }
 
 export function chunkDetail(state, it) {
+  if (it.catchUp) {
+    const subj = subjectOf(state, it.subject);
+    return subj?.catchUpByTopic ? 'Догоняю: с нуля, по темам докладов' : `Догоняю отставание${subj?.behindDays ? ` (${subj.behindDays} дн.)` : ''}`;
+  }
   if (it.maint) return 'Поддержка слабого предмета';
   const ev = eventById(state, it.eventId);
   if (!ev) return '';
   return `${EVENT_TYPES[ev.type]?.label ?? 'Событие'} · ${shortDate(ev.date)}`;
 }
 
-export function firstStep(state, it, topic) {
+export function firstStep(state, it, topics = []) {
+  const topic = topics[0];
+  if (it.catchUp) {
+    if (subjectOf(state, it.subject)?.catchUpByTopic) {
+      const list = topics.length ? quoted(topics) : '«тема»';
+      const each = topics.length > 1 ? ' по каждой теме' : '';
+      return it.kind === 'light'
+        ? `Прочитай про ${list} (лекция, учебник или презентация доклада) и выпиши${each} 3 даты и 3 имени.`
+        : `Конспект ${list} — на полстраницы${each}: даты, люди, итоги. Из него — 5 карточек.`;
+    }
+    return it.kind === 'light'
+      ? 'Найди конспект пропущенной лекции (одногруппник, СДО, чат группы) и прочитай первые 2 страницы.'
+      : 'Возьми задачи с последней пропущенной практики и реши первую. Застрял на 10 минут — смотри разбор и иди дальше.';
+  }
   if (it.maint) {
     return it.kind === 'light'
       ? 'Открой карточки по предмету и пройди 10 штук.'
@@ -203,21 +345,52 @@ export function firstStep(state, it, topic) {
   return PREP[ev?.type]?.first?.[it.kind] || 'Начни с самого простого шага на 15 минут.';
 }
 
-function studyBlock(state, chunk, place, start, end, mk) {
+/**
+ * Темы для блока. Догоняем по темам — следующие непройденные по порядку,
+ * сколько влезает в минуты блока (минуты догоняния делятся поровну на оставшиеся темы).
+ * Иначе — первая незакрытая тема предмета.
+ */
+function topicsForChunk(state, it, items, min) {
+  if (!it.maint && !it.catchUp) return [];
+  if (!(it.catchUp && subjectOf(state, it.subject)?.catchUpByTopic)) {
+    const t = nextTopicFor(state, it.subject);
+    return t ? [t] : [];
+  }
+  const all = state.topics.filter((t) => t.subject === it.subject);
+  if (!all.length) return [];
+  const c = topicCursor(state, items, it.subject);
+  let open = all.filter((t) => !c.taken.has(t.id));
+  if (!open.length) { // все темы пройдены — второй круг, уже как повторение
+    c.taken.clear();
+    open = all;
+  }
+  const per = c.minLeft > 0 ? c.minLeft / open.length : CONFIG.catchUp.perTopicMin;
+  const k = Math.min(CONFIG.catchUp.maxTopicsPerBlock, open.length, Math.max(1, Math.round(min / per)));
+  c.minLeft = Math.max(0, c.minLeft - min);
+  const pick = open.slice(0, k);
+  for (const t of pick) c.taken.add(t.id);
+  return pick;
+}
+
+function studyBlock(state, chunk, place, start, end, mk, items) {
   const it = chunk.item;
-  const topic = it.maint ? nextTopicFor(state, it.subject) : null;
+  const topics = topicsForChunk(state, it, items, chunk.min);
   return mk('study', start, end, {
-    place, itemKey: it.key, eventId: it.eventId || null, subject: it.subject, kind: it.kind,
-    min: chunk.min, maint: !!it.maint, topicId: topic?.id || null,
-    title: chunkTitle(state, it, topic), detail: chunkDetail(state, it), first: firstStep(state, it, topic),
+    place, itemKey: it.key, progressKey: it.progressKey || it.key, eventId: it.eventId || null, subject: it.subject, kind: it.kind,
+    min: chunk.min, maint: !!it.maint, catchUp: !!it.catchUp, topicId: topics[0]?.id || null,
+    ...(it.catchUp && topics.length ? { topicIds: topics.map((t) => t.id) } : {}),
+    title: chunkTitle(state, it, topics), detail: chunkDetail(state, it), first: firstStep(state, it, topics),
   });
 }
 
 /* ---------- Раскладка окон ---------- */
 
-const homeCapFor = (state, wd) => (wd === 0
-  ? (state.settings.sundayExtra ? CONFIG.sundayExtraMin : 0)
-  : (CONFIG.homeCapByWeekday[wd] ?? 150));
+/** Сколько учиться дома в этот день: правка дня («учёба в этот выходной») → воскресенье → обычный день. */
+const homeCapFor = (state, info) => {
+  if (info.ov?.study) return Number(info.ov.studyMin) || CONFIG.sundayExtraMin;
+  if (info.wd === 0) return state.settings.sundayExtra ? CONFIG.sundayExtraMin : 0;
+  return CONFIG.homeCapByWeekday[info.wd] ?? 150;
+};
 
 const gameMinutesOf = (state) => Number(state.settings.gameMinutes ?? CONFIG.game.minutes) || 0;
 
@@ -237,7 +410,7 @@ function layoutTrain(state, info, w, start, items, ctx, mk, ef) {
   const chunk = pickChunk(items, ctx, 'light', w.end, capNet);
   if (chunk) {
     commit(chunk, ctx);
-    out.push(studyBlock(state, chunk, 'train', t, t + chunk.min, mk));
+    out.push(studyBlock(state, chunk, 'train', t, t + chunk.min, mk, items));
     t += chunk.min;
   }
   if (duo && w.end - t >= duo) {
@@ -294,7 +467,7 @@ function layoutHome(state, info, w, start, items, ctx, mk, ef, flags) {
   const studyEndMax = gameOn
     ? gameEndMax - CONFIG.game.minMinutes - CONFIG.breakBeforeGameMin
     : bed - CONFIG.reviewMin - 5;
-  let netLeft = floor5(homeCapFor(state, info.wd) * ef) - (flags.keptStudyMin || 0);
+  let netLeft = floor5(homeCapFor(state, info) * ef) - (flags.keptStudyMin || 0);
   let chunks = flags.keptHomeChunks || 0;
   let studied = 0;
 
@@ -310,7 +483,7 @@ function layoutHome(state, info, w, start, items, ctx, mk, ef, flags) {
       t += gapBefore;
     }
     const wall = wallFor(chunk.min);
-    out.push(studyBlock(state, chunk, 'home', t, t + wall, mk));
+    out.push(studyBlock(state, chunk, 'home', t, t + wall, mk, items));
     t += wall;
     netLeft -= chunk.min;
     chunks += 1;
@@ -372,7 +545,7 @@ function layoutRest(state, info, w, start, items, ctx, mk, ef) {
   const occ = out.map((b) => ({ start: b.start, end: b.end }));
 
   // Учёба — после обеда, если в этот день она вообще есть.
-  let netLeft = floor5(homeCapFor(state, info.wd) * ef);
+  let netLeft = floor5(homeCapFor(state, info) * ef);
   const lunch = anchors.find((a) => a.title === 'Обед');
   const dinner = anchors.find((a) => a.title === 'Ужин');
   let t = Math.max(start, (lunch ? lunch.end : w.start + 60) + 15);
@@ -387,7 +560,7 @@ function layoutRest(state, info, w, start, items, ctx, mk, ef) {
     const s = firstFree(occ, t + gapBefore, wallFor(chunk.min), studyLimit);
     if (s == null) break;
     commit(chunk, ctx);
-    const b = studyBlock(state, chunk, 'home', s, s + wallFor(chunk.min), mk);
+    const b = studyBlock(state, chunk, 'home', s, s + wallFor(chunk.min), mk, items);
     out.push(b);
     occ.push({ start: b.start, end: b.end });
     t = b.end;
@@ -436,7 +609,7 @@ function layoutSmall(state, info, w, start, items, ctx, mk) {
   if (chunk) {
     commit(chunk, ctx);
     const end = t + (isAm ? chunk.min : wallFor(chunk.min));
-    out.push(studyBlock(state, chunk, w.kind, t, end, mk));
+    out.push(studyBlock(state, chunk, w.kind, t, end, mk, items));
     t = end;
   }
   if (w.end - t >= 5) out.push(mk(isAm ? 'ride' : 'free', t, w.end, { title: isAm ? 'Дорога: отдых' : 'Свободно', place: w.kind }));
@@ -516,10 +689,11 @@ export function buildTodayPlan(state, today, now, answers = {}) {
   const keep = prev ? keptForRebuild(state, today, prev.blocks, now) : [];
   const items = buildItems(state, today);
   for (const b of keep) {
-    // блок идёт прямо сейчас и не отмечен — его минуты заняты
+    // блок идёт прямо сейчас и не отмечен — его минуты и темы заняты
     if (b.type === 'study' && b.itemKey && !b.status && b.end > now) {
       const it = items.find((i) => i.key === b.itemKey);
       if (it) it.remaining = Math.max(0, it.remaining - (b.min || 0));
+      reserveTopics(state, items, b);
     }
   }
   const energy = answers.energy ?? prev?.energy;
@@ -548,6 +722,7 @@ export function simulate(state, today, now, days = CONFIG.horizonDays) {
         if (b.type !== 'study' || !b.itemKey || doneToday[b.id]?.status || b.end <= now) continue;
         const it = byKey.get(b.itemKey);
         if (it) it.remaining = Math.max(0, it.remaining - (b.min || 0));
+        reserveTopics(state, items, b);
       }
       const sk = daySkeleton(state, key);
       plans[key] = { key, info: sk.info, fixed: sk.fixed, windows: sk.windows, blocks: stored.blocks, energy: stored.energy, hot: stored.hot, stored: true };
@@ -571,7 +746,57 @@ export function simulate(state, today, now, days = CONFIG.horizonDays) {
     }
     if (gameDays.length) s.options.splice(s.options[0]?.kind === 'shrink' ? 1 : 0, 0, { kind: 'nogame', days: gameDays, gain });
   }
-  return { today, now, plans, items, horizonEnd, shortages };
+  // Отставание, которое не догоняется к сроку при нынешнем режиме.
+  const catchUpShort = [];
+  for (const subj of state.subjects) {
+    const left = items.filter((i) => i.catchUp && i.subject === subj.id && i.until <= horizonEnd).reduce((a, i) => a + i.remaining, 0);
+    if (left >= 15) catchUpShort.push({ subject: subj.id, short: left, until: items.find((i) => i.catchUp && i.subject === subj.id).until });
+  }
+  return { today, now, plans, items, horizonEnd, shortages, catchUpShort };
+}
+
+/** Сколько минут «догнать» по каждому предмету уже стоит в плане (без сделанного). */
+export function plannedCatchUp(sim, state) {
+  const res = {};
+  for (const [key, plan] of Object.entries(sim.plans)) {
+    const done = state.done?.[key] || {};
+    for (const b of plan.blocks) {
+      if (b.type !== 'study' || !b.catchUp || done[b.id]?.status) continue;
+      if (key === sim.today && b.end <= sim.now) continue;
+      res[b.subject] = (res[b.subject] || 0) + (b.min || 0);
+    }
+  }
+  return res;
+}
+
+/* ---------- Отметки «готово» ---------- */
+
+/** «Готово»: минуты идут в прогресс, темы блока «догнать» — пройдены («не начал» → «учу»). */
+export function recordDone(state, key, b, at = Date.now()) {
+  const day = (state.done[key] ||= {});
+  if (day[b.id]?.status === 'done') return false;
+  const pk = b.progressKey || b.itemKey || null; // у «догнать» прогресс общий на предмет, а не на неделю
+  const rec = { status: 'done', min: b.min || 0, itemKey: pk, type: b.type, at };
+  if (pk && b.min) state.progress[pk] = (state.progress[pk] || 0) + b.min;
+  if (b.catchUp && b.topicIds?.length) {
+    const fresh = state.topics.filter((t) => b.topicIds.includes(t.id) && t.status === 'new');
+    for (const t of fresh) t.status = 'learning';
+    Object.assign(rec, { topics: b.topicIds, wasNew: fresh.map((t) => t.id) });
+  }
+  day[b.id] = rec;
+  return true;
+}
+
+/** Снять отметку: вернуть минуты и статусы тем. Возвращает снятую запись. */
+export function undoRecord(state, key, id) {
+  const rec = state.done[key]?.[id];
+  if (!rec) return null;
+  if (rec.status === 'done' && rec.itemKey && rec.min) {
+    state.progress[rec.itemKey] = Math.max(0, (state.progress[rec.itemKey] || 0) - rec.min);
+  }
+  for (const t of state.topics) if (rec.wasNew?.includes(t.id) && t.status === 'learning') t.status = 'new';
+  delete state.done[key][id];
+  return rec;
 }
 
 /** День в прошлом: каркас + сохранённый план (если был). */
@@ -585,7 +810,7 @@ export function pastDay(state, key) {
 function findShortages(state, items, today, horizonEnd) {
   const by = new Map();
   for (const it of items) {
-    if (it.maint || it.remaining <= 0 || it.deadline > horizonEnd) continue;
+    if (it.maint || it.catchUp || it.remaining <= 0 || it.deadline > horizonEnd) continue;
     const s = by.get(it.eventId) || { eventId: it.eventId, short: 0, light: 0, heavy: 0, deadline: it.deadline };
     s.short += it.remaining;
     s[it.kind] += it.remaining;
@@ -621,7 +846,8 @@ export function shortageOptions(state, s, today) {
   }
   if (days.length) opts.push({ kind: 'morning', days, gain: days.length * CONFIG.morningStudyMin });
 
-  if (!state.settings.pauseMaintenance && state.subjects.some(isWeak)) opts.push({ kind: 'pause' });
+  const maint = state.settings.pauseMaintenance ? [] : maintSubjects(state);
+  if (maint.length) opts.push({ kind: 'pause', subjects: maint.map((x) => x.short) });
   return opts;
 }
 

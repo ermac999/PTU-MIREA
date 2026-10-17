@@ -5,17 +5,17 @@
 
 import { CONFIG } from '../config.js';
 import { commit, store } from '../store.js';
-import { subjectOf } from '../planner.js';
+import { catchUpDone, catchUpTotal, catchUpWindow, subjectOf } from '../planner.js';
 import {
   STATUS, STATUS_ORDER, allCards, allTasks, buildQueue, cardQueue, checkAnswer, deckList, gradeCard,
   recordAnswer, requeue, tasksForScope, topicStats, weakCards,
 } from '../practice.js';
 import { parseCards, parseTasks } from '../parse.js';
-import { esc, plural, uid } from '../util.js';
+import { esc, fmtDur, humanDate, plural, uid } from '../util.js';
 import { closeSheet, confirmSheet, copyText, icon, openSheet, toast } from '../ui.js';
 import { go } from '../nav.js';
 import { bank } from '../bank.js';
-import { levelDots, subjShort } from './shared.js';
+import { levelDots, subjShort, today } from './shared.js';
 
 const tasksAll = () => allTasks(bank.data, store.state);
 const cardsAll = () => allCards(bank.data, store.state);
@@ -24,10 +24,31 @@ const statusChip = (s) => `<span class="chip ${s === 'understood' || s === 'revi
 
 /* ---------- Список тем ---------- */
 
+const openSubjects = {}; // какие предметы раскрыты (запоминаем, пока приложение открыто)
+
+/** Запомнить, раскрыт ли предмет (вызывается из app.js на событие toggle). */
+export function rememberToggle(el) {
+  if (el?.dataset?.subj) openSubjects[el.dataset.subj] = el.open;
+}
+
+function catchUpLine(st, s) {
+  const total = catchUpTotal(st, s);
+  if (!total) return '';
+  const done = Math.min(total, catchUpDone(st, s));
+  const pct = Math.round((done / total) * 100);
+  const until = catchUpWindow(s, today()).until;
+  return `<div class="stack" style="gap:4px">
+    <span class="small">${done >= total ? 'Отставание догнано.' : `Догоняю: осталось ${fmtDur(total - done)} · до ${esc(humanDate(until))}`}</span>
+    <div class="progress ${pct >= 100 ? 'ok' : ''}"><i style="width:${pct}%"></i></div>
+  </div>`;
+}
+
 export function renderTopics() {
   const st = store.state;
   const tasks = tasksAll();
-  const subjects = [...st.subjects].sort((a, b) => (Number(a.level) || 3) - (Number(b.level) || 3));
+  // сначала те, кого догоняем, потом слабые, потом остальные
+  const score = (s) => (catchUpTotal(st, s) > catchUpDone(st, s) ? 0 : 1) * 10 + (Number(s.level) || 3);
+  const subjects = st.subjects.filter((s) => !s.noStudy).sort((a, b) => score(a) - score(b));
   return `
     <header class="head">
       <span class="eyebrow">Темы и отработка</span>
@@ -42,17 +63,22 @@ export function renderTopics() {
     ${subjects.map((s) => {
       const ts = st.topics.filter((t) => t.subject === s.id);
       const closed = ts.filter((t) => t.status === 'understood' || t.status === 'reviewed').length;
-      return `<section>
-        <div class="sec-row"><h2 class="sec">${esc(s.short)}</h2><span class="row" style="gap:8px">${levelDots(s.level)}${Number(s.level) <= CONFIG.weakLevelMax ? '<span class="chip warn">слабый</span>' : ''}</span></div>
+      const behind = catchUpTotal(st, s) > catchUpDone(st, s);
+      const open = openSubjects[s.id] ?? (behind || Number(s.level) <= CONFIG.weakLevelMax);
+      return `<details class="subj" data-subj="${esc(s.id)}" ${open ? 'open' : ''}>
+        <summary class="sec-row"><h2 class="sec">${esc(s.short)}</h2><span class="row" style="gap:8px">${levelDots(s.level)}${behind ? '<span class="chip danger">догоняю</span>' : Number(s.level) <= CONFIG.weakLevelMax ? '<span class="chip warn">слабый</span>' : ''}${icon('chev', 'chev s subj-chev')}</span></summary>
+        <div class="stack">
+        ${catchUpLine(st, s)}
         ${ts.length ? `<p class="small muted" style="margin:0">Закрыто ${closed} из ${ts.length}</p>
         <ul class="list">${ts.map((t) => {
           const n = tasks.filter((x) => x.topic === t.id).length;
           return `<li><button class="li" type="button" data-act="go" data-to="topic/${esc(t.id)}">
-            <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${n ? `${n} ${plural(n, 'задание', 'задания', 'заданий')}` : 'заданий пока нет'}${t.example ? ' · примерная тема' : ''}</span></span>
+            <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${t.num ? `доклад №${t.num} · ` : ''}${n ? `${n} ${plural(n, 'задание', 'задания', 'заданий')}` : 'заданий пока нет'}${t.example ? ' · примерная тема' : ''}</span></span>
             ${statusChip(t.status)}${icon('chev', 'chev s')}</button></li>`;
         }).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}
         <button class="btn quiet small" type="button" data-act="topic-add" data-subject="${esc(s.id)}">${icon('plus', 's')}Тема</button>
-      </section>`;
+        </div>
+      </details>`;
     }).join('')}`;
 }
 
@@ -69,7 +95,7 @@ export function renderTopic([id]) {
   return `
     <header class="head">
       <button class="back" type="button" data-act="go" data-to="topics">${icon('back', 's')}Темы</button>
-      <span class="eyebrow">${esc(subjectOf(st, topic.subject)?.name || '')}</span>
+      <span class="eyebrow">${esc(subjectOf(st, topic.subject)?.name || '')}${topic.num ? ` · доклад №${topic.num}` : ''}</span>
       <h1 class="display m">${esc(topic.name)}</h1>
       ${topic.example ? '<span class="small muted">Примерная тема — переименуй под свою программу или удали.</span>' : ''}
     </header>

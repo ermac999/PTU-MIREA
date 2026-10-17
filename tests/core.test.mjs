@@ -6,7 +6,9 @@ import { readFileSync } from 'node:fs';
 import { CONFIG } from '../js/config.js';
 import { addDays, fmtDur, fmtTime, mondayOf, plural, relDays, toMin, weekdayOf } from '../js/util.js';
 import { baseTimes, classesOn, dayInfo } from '../js/schedule.js';
-import { buildTodayPlan, netFor, simulate, wallFor, eventNeedMin, streakInfo } from '../js/planner.js';
+import {
+  buildTodayPlan, catchUpTotal, coveredTopics, eventNeedMin, netFor, plannedCatchUp, recordDone, simulate, streakInfo, undoRecord, wallFor,
+} from '../js/planner.js';
 import { buildQueue, checkAnswer, gradeCard, nextTopicStatus, normalize, parseNumber, requeue } from '../js/practice.js';
 import { parseCards, parseDeadlines, parseTasks } from '../js/parse.js';
 import { buildIcs, fold } from '../js/ics.js';
@@ -124,7 +126,90 @@ test('в электричке — только лёгкие задачи, дом
   }
   const sat = sim.plans[TODAY].blocks.filter((b) => b.type === 'study' && b.place === 'home');
   assert.equal(sat[0].kind, 'heavy');
-  assert.equal(sat[0].eventId, 'ev-linal-kr', 'суббота — сначала КР по линалу в понедельник');
+  assert.equal(sat[0].eventId, 'ev-phys-lab1', 'суббота — сначала отчёт к лабе по физике во вторник');
+});
+
+const minutesFor = (plan, pred) => plan.blocks.filter((b) => b.type === 'study' && pred(b)).reduce((a, b) => a + b.min, 0);
+
+test('КР по линалу: готовимся в воскресенье, раньше — нет', () => {
+  const st = defaultState();
+  const sim = simulate(st, TODAY, 7 * 60, 7);
+  const linal = (k) => minutesFor(sim.plans[k], (b) => b.eventId === 'ev-linal-kr');
+  assert.equal(linal('2026-10-17'), 0, 'суббота: «готовиться не раньше 18.10»');
+  assert.ok(linal('2026-10-18') >= 120, `воскресенье: на линал ${linal('2026-10-18')} мин`);
+  assert.ok(sim.plans['2026-10-18'].blocks.every((b) => b.type !== 'study' || b.place === 'home'), 'воскресенье — учёба дома');
+  assert.ok(!sim.shortages.some((s) => s.eventId === 'ev-linal-kr'), 'на линал времени хватает');
+});
+
+test('отставание: физика и информатика — больше всех, история — с нуля, всё влезает до срока', () => {
+  const st = defaultState();
+  const total = Object.fromEntries(st.subjects.map((s) => [s.id, catchUpTotal(st, s)]));
+  assert.equal(total.phys, 265);
+  assert.equal(total.inf, 265);
+  assert.equal(total.hist, 750, 'история — ~12,5 ч');
+  assert.equal(total.pe, 0, 'физкультура — только посещаемость');
+  for (const id of ['linal', 'matan', 'matlog', 'de', 'intro']) assert.ok(total[id] > 0 && total[id] <= 60, `${id}: ${total[id]}`);
+
+  const sim = simulate(st, TODAY, 7 * 60, 21);
+  const planned = plannedCatchUp(sim, st);
+  for (const id of ['phys', 'inf', 'linal', 'matan', 'matlog', 'de', 'intro']) {
+    assert.equal(planned[id], total[id], `${id}: в плане ${planned[id]} из ${total[id]}`);
+  }
+  assert.deepEqual(sim.catchUpShort, []);
+  assert.ok(sim.shortages.every((s) => s.eventId), 'догоняние не выдаётся за нехватку по событию');
+  assert.ok(!sim.items.some((i) => i.maint && total[i.subject] > 0), 'кого догоняем — без двойной «поддержки»');
+  assert.ok(!sim.shortages.some((s) => s.options.some((o) => o.kind === 'pause')), 'все слабые на догонянии — «пауза поддержки» ничего не даст и не предлагается');
+  const st2 = defaultState();
+  st2.progress['c:phys:heavy'] = total.phys; // физику догнал — она снова на поддержке
+  const pause = simulate(st2, TODAY, 7 * 60, 21).shortages.flatMap((s) => s.options).find((o) => o.kind === 'pause');
+  assert.deepEqual(pause?.subjects, ['Физика']);
+  // догоняем после дедлайнов: до КР 22.10 физика и информатика не отнимают вечер дома
+  for (const k of ['2026-10-19', '2026-10-20', '2026-10-21']) {
+    assert.equal(minutesFor(sim.plans[k], (b) => b.catchUp && b.place === 'home'), 0, `${k}: дома — подготовка к КР`);
+  }
+});
+
+test('история: темы докладов по очереди, без повторов, все 30 — до срока', () => {
+  const st = defaultState();
+  const sim = simulate(st, TODAY, 7 * 60, 42);
+  const blocks = Object.keys(sim.plans).sort().flatMap((k) => sim.plans[k].blocks.filter((b) => b.catchUp && b.subject === 'hist'));
+  const ids = blocks.flatMap((b) => b.topicIds);
+  assert.equal(new Set(ids).size, ids.length, 'тема не повторяется');
+  assert.equal(ids.length, 30, 'все темы — за 6 недель');
+  assert.deepEqual(ids.slice(0, 3), ['hist-t1', 'hist-t2', 'hist-t3']);
+  assert.ok(blocks.every((b) => b.topicIds.length <= CONFIG.catchUp.maxTopicsPerBlock));
+  assert.ok(blocks.every((b) => b.title.startsWith('История: «')));
+
+  // как в жизни: план строится каждый день заново, блоки отмечены «готово» — очередь идёт дальше
+  const st2 = defaultState();
+  const seen = [];
+  for (let d = 0, key = TODAY; d < 14; d++, key = addDays(key, 1)) {
+    st2.plans[key] = buildTodayPlan(st2, key, 5 * 60);
+    for (const b of st2.plans[key].blocks.filter((x) => x.catchUp && x.subject === 'hist')) {
+      seen.push(...b.topicIds);
+      recordDone(st2, key, b, 0);
+    }
+  }
+  assert.ok(seen.length >= 4, `за 2 недели тем: ${seen.length}`);
+  assert.equal(new Set(seen).size, seen.length, `темы не повторяются изо дня в день: ${seen.join(' ')}`);
+  assert.equal(coveredTopics(st2, 'hist').size, seen.length);
+  assert.ok(seen.every((id) => st2.topics.find((t) => t.id === id).status === 'learning'), 'пройденные темы — «учу»');
+});
+
+test('«готово» и «отменить»: минуты и статусы тем возвращаются как были', () => {
+  const st = defaultState();
+  const b = { id: 'x', type: 'study', min: 40, itemKey: 'c:hist:light#2026-10-26', progressKey: 'c:hist:light', catchUp: true, topicIds: ['hist-t1', 'hist-t2'] };
+  st.topics.find((t) => t.id === 'hist-t2').status = 'understood';
+  assert.ok(recordDone(st, TODAY, b, 0));
+  assert.ok(!recordDone(st, TODAY, b, 0), 'второй раз не засчитывается');
+  assert.equal(st.progress['c:hist:light'], 40, 'прогресс общий на предмет, не на неделю');
+  assert.equal(st.topics.find((t) => t.id === 'hist-t1').status, 'learning');
+  assert.equal(st.topics.find((t) => t.id === 'hist-t2').status, 'understood', 'закрытая тема не откатывается в «учу»');
+  undoRecord(st, TODAY, 'x');
+  assert.equal(st.progress['c:hist:light'], 0);
+  assert.equal(st.topics.find((t) => t.id === 'hist-t1').status, 'new');
+  assert.equal(st.topics.find((t) => t.id === 'hist-t2').status, 'understood');
+  assert.equal(coveredTopics(st, 'hist').size, 0);
 });
 
 test('нехватка времени видна, варианты сокращения — без урезания сна', () => {
@@ -346,4 +431,53 @@ test('копия: импорт проверяет файл и дополняет
   assert.equal(m.settings.theme, 'dark');
   assert.equal(m.settings.minSleepHours, 7);
   assert.deepEqual(m.done, {});
+});
+
+/** Данные с телефона в формате версии 1 (до отставания и тем докладов). */
+function stateV1() {
+  const v1 = defaultState();
+  v1.version = 1;
+  for (const s of v1.subjects) {
+    for (const k of ['behindDays', 'behindSince', 'catchUpWeeks', 'catchUpMin', 'catchUpLight', 'catchUpByTopic', 'noStudy']) delete s[k];
+  }
+  v1.subjects.find((s) => s.id === 'hist').level = 2;
+  v1.topics = v1.topics.filter((t) => t.subject !== 'hist').concat(['Древняя Русь', 'Московское царство']
+    .map((name, i) => ({ id: `hist-${i + 1}`, subject: 'hist', name, status: 'new', note: '', example: true })));
+  const kr = v1.events.find((e) => e.id === 'ev-linal-kr');
+  delete kr.prepFrom;
+  kr.confirmed = false;
+  kr.note = 'Точно не известно, будет ли контрольная.';
+  v1.dayOverrides = { '2026-10-20': { sleep: '22:00' } };
+  delete v1.settings.updateSeen;
+  v1.done['2026-10-16'] = { a: { status: 'done', type: 'study', min: 30, itemKey: 'ev-de-pres:heavy', at: 1 } };
+  v1.progress['ev-de-pres:heavy'] = 30;
+  return JSON.parse(JSON.stringify(v1));
+}
+
+test('обновление с версии 1: отставание, темы докладов, воскресенье — отметки и правки целы', () => {
+  const m = migrate(stateV1());
+  assert.equal(m.version, CONFIG.dataVersion);
+  const hist = m.subjects.find((s) => s.id === 'hist');
+  assert.equal(hist.level, 1);
+  assert.equal(catchUpTotal(m, hist), 750);
+  assert.equal(catchUpTotal(m, m.subjects.find((s) => s.id === 'phys')), 265);
+  const ht = m.topics.filter((t) => t.subject === 'hist');
+  assert.equal(ht.length, 30);
+  assert.ok(!ht.some((t) => t.id === 'hist-1'), 'нетронутые примерные темы истории заменены темами докладов');
+  const kr = m.events.find((e) => e.id === 'ev-linal-kr');
+  assert.deepEqual([kr.prepFrom, kr.confirmed, kr.note], ['2026-10-18', true, 'Готовимся в воскресенье.']);
+  assert.ok(m.dayOverrides['2026-10-18'].study, 'воскресенье 18.10 — учебный день');
+  assert.equal(m.dayOverrides['2026-10-20'].sleep, '22:00', 'свои правки дней остаются');
+  assert.equal(m.progress['ev-de-pres:heavy'], 30, 'прогресс не теряется');
+  assert.equal(m.done['2026-10-16'].a.status, 'done', 'отметки не теряются');
+  assert.equal(m.settings.updateSeen, 1, 'покажется заметка «что нового»');
+  assert.equal(migrate(m).settings.updateSeen, 1, 'повторный запуск ничего не меняет');
+
+  // свои темы истории не трогаем — темы докладов добавляются рядом
+  const v1 = stateV1();
+  v1.topics.find((t) => t.id === 'hist-1').note = 'мой конспект';
+  const m2 = parseBackup(JSON.stringify({ app: 'ramki', version: 1, state: v1 }));
+  assert.ok(m2.topics.some((t) => t.id === 'hist-1' && t.note === 'мой конспект'));
+  assert.equal(m2.topics.filter((t) => t.subject === 'hist').length, 32);
+  assert.ok(simulate(m2, TODAY, 7 * 60, 7).plans['2026-10-18'].blocks.some((b) => b.eventId === 'ev-linal-kr'));
 });

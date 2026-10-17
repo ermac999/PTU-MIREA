@@ -302,6 +302,14 @@ input[type="time"].inp, input[type="date"].inp { -webkit-appearance: none; appea
 .sheet-head { position: sticky; top: 0; background: var(--paper); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px 10px; border-bottom: 1px solid var(--line-soft); z-index: 1; }
 .sheet-head h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.1; }
 
+/* ---------- Раскрывающиеся предметы на «Темах» ---------- */
+details.subj { display: grid; gap: 14px; min-width: 0; }
+details.subj > summary { cursor: pointer; list-style: none; }
+details.subj > summary::-webkit-details-marker { display: none; }
+details.subj > .stack { padding-top: 12px; }
+.subj-chev { transition: transform .15s; transform: rotate(90deg); }
+details.subj:not([open]) .subj-chev { transform: none; }
+
 /* ---------- Календарь ---------- */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .cal-nav .m { font-family: var(--font-display); font-size: 24px; text-transform: capitalize; }

@@ -3,6 +3,7 @@
    и «Править день» (времена этого дня за пару тапов).
    ===================================================================== */
 
+import { CONFIG } from '../config.js';
 import { store, commit } from '../store.js';
 import { baseTimes } from '../schedule.js';
 import { buildTodayPlan } from '../planner.js';
@@ -40,6 +41,11 @@ export function renderDay([keyParam]) {
     </div>
 
     ${info.notes.map((n) => `<div class="note ${n.kind === 'sleepShort' ? 'warn' : ''}">${esc(n.text)}</div>`).join('')}
+    ${(() => {
+      const hotEv = info.ov.hot ? store.state.events.find((e) => e.id === info.ov.hot) : null;
+      if (!hotEv && !info.ov.study) return '';
+      return `<div class="note">${info.ov.study ? `Учебный выходной: до ${fmtDur(Number(info.ov.studyMin) || CONFIG.sundayExtraMin)} учёбы после обеда, остальное — отдых. ` : ''}${hotEv ? `В приоритете — ${esc(eventTitle(hotEv))}.` : ''}</div>`;
+    })()}
     ${shortages.length ? `<div class="note danger">До ${esc(evs.find((e) => e.id === shortages[0].eventId) ? eventTitle(evs.find((e) => e.id === shortages[0].eventId)) : 'события')} не хватает ~${fmtDur(shortages[0].short)} подготовки. <button class="btn quiet small" type="button" data-act="go" data-to="burning">Что можно сократить →</button></div>` : ''}
     ${isPast && !plan.blocks.length ? '<p class="lead small">Плана на этот день не сохранилось — показываю только режим.</p>' : ''}
     ${!isPast && !isToday ? '<p class="lead small">Черновик: он пересобирается сам, когда меняется прогресс. Отмечать блоки можно в сам день.</p>' : ''}
@@ -122,6 +128,7 @@ function openEdit(key) {
         <div class="field"><label for="de-${f}">${label}</label><input class="inp" type="time" id="de-${f}" value="${val(f)}"></div>`).join('')}
       </div>
       ${switchBtn('noClasses', 'Пар нет (выходной, отмена)', !!ov.noClasses)}
+      ${!cur.classes.length || ov.study ? switchBtn('study', 'Учиться в этот выходной (до 2–3 ч после обеда)', !!ov.study) : ''}
       ${cur.classes.length || ov.morningStudy ? switchBtn('morningStudy', 'Учиться в утренней дороге', !!ov.morningStudy) : ''}
       ${switchBtn('noGame', 'Без игры в этот день', !!ov.noGame)}
       <div class="row">
@@ -153,7 +160,7 @@ function openEdit(key) {
           else delete o[f];
         }
         delete o.homeShift; // точное время «дома в» важнее сдвига
-        for (const sw of ['noClasses', 'morningStudy', 'noGame']) {
+        for (const sw of ['noClasses', 'morningStudy', 'noGame', 'study']) {
           if (switchValue(body, sw)) o[sw] = true;
           else delete o[sw];
         }
@@ -166,7 +173,7 @@ function openEdit(key) {
       body.querySelector('#de-reset').addEventListener('click', () => {
         finish((s) => {
           const keep = {};
-          for (const k of ['energy', 'hot']) if (ov[k] != null) keep[k] = ov[k];
+          for (const k of ['energy', 'hot', 'study', 'studyMin']) if (ov[k] != null) keep[k] = ov[k];
           s.dayOverrides[key] = keep;
         }, 'Вернул как в шаблоне.');
       });

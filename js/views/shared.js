@@ -5,7 +5,9 @@
 
 import { EVENT_TYPES } from '../config.js';
 import { commit, store } from '../store.js';
-import { buildItems, buildTodayPlan, pastDay, planDay, simulate, streakInfo, subjectOf } from '../planner.js';
+import {
+  buildItems, buildTodayPlan, pastDay, planDay, recordDone, simulate, streakInfo, subjectOf, undoRecord,
+} from '../planner.js';
 import { addDays, clamp, dateOf, esc, fmtDur, fmtTime, minutesNow, relDays, todayKey, WD_SHORT } from '../util.js';
 import { icon, toast } from '../ui.js';
 
@@ -58,11 +60,7 @@ export const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export function markDone(key, b) {
   commit((st) => {
-    const day = (st.done[key] ||= {});
-    if (day[b.id]?.status === 'done') return;
-    if (day[b.id]?.status === 'skipped') delete day[b.id];
-    day[b.id] = { status: 'done', min: b.min || 0, itemKey: b.itemKey || null, type: b.type, at: Date.now() };
-    if (b.itemKey && b.min) st.progress[b.itemKey] = (st.progress[b.itemKey] || 0) + b.min;
+    if (!recordDone(st, key, b)) return;
     const s = streakInfo(st, today());
     if (s.streak > (st.bestStreak || 0)) st.bestStreak = s.streak;
   });
@@ -71,7 +69,7 @@ export function markDone(key, b) {
 
 export function markSkipped(key, b) {
   commit((st) => {
-    (st.done[key] ||= {})[b.id] = { status: 'skipped', min: b.min || 0, itemKey: b.itemKey || null, type: b.type, at: Date.now() };
+    (st.done[key] ||= {})[b.id] = { status: 'skipped', min: b.min || 0, itemKey: b.progressKey || b.itemKey || null, type: b.type, at: Date.now() };
     if (key === today()) {
       // блок идёт прямо сейчас — обрезаем его до текущей минуты, чтобы остаток окна достался новому плану
       const now = nowMin();
@@ -85,13 +83,8 @@ export function markSkipped(key, b) {
 
 export function undoMark(key, b) {
   commit((st) => {
-    const rec = st.done[key]?.[b.id];
-    if (!rec) return;
-    if (rec.status === 'done' && rec.itemKey && rec.min) {
-      st.progress[rec.itemKey] = Math.max(0, (st.progress[rec.itemKey] || 0) - rec.min);
-    }
-    delete st.done[key][b.id];
-    if (rec.status === 'skipped' && key === today()) st.plans[key] = buildTodayPlan(st, key, nowMin());
+    const rec = undoRecord(st, key, b.id);
+    if (rec?.status === 'skipped' && key === today()) st.plans[key] = buildTodayPlan(st, key, nowMin());
   });
 }
 
@@ -200,7 +193,7 @@ function blockRow(key, b, ctx) {
     for (const e of evs) if (!(e.type === 'lab' && b.kind === 'lab')) chips.push(`<span class="chip danger">${esc(EVENT_TYPES[e.type]?.short ?? '')}</span>`);
     if (subjectOf(st, b.subject)?.marked) chips.push('<span class="chip">отмечают</span>');
   }
-  if (b.type === 'study') label = `Учёба · ${PLACE_LABEL[b.place] || ''}`;
+  if (b.type === 'study') label = `${b.catchUp ? 'Догоняю' : 'Учёба'} · ${PLACE_LABEL[b.place] || ''}`;
   if (b.type === 'sleep') title = b.start === 0 ? `Сон до ${fmtTime(b.end)}` : `Отбой в ${fmtTime(b.start)}`;
   if (b.type === 'game' && ctx.isToday && !status) {
     const pending = ctx.plan.blocks.filter((s) => s.type === 'study' && s.start < b.start && !statusOf(key, s.id));
