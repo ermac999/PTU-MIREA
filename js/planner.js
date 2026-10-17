@@ -800,6 +800,9 @@ export function plannedCatchUp(sim, state) {
 
 /* ---------- Отметки «готово» ---------- */
 
+/** Подготовка к КР, зачёту или экзамену по предмету, который догоняем, — это и есть догоняние: минуты засчитываются и туда. */
+const CREDIT_TYPES = new Set(['kr', 'zachet', 'exam']);
+
 /** «Готово»: минуты идут в прогресс, темы блока «догнать» — пройдены («не начал» → «учу»). */
 export function recordDone(state, key, b, at = Date.now()) {
   const day = (state.done[key] ||= {});
@@ -811,6 +814,16 @@ export function recordDone(state, key, b, at = Date.now()) {
     const fresh = state.topics.filter((t) => b.topicIds.includes(t.id) && t.status === 'new');
     for (const t of fresh) t.status = 'learning';
     Object.assign(rec, { topics: b.topicIds, wasNew: fresh.map((t) => t.id) });
+  }
+  const ev = b.eventId ? eventById(state, b.eventId) : null;
+  const subj = ev && CREDIT_TYPES.has(ev.type) ? subjectOf(state, ev.subject) : null;
+  if (subj && b.min) {
+    const credit = Math.min(b.min, Math.max(0, catchUpTotal(state, subj) - catchUpDone(state, subj)));
+    if (credit > 0) {
+      const ck = `c:${subj.id}:${b.kind === 'light' ? 'light' : 'heavy'}`;
+      state.progress[ck] = (state.progress[ck] || 0) + credit;
+      rec.credit = { key: ck, min: credit };
+    }
   }
   day[b.id] = rec;
   return true;
@@ -824,6 +837,7 @@ export function undoRecord(state, key, id) {
     state.progress[rec.itemKey] = Math.max(0, (state.progress[rec.itemKey] || 0) - rec.min);
   }
   for (const t of state.topics) if (rec.wasNew?.includes(t.id) && t.status === 'learning') t.status = 'new';
+  if (rec.credit) state.progress[rec.credit.key] = Math.max(0, (state.progress[rec.credit.key] || 0) - rec.credit.min);
   delete state.done[key][id];
   return rec;
 }
@@ -861,7 +875,7 @@ export function shortageOptions(state, s, today) {
 
   if (!state.settings.sundayExtra) {
     let sundays = 0;
-    for (let k = today; k < ev.date; k = addDays(k, 1)) if (baseTimes(state, k).wd === 0) sundays += 1;
+    for (let k = today; k < ev.date; k = addDays(k, 1)) if (baseTimes(state, k).wd === 0 && !state.dayOverrides?.[k]?.study) sundays += 1;
     if (sundays) opts.push({ kind: 'sunday', gain: sundays * CONFIG.sundayExtraMin });
   }
 

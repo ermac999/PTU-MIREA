@@ -214,6 +214,44 @@ test('отчёт по лабе можно делать только после �
   assert.equal(prepStartOf(st, own), '2026-11-25');
 });
 
+test('КР по информатике в пятницу: событие в плане, нехватка видна, «воскресенье» не предлагается зря', () => {
+  const st = defaultState();
+  const kr = st.events.find((e) => e.id === 'ev-inf-kr');
+  assert.deepEqual([kr.subject, kr.type, kr.date, kr.time, kr.confirmed], ['inf', 'kr', '2026-10-23', '16:20', true]);
+  const sim = simulate(st, TODAY, 20 * 60, 21);
+  const planned = Object.values(sim.plans).flatMap((p) => p.blocks).filter((b) => b.eventId === 'ev-inf-kr');
+  assert.ok(planned.length && planned.every((b) => b.min > 0));
+  assert.ok(Object.entries(sim.plans).every(([k, p]) => !p.blocks.some((b) => b.eventId === 'ev-inf-kr') || k < '2026-10-23'), 'готовимся до пятницы, не в день КР');
+  const short = sim.shortages.find((s) => s.eventId === 'ev-inf-kr');
+  assert.ok(short && short.short > 0, 'недели не хватает на всё — это честно показано');
+  assert.ok(short.options.some((o) => o.kind === 'shrink'), 'можно сократить до минимума');
+  // воскресенье 18.10 уже учебное — «взять воскресенье» ничего бы не дало и не предлагается
+  const matan = sim.shortages.find((s) => s.eventId === 'ev-matan-kr');
+  assert.ok(matan && !matan.options.some((o) => o.kind === 'sunday'));
+});
+
+test('подготовка к КР по предмету, который догоняем, засчитывается и в догоняние (и отменяется вместе с отметкой)', () => {
+  const st = defaultState();
+  const inf = st.subjects.find((s) => s.id === 'inf');
+  const total = catchUpTotal(st, inf);
+  const blk = { id: 'k1', type: 'study', min: 60, kind: 'light', eventId: 'ev-inf-kr', itemKey: 'ev-inf-kr:light', subject: 'inf' };
+  assert.ok(recordDone(st, TODAY, blk, 0));
+  assert.equal(st.progress['ev-inf-kr:light'], 60, 'в подготовку к КР');
+  assert.equal(st.progress['c:inf:light'], 60, 'и в догоняние');
+  assert.equal(simulate(st, TODAY, 7 * 60, 21).items.filter((i) => i.catchUp && i.subject === 'inf').reduce((a, i) => a + i.total, 0), total - 60);
+  undoRecord(st, TODAY, 'k1');
+  assert.equal(st.progress['ev-inf-kr:light'], 0);
+  assert.equal(st.progress['c:inf:light'], 0);
+  // лабы и ДЗ в догоняние не идут; предмет без долга — тоже
+  const lab = { id: 'l1', type: 'study', min: 50, kind: 'heavy', eventId: 'ev-phys-lab1', itemKey: 'ev-phys-lab1:heavy', subject: 'phys' };
+  recordDone(st, TODAY, lab, 0);
+  assert.equal(st.progress['c:phys:heavy'] || 0, 0);
+  // не больше, чем осталось догнать
+  st.progress['c:inf:heavy'] = total - 10;
+  recordDone(st, TODAY, { ...blk, id: 'k2' }, 0);
+  assert.equal(st.progress['c:inf:light'], 10);
+});
+
 test('пересборка дня во время блока дома: следующий блок — после перерыва в 10 минут', () => {
   const st = defaultState();
   st.plans[TODAY] = buildTodayPlan(st, TODAY, 7 * 60);
@@ -252,7 +290,7 @@ test('история: темы докладов по очереди, без по
       recordDone(st2, key, b, 0);
     }
   }
-  assert.ok(seen.length >= 4, `за 2 недели тем: ${seen.length}`);
+  assert.ok(seen.length >= 3, `за 2 недели тем: ${seen.length}`); // неделя КР плотная — история идёт после дедлайнов
   assert.equal(new Set(seen).size, seen.length, `темы не повторяются изо дня в день: ${seen.join(' ')}`);
   assert.equal(coveredTopics(st2, 'hist').size, seen.length);
   assert.ok(seen.every((id) => st2.topics.find((t) => t.id === id).status === 'learning'), 'пройденные темы — «учу»');
@@ -550,6 +588,21 @@ test('обновление до версии 5: заметки к лабам о�
   assert.equal(migrate(m).events.find((e) => e.id === 'ev-phys-lab1').note, note('ev-phys-lab1'), 'повторный запуск ничего не меняет');
   assert.equal(m.settings.updateSeen, v4.settings.updateSeen);
   assert.ok(m.settings.updateSeen < CONFIG.noteVersion || v4.settings.updateSeen >= CONFIG.noteVersion);
+});
+
+test('обновление до версии 6: КР по информатике добавляется один раз', () => {
+  const v5 = defaultState();
+  v5.version = 5;
+  v5.events = v5.events.filter((e) => e.id !== 'ev-inf-kr');
+  const m = migrate(JSON.parse(JSON.stringify(v5)));
+  assert.equal(m.events.filter((e) => e.id === 'ev-inf-kr').length, 1);
+  assert.equal(migrate(m).events.filter((e) => e.type === 'kr' && e.subject === 'inf').length, 1, 'повторный запуск не дублирует');
+  // уже добавил сам (другой id, та же дата и предмет) — не дублируем
+  const mine = JSON.parse(JSON.stringify(v5));
+  mine.events.push({ id: 'ev-mine', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-23', time: '18:00', confirmed: true, note: '' });
+  const m2 = migrate(mine);
+  assert.equal(m2.events.filter((e) => e.type === 'kr' && e.subject === 'inf').length, 1);
+  assert.equal(m2.events.find((e) => e.id === 'ev-mine').time, '18:00', 'свои правки остаются');
 });
 
 /** Данные с телефона в формате версии 1 (до отставания и тем докладов). */

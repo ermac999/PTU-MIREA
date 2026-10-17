@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 5,
-  noteVersion: 4,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 6,
+  noteVersion: 5,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -227,7 +227,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 4,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 5,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -290,6 +290,8 @@ export const DEFAULT_DATA = {
       format: 'на бумаге', phone: 'no', confirmed: true, note: '' },
     { id: 'ev-matan-kr', subject: 'matan', type: 'kr', title: 'Контрольная', date: '2026-10-22', time: '18:00', timeAssumed: true,
       format: 'на бумаге', phone: 'no', confirmed: true, note: '' },
+    { id: 'ev-inf-kr', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-23', time: '16:20', timeAssumed: true,
+      format: '', phone: '?', confirmed: true, note: 'Тему и формат — уточнить. Время — по первой паре; если КР на второй, поправь на 18:00.' },
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab3', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-12-15', time: '12:40',

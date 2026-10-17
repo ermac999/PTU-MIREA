@@ -67,6 +67,7 @@ export function migrate(raw) {
   if (from < 3) upgradeTo3(st);
   if (from < 4) upgradeTo4(st);
   if (from < 5) upgradeTo5(st);
+  if (from < 6) upgradeTo6(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -142,6 +143,13 @@ function upgradeTo5(st) {
     const ev = st.events.find((e) => e.id === fresh.id);
     if (ev && (ev.note || '') === (OLD_LAB_NOTES[ev.id] ?? '')) ev.note = fresh.note;
   }
+}
+
+/** Версия 6 (17.10): контрольная по информатике в пятницу 23.10. Если такое событие уже есть (добавил сам) — не дублируем. */
+function upgradeTo6(st) {
+  const fresh = DEFAULT_DATA.events.find((e) => e.id === 'ev-inf-kr');
+  const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
+  if (!has) st.events.push(clone(fresh));
 }
 
 export const store = {
