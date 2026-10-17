@@ -1,0 +1,11 @@
+{
+  "name": "ramki",
+  "private": true,
+  "type": "module",
+  "description": "Рамки — мобильный помощник для учёбы. Статический сайт для GitHub Pages.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "serve": "npx --yes http-server -p 8080 -c-1 .",
+    "build:preview": "node tools/build-preview.mjs"
+  }
+}

@@ -1,0 +1,203 @@
+/* =====================================================================
+   «Рамки» — точка входа: загрузка данных, маршруты, нижнее меню,
+   обработка нажатий, офлайн-режим (service worker).
+   ===================================================================== */
+
+import { CONFIG } from './config.js';
+import { commit, loadState, onChange, persistNow, store } from './store.js';
+import { loadBank } from './bank.js';
+import { go, initNav, route, setRenderer } from './nav.js';
+import { closeSheet, icon, sheetIsOpen } from './ui.js';
+import { streakInfo } from './planner.js';
+import { daysBetween, esc, minutesNow, plural } from './util.js';
+import { blockActionHandlers, ensureTodayPlan, today } from './views/shared.js';
+import { calendarActions, renderCalendar } from './views/calendar.js';
+import { eventActions } from './views/events.js';
+import { dayActions, renderDay } from './views/day.js';
+import { ensureTicker, paintTimer, renderBurning, renderToday, todayActions } from './views/today.js';
+import {
+  renderCards, renderDrill, renderImport, renderPractice, renderTopic, renderTopics, topicsActions, topicsInputs,
+} from './views/topics.js';
+import {
+  applyLook, mountSettings, renderAttendance, renderClasses, renderSettings, renderSubjects, settingsActions,
+} from './views/settings.js';
+
+const ROUTES = {
+  calendar: { tab: 'calendar', title: 'Календарь', render: renderCalendar },
+  day: { tab: 'calendar', title: 'День', render: renderDay, scrollToNow: true },
+  burning: { tab: 'calendar', title: 'Горит', render: renderBurning },
+  today: { tab: 'today', title: 'Сегодня', render: renderToday },
+  topics: { tab: 'topics', title: 'Темы', render: renderTopics },
+  topic: { tab: 'topics', title: 'Тема', render: renderTopic },
+  practice: { tab: 'topics', title: 'Отработка', render: renderPractice },
+  cards: { tab: 'topics', title: 'Карточки', render: renderCards },
+  drill: { tab: 'topics', title: 'Карточки', render: renderDrill },
+  import: { tab: 'topics', title: 'Добавить задания', render: renderImport },
+  settings: { tab: 'settings', title: 'Настройки', render: renderSettings, mount: mountSettings },
+  subjects: { tab: 'settings', title: 'Предметы', render: renderSubjects },
+  classes: { tab: 'settings', title: 'Пары', render: renderClasses },
+  attendance: { tab: 'settings', title: 'Посещаемость', render: renderAttendance },
+};
+
+const TABS = [
+  ['calendar', 'Календарь', 'calendar'],
+  ['today', 'Сегодня', 'today'],
+  ['topics', 'Темы', 'topics'],
+  ['settings', 'Настройки', 'settings'],
+];
+
+const actions = {
+  go: (el) => go(el.dataset.to),
+  'intro-dismiss': () => commit((st) => { st.settings.introSeen = true; }),
+  ...blockActionHandlers, ...calendarActions, ...eventActions, ...dayActions,
+  ...todayActions, ...topicsActions, ...settingsActions,
+};
+const inputs = { ...topicsInputs };
+
+/* ---------- Отрисовка ---------- */
+
+function renderStrip() {
+  const st = store.state;
+  const t = today();
+  const s = streakInfo(st, t);
+  const session = st.events.find((e) => e.type === 'session' && !e.done);
+  const left = session ? daysBetween(t, session.date) : null;
+  document.getElementById('strip').innerHTML = `<div class="strip-in">
+    <span>Серия <b>${s.streak}</b></span>
+    ${left != null && left >= 0 ? `<span>До сессии <b>${session.confirmed ? '' : '~'}${left}</b> ${plural(left, 'день', 'дня', 'дней')}</span>` : ''}
+    <span>Сон ≥ <b>${String(st.settings.minSleepHours).replace('.', ',')} ч</b></span>
+    <span id="strip-timer" hidden></span>
+  </div>`;
+}
+
+function renderNav(tab) {
+  document.getElementById('nav').innerHTML = `<div class="nav-in">${TABS.map(([id, label, ic]) => `
+    <a href="#${id}" data-act="go" data-to="${id}" ${tab === id ? 'aria-current="page"' : ''}>${icon(ic)}<span>${label}</span></a>`).join('')}</div>`;
+}
+
+function introNote() {
+  if (store.state.settings.introSeen) return '';
+  return `<div class="note"><b>Данные из опроса уже внутри:</b> режим недели, пары, предметы, дедлайны. Мои предположения — отбой в чт и пт, подъём в вс, «иностранный = немецкий», дата сессии — поправь в «Настройках», если не так. Задания и карточки с пометкой «пример» — для старта.
+    <button class="btn quiet small" type="button" data-act="intro-dismiss">Понятно</button></div>`;
+}
+
+let rendering = false;
+
+function render() {
+  if (rendering) return;
+  rendering = true;
+  const view = document.getElementById('view');
+  try {
+    ensureTodayPlan();
+    if (!ROUTES[route.name]) {
+      route.name = 'calendar';
+      route.params = [];
+    }
+    const def = ROUTES[route.name];
+    view.innerHTML = (route.name === 'calendar' || route.name === 'today' ? introNote() : '') + def.render(route.params || []);
+    renderStrip();
+    renderNav(def.tab);
+    document.title = `${def.title} · ${CONFIG.appName}`;
+    if (route.changed) {
+      route.changed = false;
+      window.scrollTo(0, 0);
+      def.mount?.(route.params);
+      if (def.scrollToNow) document.getElementById('tl-now')?.scrollIntoView({ block: 'center' });
+    }
+    paintTimer();
+  } catch (e) {
+    console.error(e);
+    view.innerHTML = `<div class="note danger">Экран не отрисовался: ${esc(e.message)}. Данные целы.
+      <button class="btn small" type="button" data-act="go" data-to="calendar">На главный</button></div>`;
+  } finally {
+    rendering = false;
+  }
+}
+
+// Не перерисовывать, пока человек печатает в поле на экране — дождаться, пока уберёт фокус.
+let pending = false;
+let raf = 0;
+const typing = () => {
+  const a = document.activeElement;
+  return !!a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !!a.closest('#view');
+};
+function scheduleRender() {
+  if (typing()) {
+    pending = true;
+    return;
+  }
+  if (raf) return;
+  raf = requestAnimationFrame(() => {
+    raf = 0;
+    render();
+  });
+}
+document.addEventListener('focusout', () => {
+  if (!pending) return;
+  pending = false;
+  setTimeout(scheduleRender, 0);
+});
+
+/* ---------- Нажатия ---------- */
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const fn = actions[el.dataset.act];
+  if (!fn) return;
+  if (el.tagName === 'A') e.preventDefault();
+  if (el.dataset.act === 'go' && sheetIsOpen()) closeSheet(true);
+  fn(el, e);
+});
+document.addEventListener('submit', (e) => {
+  const f = e.target.closest('[data-submit]');
+  if (!f) return;
+  e.preventDefault();
+  actions[f.dataset.submit]?.(f, e);
+});
+document.addEventListener('input', (e) => {
+  const el = e.target.closest('[data-input]');
+  if (el) inputs[el.dataset.input]?.(el, e);
+});
+
+/* ---------- Запуск ---------- */
+
+function registerServiceWorker() {
+  if (globalThis.__RAMKI_PREVIEW__ || !('serviceWorker' in navigator)) return;
+  const local = ['localhost', '127.0.0.1'].includes(location.hostname);
+  if (location.protocol !== 'https:' && !local) return;
+  navigator.serviceWorker.register('sw.js').catch(() => { /* без офлайна — тоже работает */ });
+}
+
+function start() {
+  loadState();
+  applyLook();
+  document.documentElement.classList.add('motion');
+  initNav('calendar');
+  setRenderer(render);
+  onChange(scheduleRender);
+  render();
+  loadBank().then(scheduleRender);
+  ensureTicker();
+  registerServiceWorker();
+
+  // Раз в 5 минут обновить «сейчас» на ленте; после полуночи — новый день.
+  let lastTick = `${today()}|${Math.floor(minutesNow() / 5)}`;
+  setInterval(() => {
+    const k = `${today()}|${Math.floor(minutesNow() / 5)}`;
+    if (k === lastTick || sheetIsOpen() || typing()) return;
+    lastTick = k;
+    if (['calendar', 'day', 'today', 'burning'].includes(route.name)) scheduleRender();
+  }, 30000);
+
+  window.addEventListener('pagehide', persistNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) persistNow();
+    else {
+      scheduleRender();
+      paintTimer();
+    }
+  });
+}
+
+start();
