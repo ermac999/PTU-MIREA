@@ -65,6 +65,7 @@ export function migrate(raw) {
   const from = Number(raw.version) || 1;
   if (from < 2) upgradeTo2(st);
   if (from < 3) upgradeTo3(st);
+  if (from < 4) upgradeTo4(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -118,6 +119,13 @@ function upgradeTo3(st) {
     ev.note = evNew.note;
   }
   if (st.settings.sessionStart === '2026-12-01' && st.settings.sessionApprox !== false) st.settings.sessionStart = d.settings.sessionStart;
+}
+
+/** Версия 4 (17.10): историю растянули с 6 до 8 недель — сессия в конце декабря. Если срок меняли сами — не трогаем. */
+function upgradeTo4(st) {
+  const hist = st.subjects.find((s) => s.id === 'hist');
+  const dh = DEFAULT_DATA.subjects.find((s) => s.id === 'hist');
+  if (hist?.catchUpByTopic && Number(hist.catchUpWeeks) === 6 && Number(hist.catchUpMin) === Number(dh.catchUpMin)) hist.catchUpWeeks = dh.catchUpWeeks;
 }
 
 export const store = {

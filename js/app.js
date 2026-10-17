@@ -8,8 +8,8 @@ import { commit, loadState, onChange, persistNow, store } from './store.js';
 import { loadBank } from './bank.js';
 import { go, initNav, route, setRenderer } from './nav.js';
 import { closeSheet, icon, sheetIsOpen } from './ui.js';
-import { buildTodayPlan, streakInfo } from './planner.js';
-import { daysBetween, esc, minutesNow, plural } from './util.js';
+import { buildTodayPlan, catchUpWindow, streakInfo, subjectOf } from './planner.js';
+import { daysBetween, esc, humanDate, minutesNow, plural } from './util.js';
 import { blockActionHandlers, ensureTodayPlan, today } from './views/shared.js';
 import { calendarActions, renderCalendar } from './views/calendar.js';
 import { eventActions } from './views/events.js';
@@ -77,7 +77,17 @@ function renderNav(tab) {
 }
 
 function updateNote() {
-  return `<div class="note"><b>Обновление плана.</b> Учёл отставание: физика и информатика — около 8 дней (догоняем по ~4,5 ч за 3 недели), остальные предметы — 1–2 дня, история — с нуля, по темам докладов (~12,5 ч до сессии). Воскресенье 18.10 — подготовка к КР по линалу. Поправить — «Настройки → Предметы».
+  const seen = Number(store.state.settings.updateSeen) || 0;
+  const hist = subjectOf(store.state, 'hist');
+  const parts = [];
+  if (seen < 2) {
+    parts.push('Учёл отставание: физика и информатика — около 8 дней (догоняем по ~4,5 ч за 3 недели), остальные предметы — 1–2 дня, история — с нуля, по темам докладов (~12,5 ч). Воскресенье 18.10 — подготовка к КР по линалу.');
+  }
+  if (seen < 3) {
+    const until = hist ? ` до ${humanDate(catchUpWindow(hist, today()).until)}` : '';
+    parts.push(`Сессия — в конце декабря (дата примерная, 22.12), поэтому историю растянул${until}: около 1,5 ч в неделю.`);
+  }
+  return `<div class="note"><b>Обновление плана.</b> ${parts.join(' ')} Поправить — «Настройки → Предметы».
     <button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div>`;
 }
 

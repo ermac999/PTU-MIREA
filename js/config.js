@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 3,
-  noteVersion: 2,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 4,
+  noteVersion: 3,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -76,6 +76,7 @@ export const CONFIG = {
     weeks: 3,                  // за сколько недель догонять по умолчанию
     lightShare: 0.4,           // доля теории (карточки, чтение — годится для электрички)
     minTotal: 20,              // меньше 20 минут не планируем
+    skipWeekIfDaysLeft: 2,     // до воскресенья меньше 2 дней (сегодня сб или вс) — порцию за эту неделю не выделяем
     perTopicMin: 25,           // догоняем по темам: минут на тему, если время уже расписано
     maxTopicsPerBlock: 3,      // больше трёх тем в одном блоке не ставим
   },
@@ -221,7 +222,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 2,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 3,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -243,7 +244,7 @@ export const DEFAULT_DATA = {
     { id: 'matlog', name: 'Математическая логика',                     short: 'Матлогика',   level: 3, behindDays: 2, catchUpWeeks: 2, behindSince: '2026-10-17', note: 'Название на скриншоте обрезано — поправьте.' },
     { id: 'inf',    name: 'Информатика',                               short: 'Информатика', level: 2, behindDays: 8, catchUpWeeks: 3, behindSince: '2026-10-17' },
     { id: 'phys',   name: 'Физика',                                    short: 'Физика',      level: 2, behindDays: 8, catchUpWeeks: 3, behindSince: '2026-10-17' },
-    { id: 'hist',   name: 'История России',                            short: 'История',     level: 1, behindDays: 46, catchUpMin: 750, catchUpWeeks: 6, catchUpLight: 0.7, catchUpByTopic: true, behindSince: '2026-10-17',
+    { id: 'hist',   name: 'История России',                            short: 'История',     level: 1, behindDays: 46, catchUpMin: 750, catchUpWeeks: 8, catchUpLight: 0.7, catchUpByTopic: true, behindSince: '2026-10-17',
       note: 'С начала семестра не учил. Темы — по слайдам докладов (по ~25 минут на тему).' },
     { id: 'intro',  name: 'Введение в профессиональную деятельность',  short: 'Введение',    level: 3, behindDays: 2, catchUpWeeks: 2, catchUpLight: 1, behindSince: '2026-10-17' },
     { id: 'de',     name: 'Иностранный язык (немецкий)',               short: 'Немецкий',    level: 3, behindDays: 2, catchUpWeeks: 2, behindSince: '2026-10-17', note: 'Предположил, что иностранный — это немецкий.' },

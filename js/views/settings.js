@@ -212,7 +212,7 @@ function openSubject(id) {
       <p class="small muted" style="margin:0">Уровень 1–2 — «слабый»: больше часов на подготовку и немного времени каждую неделю.</p>
 
       <div class="field"><label for="sj-behind">Отстаю на (дней материала)</label><input class="inp" id="sj-behind" inputmode="numeric" value="${esc(s.behindDays ?? '')}" placeholder="0 — не отстаю"></div>
-      <div class="field"><span class="eyebrow">Догнать за</span>${segButtons('weeks', [[1, '1 нед.'], [2, '2'], [3, '3'], [4, '4'], [6, '6']], s.catchUpWeeks || CONFIG.catchUp.weeks)}</div>
+      <div class="field"><span class="eyebrow">Догнать за</span>${segButtons('weeks', [[1, '1 нед.'], [2, '2'], [3, '3'], [4, '4'], [6, '6'], [8, '8'], [10, '10']], s.catchUpWeeks || CONFIG.catchUp.weeks)}</div>
       <div class="field"><label for="sj-cmin">Или часов на догоняние (если знаешь точнее)</label><input class="inp" id="sj-cmin" inputmode="decimal" value="${s.catchUpMin != null && s.catchUpMin !== '' ? esc(String(Math.round((s.catchUpMin / 60) * 10) / 10).replace('.', ',')) : ''}" placeholder="пусто — посчитаю по дням"></div>
       ${total ? `<p class="small muted" style="margin:0">Догнать: ${fmtDur(total)}, сделано ${fmtDur(done)}${s.behindSince ? ` · с ${esc(humanDate(s.behindSince))}` : ''}. Если поменять отставание, отсчёт начнётся заново с сегодняшнего дня.</p>` : ''}
 

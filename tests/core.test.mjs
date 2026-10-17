@@ -169,13 +169,20 @@ test('отставание: физика и информатика — боль�
   }
 });
 
-test('история: темы докладов по очереди, без повторов, все 30 — до срока', () => {
+test('история: темы докладов по очереди, без повторов, все 30 — до 11 декабря, по неделям ровно', () => {
   const st = defaultState();
-  const sim = simulate(st, TODAY, 7 * 60, 42);
-  const blocks = Object.keys(sim.plans).sort().flatMap((k) => sim.plans[k].blocks.filter((b) => b.catchUp && b.subject === 'hist'));
+  const sim = simulate(st, TODAY, 7 * 60, 70);
+  const days = Object.keys(sim.plans).sort();
+  const blocks = days.flatMap((k) => sim.plans[k].blocks.filter((b) => b.catchUp && b.subject === 'hist').map((b) => ({ ...b, day: k })));
   const ids = blocks.flatMap((b) => b.topicIds);
   assert.equal(new Set(ids).size, ids.length, 'тема не повторяется');
-  assert.equal(ids.length, 30, 'все темы — за 6 недель');
+  assert.equal(ids.length, 30, 'все темы — за 8 недель');
+  assert.ok(blocks.at(-1).day <= '2026-12-11', `последний блок ${blocks.at(-1).day} — после срока`);
+  assert.ok(blocks.at(-1).day < '2026-12-15', 'до сессии и лабы 15.12 история закрыта');
+  const perWeek = {};
+  for (const b of blocks) perWeek[mondayOf(b.day)] = (perWeek[mondayOf(b.day)] || 0) + b.min;
+  assert.ok(Math.max(...Object.values(perWeek)) <= 135, `в неделю не больше 2 ч 15 мин: ${JSON.stringify(perWeek)}`);
+  assert.ok(!perWeek['2026-10-12'], 'за остаток текущей недели (сб–вс) порцию не выделяем');
   assert.deepEqual(ids.slice(0, 3), ['hist-t1', 'hist-t2', 'hist-t3']);
   assert.ok(blocks.every((b) => b.topicIds.length <= CONFIG.catchUp.maxTopicsPerBlock));
   assert.ok(blocks.every((b) => b.title.startsWith('История: «')));
@@ -454,6 +461,27 @@ test('сессия — в конце декабря: у старых данны�
   assert.equal(m2.settings.sessionStart, '2026-12-25');
 });
 
+test('обновление до версии 4: история — 8 недель, свои сроки не трогаем, заметку показываем один раз', () => {
+  const v3 = defaultState();
+  v3.version = 3;
+  v3.settings.updateSeen = 2;
+  v3.subjects.find((s) => s.id === 'hist').catchUpWeeks = 6; // как было у версии 2–3
+  const m = migrate(JSON.parse(JSON.stringify(v3)));
+  assert.equal(m.version, CONFIG.dataVersion);
+  assert.equal(m.subjects.find((s) => s.id === 'hist').catchUpWeeks, 8);
+  assert.equal(m.settings.updateSeen, 2, 'заметка про историю ещё не показана');
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion);
+  assert.equal(migrate(m).subjects.find((s) => s.id === 'hist').catchUpWeeks, 8, 'повторный запуск ничего не меняет');
+  assert.ok(defaultState().settings.updateSeen >= CONFIG.noteVersion, 'на чистой установке заметки «что нового» нет');
+
+  const mine = JSON.parse(JSON.stringify(v3));
+  mine.subjects.find((s) => s.id === 'hist').catchUpWeeks = 4; // сам сжал срок
+  assert.equal(migrate(mine).subjects.find((s) => s.id === 'hist').catchUpWeeks, 4);
+  const mine2 = JSON.parse(JSON.stringify(v3));
+  mine2.subjects.find((s) => s.id === 'hist').catchUpMin = 600; // сам поменял объём
+  assert.equal(migrate(mine2).subjects.find((s) => s.id === 'hist').catchUpWeeks, 6);
+});
+
 /** Данные с телефона в формате версии 1 (до отставания и тем докладов). */
 function stateV1() {
   const v1 = defaultState();
@@ -481,6 +509,7 @@ test('обновление с версии 1: отставание, темы д�
   const hist = m.subjects.find((s) => s.id === 'hist');
   assert.equal(hist.level, 1);
   assert.equal(catchUpTotal(m, hist), 750);
+  assert.equal(hist.catchUpWeeks, 8, 'история — 8 недель, до 11 декабря');
   assert.equal(catchUpTotal(m, m.subjects.find((s) => s.id === 'phys')), 265);
   const ht = m.topics.filter((t) => t.subject === 'hist');
   assert.equal(ht.length, 30);

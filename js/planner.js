@@ -16,7 +16,7 @@
 
 import { CONFIG, PREP, EVENT_TYPES } from './config.js';
 import { baseTimes, classesOn, daySkeleton } from './schedule.js';
-import { addDays, floor5, fmtTime, mondayOf, plural, round5, shortDate, toMin } from './util.js';
+import { addDays, daysBetween, floor5, fmtTime, mondayOf, plural, round5, shortDate, toMin } from './util.js';
 
 export const subjectOf = (state, id) => state.subjects.find((s) => s.id === id) || null;
 export const isWeak = (s) => !!s && !s.noStudy && Number(s.level) <= CONFIG.weakLevelMax;
@@ -179,8 +179,12 @@ export function buildItems(state, today) {
     if (total <= 0 || left <= 0) continue;
     const win = catchUpWindow(s, today);
     const end = win.until < today ? addDays(mondayOf(today), 6) : win.until; // срок прошёл — догоняем на этой неделе
+    // Остались сб–вс текущей недели — порцию за неё не выделяем: она слилась бы с порцией следующей недели.
+    const thisMonday = mondayOf(today);
+    const lateInWeek = daysBetween(today, addDays(thisMonday, 6)) < CONFIG.catchUp.skipWeekIfDaysLeft;
     const allWeeks = [];
-    for (let m = mondayOf(today); m <= end; m = addDays(m, 7)) allWeeks.push(m);
+    for (let m = lateInWeek ? addDays(thisMonday, 7) : thisMonday; m <= end; m = addDays(m, 7)) allWeeks.push(m);
+    if (!allWeeks.length) allWeeks.push(thisMonday); // окно короткое — догоняем на этой неделе
     // Мелкие порции дробят день: неделя — не меньше часа, иначе догоняем в первые недели.
     const weeks = allWeeks.slice(0, Math.max(1, Math.min(allWeeks.length, Math.floor(left / 60))));
     const share = Number(s.catchUpLight ?? CONFIG.catchUp.lightShare);
