@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { CONFIG } from '../js/config.js';
 import { autoMode, renderMd } from '../js/theory.js';
 import { MODULES, modulesFor, seedModules, startedTopics } from '../js/modules.js';
+import { allCards, buildQueue, deckList } from '../js/practice.js';
 import { buildTheory, parseTheoryFile } from '../tools/build-theory.mjs';
 import { defaultState, defaultTopics, migrate } from '../js/store.js';
 import { recordDone, simulate, undoRecord } from '../js/planner.js';
@@ -84,6 +85,8 @@ test('data/theory.json собран из content/theory и актуален', ()
   }
   assert.ok(topics['phys-1'], 'теория по кинематике есть');
   for (let n = 1; n <= 8; n += 1) assert.ok(topics[`inf-p${n}`], `теория к практике ${n} по информатике`);
+  for (let n = 1; n <= 6; n += 1) assert.ok(topics[`linal-p${n}`], `теория к практике ${n} по линалу`);
+  assert.ok(/ненулевых/.test(topics['linal-p5'].detailed) && /Осторожно/.test(topics['linal-p3'].detailed), 'пометки об ошибках в тетради на месте');
 });
 
 test('файл теории: понятные ошибки разметки', () => {
@@ -246,4 +249,41 @@ test('обновление до версии 10: темы информатики
   assert.ok(m2.topics.some((t) => t.id === 'inf-3' && t.note === 'мой конспект'));
   assert.equal(m2.topics.filter((t) => t.subject === 'inf').length, 9);
   assert.deepEqual(m2.events.find((e) => e.id === 'ev-inf-kr').topics, ['inf-p4', 'inf-3']);
+});
+
+test('обновление до версии 11: линал — 6 практик, КР завтра по практикам 1–5', () => {
+  const v10 = defaultState();
+  v10.version = 10;
+  v10.settings.updateSeen = 8;
+  v10.topics = v10.topics.filter((t) => t.subject !== 'linal');
+  const old = ['Матрицы и действия с ними', 'Определители', 'Обратная матрица', 'СЛАУ: метод Гаусса и Крамера', 'Векторы и скалярное произведение', 'Прямая и плоскость']
+    .map((name, i) => ({ id: `linal-${i + 1}`, subject: 'linal', name, status: 'new', note: '', example: true }));
+  v10.topics.unshift(...old);
+  delete v10.events.find((e) => e.id === 'ev-linal-kr').topics;
+  v10.decks.push({ id: 'd1', name: 'мои', subject: 'linal', topicId: 'linal-4', cards: [] });
+  const m = migrate(JSON.parse(JSON.stringify(v10)));
+  assert.deepEqual(m.topics.filter((t) => t.subject === 'linal').map((t) => t.id), ['linal-p1', 'linal-p2', 'linal-p3', 'linal-p4', 'linal-p5', 'linal-p6']);
+  assert.deepEqual(m.events.find((e) => e.id === 'ev-linal-kr').topics, ['linal-p1', 'linal-p2', 'linal-p3', 'linal-p4', 'linal-p5']);
+  assert.equal(m.decks[0].topicId, 'linal-p3', 'СЛАУ (Крамер) → практика 3');
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion);
+
+  // темы КР уже отмечены сам — не трогаем (только переводим на новые id)
+  v10.events.find((e) => e.id === 'ev-linal-kr').topics = ['linal-2'];
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(v10))).events.find((e) => e.id === 'ev-linal-kr').topics, ['linal-p2']);
+});
+
+test('карточки по практикам — своя колода предмета, примеры — отдельно', () => {
+  const bank = JSON.parse(readFileSync(file('data/bank.json'), 'utf8'));
+  const st = defaultState();
+  const decks = deckList(bank, st);
+  const lin = decks.find((d) => d.id === 'bank-linal');
+  assert.ok(lin && lin.name === 'Линал: по твоим практикам' && !lin.example && lin.cards.length >= 20);
+  assert.ok(decks.find((d) => d.id === 'ex-inf').example, 'примеры остаются примерами');
+  assert.ok(allCards(bank, st).filter((c) => c.subject === 'linal').every((c) => !c.example));
+});
+
+test('отработка: новые задачи из практик идут раньше примеров', () => {
+  const tasks = [{ id: 'e1', example: true }, { id: 'p1', from: 'Практика №1' }, { id: 'e2', example: true }, { id: 'p2', from: 'Практика №2' }];
+  assert.deepEqual(buildQueue(tasks, {}, 0), ['p1', 'p2', 'e1', 'e2']);
+  assert.deepEqual(buildQueue(tasks, { e2: { seen: 1, correct: 0, wrong: 1, streak: 0, due: 0 } }, 1), ['e2', 'p1', 'p2', 'e1'], 'ошибки, которым пора, — всё равно первыми');
 });

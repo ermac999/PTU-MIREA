@@ -439,7 +439,7 @@ test('каждое задание банка проходит собственн
     ids.add(t.id);
     assert.ok(subjIds.has(t.subject), `${t.id}: нет предмета ${t.subject}`);
     assert.ok(!t.topic || topicIds.has(t.topic), `${t.id}: нет темы ${t.topic}`);
-    assert.ok(t.example === true, `${t.id}: пример должен быть помечен`);
+    assert.ok(t.example === true || (t.from && !t.example), `${t.id}: пример помечен example, задача по практике — from`);
     assert.ok(t.q && t.explain, `${t.id}: нет вопроса или разбора`);
     if (t.type === 'choice') {
       assert.ok(t.options.length >= 2 && t.answer >= 0 && t.answer < t.options.length, `${t.id}: варианты`);
@@ -451,7 +451,8 @@ test('каждое задание банка проходит собственн
   for (const c of bank.cards) {
     assert.ok(!ids.has(c.id), `дубль id ${c.id}`);
     ids.add(c.id);
-    assert.ok(subjIds.has(c.subject) && c.q && c.a && c.example === true, `${c.id}: карточка`);
+    assert.ok(subjIds.has(c.subject) && c.q && c.a && (c.example === true || (c.from && !c.example)), `${c.id}: карточка`);
+    assert.ok(!c.topic || topicIds.has(c.topic), `${c.id}: нет темы ${c.topic}`);
   }
 });
 

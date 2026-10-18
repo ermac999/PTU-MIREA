@@ -305,7 +305,7 @@ function answer(input, opts = {}) {
 /* ---------- Карточки ---------- */
 
 function deckName(d) {
-  if (d.own) return d.name;
+  if (d.own || d.name) return d.name;
   return `Примеры: ${subjShort(d.subject) || 'разное'}`;
 }
 
@@ -329,7 +329,7 @@ export function renderCards() {
         return `<li class="li">
           <button class="grow" type="button" data-act="go" data-to="drill/d:${esc(d.id)}" style="background:none;border:0;text-align:left;padding:0">
             <span class="t">${esc(deckName(d))}</span><span class="m">${d.cards.length} ${plural(d.cards.length, 'карточка', 'карточки', 'карточек')} · пора повторить: ${dDue}</span></button>
-          ${d.own ? `<button class="ibtn" type="button" data-act="deck-del" data-id="${esc(d.id)}" aria-label="Удалить колоду">${icon('trash', 's')}</button>` : '<span class="chip">пример</span>'}
+          ${d.own ? `<button class="ibtn" type="button" data-act="deck-del" data-id="${esc(d.id)}" aria-label="Удалить колоду">${icon('trash', 's')}</button>` : d.example ? '<span class="chip">пример</span>' : ''}
         </li>`;
       }).join('')}</ul>
     </section>`;

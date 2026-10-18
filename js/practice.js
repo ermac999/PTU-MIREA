@@ -112,6 +112,7 @@ export function buildQueue(tasks, practice, now = Date.now(), size = CONFIG.prac
     else rest.push(t);
   }
   const byDue = (a, b) => (practice[a.id].due ?? 0) - (practice[b.id].due ?? 0);
+  fresh.sort((a, b) => Number(!!a.example) - Number(!!b.example)); // новые: сначала задачи из твоих практик, примеры — потом
   wrongDue.sort(byDue);
   reviewDue.sort(byDue);
   rest.sort((a, b) => (practice[a.id].lastAt ?? 0) - (practice[b.id].lastAt ?? 0));
@@ -202,7 +203,8 @@ export function topicStats(tasks, state, topicId, now = Date.now()) {
 
 /** Все карточки: примеры из банка + колоды пользователя. */
 export function allCards(bank, state) {
-  const ex = (bank?.cards || []).map((c) => ({ ...c, deckId: `ex-${c.subject}`, example: true }));
+  // карточки банка: примеры — в колоду «Примеры», по практикам (from) — в отдельную колоду предмета
+  const ex = (bank?.cards || []).map((c) => ({ ...c, deckId: `${c.from ? 'bank' : 'ex'}-${c.subject}`, example: !c.from }));
   const own = state.decks.flatMap((d) => d.cards.map((c) => ({ ...c, deckId: d.id, subject: d.subject, topic: d.topicId || null })));
   return [...ex, ...own];
 }
@@ -213,7 +215,9 @@ export function deckList(bank, state) {
   const decks = new Map();
   for (const d of state.decks) decks.set(d.id, { id: d.id, name: d.name, subject: d.subject, own: true });
   for (const c of cards) {
-    if (!decks.has(c.deckId)) decks.set(c.deckId, { id: c.deckId, subject: c.subject, example: true });
+    if (decks.has(c.deckId)) continue;
+    const short = state.subjects.find((s) => s.id === c.subject)?.short || '';
+    decks.set(c.deckId, c.example ? { id: c.deckId, subject: c.subject, example: true } : { id: c.deckId, subject: c.subject, name: `${short}: по твоим практикам` });
   }
   return [...decks.values()].map((d) => ({ ...d, cards: cards.filter((c) => c.deckId === d.id) }));
 }

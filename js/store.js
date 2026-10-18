@@ -71,6 +71,7 @@ export function migrate(raw) {
   if (from < 7) upgradeTo7(st);
   if (from < 9) upgradeTo9(st);
   if (from < 10) upgradeTo10(st);
+  if (from < 11) upgradeTo11(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -171,31 +172,41 @@ function upgradeTo9(st) {
 }
 
 /**
- * Версия 10 (18.10): темы информатики — 8 практик курса вместо примерных. Нетронутые примерные темы
- * убираем, свои — оставляем рядом. Ссылки на старые темы (события, свои задания, колоды) переводим на практики.
+ * Примерные темы предмета → темы по практикам. Нетронутые примерные темы убираем, свои — оставляем рядом.
+ * Ссылки на убранные темы (события, свои задания, колоды) переводим по map: старая тема → новая (или null).
  */
-const OLD_INF = { 'inf-1': 'inf-p4', 'inf-2': 'inf-p2', 'inf-3': null, 'inf-4': null };
-
-function upgradeTo10(st) {
+function replaceExampleTopics(st, subject, map) {
   const untouched = (t) => t.example && t.status === 'new' && !t.note;
-  const old = st.topics.filter((t) => t.id in OLD_INF);
-  const gone = new Set(old.filter(untouched).map((t) => t.id));
+  const gone = new Set(st.topics.filter((t) => t.id in map && untouched(t)).map((t) => t.id));
   st.topics = st.topics.filter((t) => !gone.has(t.id));
   const have = new Set(st.topics.map((t) => t.id));
-  const fresh = defaultTopics('inf').filter((t) => !have.has(t.id));
-  const at = st.topics.findIndex((t) => t.subject === 'inf'); // практики — в начало списка информатики
+  const fresh = defaultTopics(subject).filter((t) => !have.has(t.id));
+  const at = st.topics.findIndex((t) => t.subject === subject); // практики — в начало списка предмета
   st.topics.splice(at < 0 ? st.topics.length : at, 0, ...fresh);
-  const remap = (id) => (gone.has(id) ? OLD_INF[id] : id);
+  const remap = (id) => (gone.has(id) ? map[id] : id);
   for (const e of st.events) {
     if (Array.isArray(e.topics)) e.topics = [...new Set(e.topics.map(remap).filter(Boolean))];
   }
-  for (const t of st.customTasks) if (gone.has(t.topic)) t.topic = OLD_INF[t.topic];
-  for (const d of st.decks) if (gone.has(d.topicId)) d.topicId = OLD_INF[d.topicId];
+  for (const t of st.customTasks) if (gone.has(t.topic)) t.topic = map[t.topic];
+  for (const d of st.decks) if (gone.has(d.topicId)) d.topicId = map[d.topicId];
   for (const id of gone) {
-    const to = OLD_INF[id];
+    const to = map[id];
     if (st.topicHist[id] && to && !st.topicHist[to]) st.topicHist[to] = st.topicHist[id];
     delete st.topicHist[id];
   }
+}
+
+/** Версия 10 (18.10): темы информатики — 8 практик курса вместо примерных. */
+function upgradeTo10(st) {
+  replaceExampleTopics(st, 'inf', { 'inf-1': 'inf-p4', 'inf-2': 'inf-p2', 'inf-3': null, 'inf-4': null });
+}
+
+/** Версия 11 (18.10): темы линала — 6 практик по тетради; КР 19.10 — по практикам 1–5, если темы ещё не отмечены. */
+function upgradeTo11(st) {
+  replaceExampleTopics(st, 'linal', { 'linal-1': 'linal-p1', 'linal-2': 'linal-p2', 'linal-3': 'linal-p3', 'linal-4': 'linal-p3', 'linal-5': 'linal-p6', 'linal-6': null });
+  const kr = st.events.find((e) => e.id === 'ev-linal-kr');
+  const fresh = DEFAULT_DATA.events.find((e) => e.id === 'ev-linal-kr');
+  if (kr && !kr.done && !(kr.topics || []).length) kr.topics = [...fresh.topics];
 }
 
 export const store = {
