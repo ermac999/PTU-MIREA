@@ -99,12 +99,17 @@ function updateNote() {
   if (seen < 6) {
     parts.push('Воскресенье 18.10: до обеда — информатика (КР в пятницу), после обеда — линал. Учёбы около 4,5 ч с перерывами, вечер свободен.');
   }
-  const hub = seen < 7
-    ? 'В «Темах» у каждого предмета своя страница: темы, теория (кратко или подробно) и игры. Физика → «Кинематика на зачёт» — твоя игра уже здесь, прогресс перенесён: 25 звёзд, дальше 12-й уровень. В карточке контрольной можно отметить темы — подготовка пойдёт по ним, а в плане появится «Теория →».'
-    : '';
+  const fresh = [];
+  if (seen < 7) {
+    fresh.push('В «Темах» у каждого предмета своя страница: темы, теория (кратко или подробно) и игры. Физика → «Кинематика на зачёт» — твоя игра уже здесь, прогресс перенесён: 25 звёзд, дальше 12-й уровень. В карточке контрольной можно отметить темы — подготовка пойдёт по ним, а в плане появится «Теория →».');
+  }
+  if (seen < 8) {
+    fresh.push('Информатика: вместо примерных тем — твои 8 практик, у каждой теория и номера задач по уровням. Игра «Бит за битом» — там же, прогресс перенесён. Отметь в карточке КР в пятницу, какие практики в неё входят.');
+  }
+  const hub = fresh.join(' ');
   return `<div class="note">${parts.length ? `<span><b>Обновление плана.</b> ${parts.join(' ')} Поправить — «Настройки → Предметы».</span>` : ''}
     ${hub ? `<span><b>Новое.</b> ${hub}</span>` : ''}
-    <div class="row" style="gap:4px">${hub ? '<button class="btn quiet small" type="button" data-act="go" data-to="subject/phys">Открыть физику →</button>' : ''}<button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div></div>`;
+    <div class="row" style="gap:4px">${hub ? '<button class="btn quiet small" type="button" data-act="go" data-to="topics">К предметам →</button>' : ''}<button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div></div>`;
 }
 
 function introNote() {

@@ -70,6 +70,7 @@ export function migrate(raw) {
   if (from < 6) upgradeTo6(st);
   if (from < 7) upgradeTo7(st);
   if (from < 9) upgradeTo9(st);
+  if (from < 10) upgradeTo10(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -167,6 +168,34 @@ function upgradeTo7(st) {
 function upgradeTo9(st) {
   const t = st.topics.find((x) => x.id === 'phys-1');
   if (t && t.example && t.name === 'Кинематика') t.example = false;
+}
+
+/**
+ * Версия 10 (18.10): темы информатики — 8 практик курса вместо примерных. Нетронутые примерные темы
+ * убираем, свои — оставляем рядом. Ссылки на старые темы (события, свои задания, колоды) переводим на практики.
+ */
+const OLD_INF = { 'inf-1': 'inf-p4', 'inf-2': 'inf-p2', 'inf-3': null, 'inf-4': null };
+
+function upgradeTo10(st) {
+  const untouched = (t) => t.example && t.status === 'new' && !t.note;
+  const old = st.topics.filter((t) => t.id in OLD_INF);
+  const gone = new Set(old.filter(untouched).map((t) => t.id));
+  st.topics = st.topics.filter((t) => !gone.has(t.id));
+  const have = new Set(st.topics.map((t) => t.id));
+  const fresh = defaultTopics('inf').filter((t) => !have.has(t.id));
+  const at = st.topics.findIndex((t) => t.subject === 'inf'); // практики — в начало списка информатики
+  st.topics.splice(at < 0 ? st.topics.length : at, 0, ...fresh);
+  const remap = (id) => (gone.has(id) ? OLD_INF[id] : id);
+  for (const e of st.events) {
+    if (Array.isArray(e.topics)) e.topics = [...new Set(e.topics.map(remap).filter(Boolean))];
+  }
+  for (const t of st.customTasks) if (gone.has(t.topic)) t.topic = OLD_INF[t.topic];
+  for (const d of st.decks) if (gone.has(d.topicId)) d.topicId = OLD_INF[d.topicId];
+  for (const id of gone) {
+    const to = OLD_INF[id];
+    if (st.topicHist[id] && to && !st.topicHist[to]) st.topicHist[to] = st.topicHist[id];
+    delete st.topicHist[id];
+  }
 }
 
 export const store = {

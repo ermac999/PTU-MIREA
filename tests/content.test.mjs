@@ -83,6 +83,7 @@ test('data/theory.json собран из content/theory и актуален', ()
     assert.ok(t.brief.length > 200 && t.detailed.length > t.brief.length, `${id}: «подробно» длиннее «кратко»`);
   }
   assert.ok(topics['phys-1'], 'теория по кинематике есть');
+  for (let n = 1; n <= 8; n += 1) assert.ok(topics[`inf-p${n}`], `теория к практике ${n} по информатике`);
 });
 
 test('файл теории: понятные ошибки разметки', () => {
@@ -112,7 +113,8 @@ test('модули: файлы на месте, предмет и темы су�
     assert.ok(html.includes(`'${m.storageKey}'`), 'игра хранит прогресс под тем ключом, который читают «Рамки»');
   }
   assert.deepEqual(modulesFor({ topic: 'phys-1' }).map((m) => m.id), ['kinematics']);
-  assert.deepEqual(modulesFor({ subject: 'inf' }), []);
+  assert.deepEqual(modulesFor({ subject: 'inf' }).map((m) => m.id), ['bits']);
+  assert.deepEqual(modulesFor({ topic: 'inf-p6' }).map((m) => m.id), ['bits']);
 });
 
 test('кинематика: перенесённый прогресс — 25 звёзд, пройдено 11 уровней', () => {
@@ -162,7 +164,7 @@ test('перенос прогресса: кладётся, только если
 test('темы контрольной: блоки подготовки идут по ним по порядку, «готово» отмечает пройденные', () => {
   const st = defaultState();
   const ev = st.events.find((e) => e.id === 'ev-inf-kr');
-  ev.topics = ['inf-1', 'inf-3'];
+  ev.topics = ['inf-p1', 'inf-p3'];
   const blocks = (s) => Object.entries(simulate(s, TODAY, 7 * 60, 7).plans)
     .flatMap(([k, p]) => p.blocks.filter((b) => b.eventId === 'ev-inf-kr').map((b) => ({ ...b, key: k })));
   const all = blocks(st);
@@ -173,7 +175,7 @@ test('темы контрольной: блоки подготовки идут 
     assert.equal(b.topicId, b.topicIds[0]);
   }
   const first = all.find((b) => b.kind === 'heavy') || all[0];
-  assert.equal(first.topicIds[0], 'inf-1', 'начинаем с первой темы');
+  assert.equal(first.topicIds[0], 'inf-p1', 'начинаем с первой темы');
 
   // отметили блок — темы пройдены, статус «не начал» → «учу»; отмена возвращает как было
   assert.ok(recordDone(st, first.key, first));
@@ -200,4 +202,48 @@ test('обновление до версии 9: «Кинематика» — н�
   const fresh = defaultState().topics.filter((t) => t.subject === 'phys');
   assert.deepEqual(fresh.map((t) => t.id), ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-5'], 'id тем физики прежние');
   assert.deepEqual(fresh.map((t) => t.example), [false, true, true, true, true]);
+});
+
+test('бит за битом: прогресс по всей игре и по практике, уровни совпадают с игрой', () => {
+  const m = MODULES.find((x) => x.id === 'bits');
+  const html = readFileSync(file(m.href), 'utf8');
+  const perWorld = {};
+  for (const [, w] of html.matchAll(/\{ id: 'w(\d)(?:l\d+|b)'/g)) perWorld[w] = (perWorld[w] || 0) + 1;
+  const seed = JSON.parse(readFileSync(file(m.seed), 'utf8'));
+  assert.ok(!JSON.stringify(seed).includes('u_'), 'без идентификатора аккаунта');
+  withStorage({ [m.storageKey]: JSON.stringify(seed) }, () => {
+    for (let n = 1; n <= 8; n += 1) assert.equal(m.progress(`inf-p${n}`).total, perWorld[n], `модуль ${n}: уровней как в игре`);
+    const all = m.progress();
+    assert.deepEqual([all.stars, all.done, all.total, all.maxStars], [1, 1, 52, 156]);
+    assert.equal(m.progress('inf-p1').label, 'модуль 1: 1/18 ★ · пройдено 1 из 6');
+    assert.equal(m.progress('inf-p2').done, 0);
+    const st = defaultState();
+    assert.deepEqual(startedTopics(st).filter((id) => id.startsWith('inf')), ['inf-p1'], 'начата только первая практика');
+  });
+});
+
+test('обновление до версии 10: темы информатики — 8 практик, ссылки на старые темы переезжают', () => {
+  const v9 = defaultState();
+  v9.version = 9;
+  v9.settings.updateSeen = 7; // заметку версии 9 уже видел
+  v9.topics = v9.topics.filter((t) => t.subject !== 'inf');
+  const old = ['Системы счисления', 'Кодирование информации', 'Логические операции', 'Алгоритмы и программы']
+    .map((name, i) => ({ id: `inf-${i + 1}`, subject: 'inf', name, status: 'new', note: '', example: true }));
+  v9.topics.splice(10, 0, ...old);
+  v9.events.find((e) => e.id === 'ev-inf-kr').topics = ['inf-1', 'inf-3'];
+  v9.customTasks.push({ id: 'my1', subject: 'inf', topic: 'inf-2', type: 'number', q: '?', answers: ['1'] });
+  const m = migrate(JSON.parse(JSON.stringify(v9)));
+  const inf = m.topics.filter((t) => t.subject === 'inf');
+  assert.deepEqual(inf.map((t) => t.id), ['inf-p1', 'inf-p2', 'inf-p3', 'inf-p4', 'inf-p5', 'inf-p6', 'inf-p7', 'inf-p8']);
+  assert.ok(inf.every((t) => t.numLabel === 'практика' && !t.example));
+  assert.deepEqual(m.events.find((e) => e.id === 'ev-inf-kr').topics, ['inf-p4'], 'системы счисления → практика 4, логика — убрана');
+  assert.equal(m.customTasks.find((t) => t.id === 'my1').topic, 'inf-p2');
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
+
+  // свою тему (с конспектом) не трогаем — практики встают рядом
+  v9.topics.find((t) => t.id === 'inf-3').note = 'мой конспект';
+  const m2 = migrate(JSON.parse(JSON.stringify(v9)));
+  assert.ok(m2.topics.some((t) => t.id === 'inf-3' && t.note === 'мой конспект'));
+  assert.equal(m2.topics.filter((t) => t.subject === 'inf').length, 9);
+  assert.deepEqual(m2.events.find((e) => e.id === 'ev-inf-kr').topics, ['inf-p4', 'inf-3']);
 });

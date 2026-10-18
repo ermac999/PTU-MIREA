@@ -41,9 +41,9 @@ function catchUpLine(st, s) {
   </div>`;
 }
 
-/** Карточка модуля (игры, тренажёра): название, о чём, прогресс. */
-function moduleCard(m) {
-  const pr = m.progress?.();
+/** Карточка модуля (игры, тренажёра): название, о чём, прогресс (на странице темы — по этой теме). */
+function moduleCard(m, topicId = null) {
+  const pr = m.progress?.(topicId);
   const ext = moduleHref(m) !== m.href;
   return `<a class="mod" href="${esc(moduleHref(m))}"${ext ? ' target="_blank" rel="noopener"' : ''}>
     <span class="mod-k">${icon('target', 's')}${esc(m.kind)}</span>
@@ -85,7 +85,7 @@ function theorySection(st, topic) {
 function topicRow(t, tasks) {
   const n = tasks.filter((x) => x.topic === t.id).length;
   return `<li><button class="li" type="button" data-act="go" data-to="topic/${esc(t.id)}">
-    <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${t.num ? `доклад №${t.num} · ` : ''}${n ? `${n} ${plural(n, 'задание', 'задания', 'заданий')}` : 'заданий пока нет'}${hasTheory(t.id) ? ' · теория' : ''}${modulesFor({ topic: t.id }).length ? ' · игра' : ''}${t.example ? ' · примерная тема' : ''}</span></span>
+    <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${t.num ? `${t.numLabel || 'доклад'} №${t.num} · ` : ''}${n ? `${n} ${plural(n, 'задание', 'задания', 'заданий')}` : 'заданий пока нет'}${hasTheory(t.id) ? ' · теория' : ''}${modulesFor({ topic: t.id }).length ? ' · игра' : ''}${t.example ? ' · примерная тема' : ''}</span></span>
     ${statusChip(t.status)}${icon('chev', 'chev s')}</button></li>`;
 }
 
@@ -141,7 +141,7 @@ export function renderSubject([id]) {
       <h1 class="display m">${esc(s.short)}</h1>
     </header>
     ${catchUpLine(st, s)}
-    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${mods.map(moduleCard).join('')}</section>` : ''}
+    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${mods.map((m) => moduleCard(m)).join('')}</section>` : ''}
     <section>
       <div class="sec-row"><h2 class="sec">Темы</h2>${ts.length ? `<span class="small muted">закрыто ${ts.filter(isClosedTopic).length} из ${ts.length}</span>` : ''}</div>
       ${ts.length ? `<ul class="list">${ts.map((t) => topicRow(t, tasks)).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}
@@ -166,14 +166,14 @@ export function renderTopic([id]) {
   return `
     <header class="head">
       <button class="back" type="button" data-act="go" data-to="subject/${esc(topic.subject)}">${icon('back', 's')}${esc(subjShort(topic.subject) || 'Темы')}</button>
-      <span class="eyebrow">${esc(subjectOf(st, topic.subject)?.name || '')}${topic.num ? ` · доклад №${topic.num}` : ''}</span>
+      <span class="eyebrow">${esc(subjectOf(st, topic.subject)?.name || '')}${topic.num ? ` · ${topic.numLabel || 'доклад'} №${topic.num}` : ''}</span>
       <h1 class="display m">${esc(topic.name)}</h1>
       ${topic.example ? '<span class="small muted">Примерная тема — переименуй под свою программу или удали.</span>' : ''}
     </header>
 
     ${theorySection(st, topic)}
 
-    ${modulesFor({ topic: id }).length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${modulesFor({ topic: id }).map(moduleCard).join('')}</section>` : ''}
+    ${modulesFor({ topic: id }).length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${modulesFor({ topic: id }).map((m) => moduleCard(m, id)).join('')}</section>` : ''}
 
     <section>
       <span class="eyebrow">Статус — меняется сам по результатам, можно поправить</span>

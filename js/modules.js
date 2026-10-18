@@ -26,6 +26,26 @@ function kinematicsProgress() {
   return { stars, maxStars: 48, done, total: 16, label: `${stars}/48 ★ · пройдено ${done} из 16` };
 }
 
+/** «Бит за битом»: 8 модулей = 8 практик информатики; уровней в модуле (вместе с боссом). */
+const BITS_LEVELS = { 1: 6, 2: 6, 3: 7, 4: 6, 5: 6, 6: 6, 7: 8, 8: 7 };
+
+/** Прогресс «Бит за битом»: весь или по одной практике (тема inf-pN = модуль N). */
+function bitsProgress(topicId = null) {
+  const levels = readJson('bzb.progress.v1')?.levels || {};
+  const world = /^inf-p\d+$/.test(topicId || '') ? Number(topicId.slice(5)) : null;
+  let stars = 0;
+  let done = 0;
+  for (const [id, l] of Object.entries(levels)) {
+    const m = id.match(/^w(\d+)(?:l\d+|b)$/);
+    if (!m || (world && Number(m[1]) !== world)) continue;
+    const s = Number(l?.stars) || 0;
+    stars += s;
+    if (s > 0) done += 1;
+  }
+  const total = world ? BITS_LEVELS[world] || 0 : Object.values(BITS_LEVELS).reduce((a, b) => a + b, 0);
+  return { stars, maxStars: total * 3, done, total, label: `${world ? `модуль ${world}: ` : ''}${stars}/${total * 3} ★ · пройдено ${done} из ${total}` };
+}
+
 export const MODULES = [
   {
     id: 'kinematics',
@@ -39,6 +59,18 @@ export const MODULES = [
     seed: 'modules/kinematics/seed.json',
     progress: kinematicsProgress,
   },
+  {
+    id: 'bits',
+    title: 'Бит за битом',
+    kind: 'игра',
+    subject: 'inf',
+    topics: ['inf-p1', 'inf-p2', 'inf-p3', 'inf-p4', 'inf-p5', 'inf-p6', 'inf-p7', 'inf-p8'],
+    href: 'modules/bits/index.html',
+    about: 'Пульт ЭВМ «Кварц-8»: 8 модулей по практикам — информация, коды, ошибки, системы счисления, доп. код. Теория, задачи с разбором, Python.',
+    storageKey: 'bzb.progress.v1',
+    seed: 'modules/bits/seed.json',
+    progress: bitsProgress,
+  },
 ];
 
 export const modulesFor = ({ subject = null, topic = null } = {}) =>
@@ -46,7 +78,7 @@ export const modulesFor = ({ subject = null, topic = null } = {}) =>
 
 /** Темы «не начал», по которым игра уже начата (есть звёзды): их пора отметить «учу». */
 export function startedTopics(state) {
-  const ids = new Set(MODULES.filter((m) => m.progress?.().done > 0).flatMap((m) => m.topics));
+  const ids = new Set(MODULES.flatMap((m) => m.topics.filter((t) => m.progress?.(t).done > 0)));
   return state.topics.filter((t) => ids.has(t.id) && t.status === 'new').map((t) => t.id);
 }
 
