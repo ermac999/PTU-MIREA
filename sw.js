@@ -1,14 +1,15 @@
 /* Service worker: приложение открывается и работает без интернета (в электричке).
    При обновлении сайта поменяйте VERSION — старый кэш удалится. */
 
-const VERSION = 'ramki-v9';
+const VERSION = 'ramki-v10';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/schedule.js', 'js/planner.js', 'js/practice.js',
-  'js/parse.js', 'js/ics.js', 'js/store.js', 'js/ui.js', 'js/nav.js', 'js/bank.js',
+  'js/parse.js', 'js/ics.js', 'js/store.js', 'js/ui.js', 'js/nav.js', 'js/bank.js', 'js/theory.js', 'js/modules.js',
   'js/views/shared.js', 'js/views/calendar.js', 'js/views/events.js', 'js/views/day.js',
   'js/views/today.js', 'js/views/topics.js', 'js/views/settings.js',
-  'data/bank.json',
+  'data/bank.json', 'data/theory.json',
+  'modules/kinematics/index.html', 'modules/kinematics/seed.json',
   'fonts/playfair-display-cyrillic-400-normal.woff2', 'fonts/playfair-display-latin-400-normal.woff2',
   'fonts/playfair-display-cyrillic-600-normal.woff2', 'fonts/playfair-display-latin-600-normal.woff2',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
@@ -33,8 +34,8 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Банк заданий — сначала сеть (чтобы новые задания подтягивались), без сети — из кэша.
-  if (url.pathname.endsWith('/data/bank.json')) {
+  // Банк заданий и теория — сначала сеть (чтобы новое подтягивалось), без сети — из кэша.
+  if (url.pathname.endsWith('/data/bank.json') || url.pathname.endsWith('/data/theory.json')) {
     e.respondWith(
       fetch(req)
         .then((res) => {

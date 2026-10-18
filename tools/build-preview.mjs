@@ -1,4 +1,4 @@
-// Сборка одностраничного превью «Рамок»: весь код, стили, шрифты и банк заданий —
+// Сборка одностраничного превью «Рамок»: весь код, стили, шрифты, банк заданий и теория —
 // в одном HTML-фрагменте (без service worker). Основная версия — обычная папка для GitHub Pages.
 // Запуск: npm run build:preview [путь/к/файлу.html]
 import { execFileSync } from 'node:child_process';
@@ -23,6 +23,7 @@ const css = readFileSync(join(root, 'css/app.css'), 'utf8').replace(
 
 // 3. Банк заданий — внутрь, чтобы не зависеть от загрузки файла.
 const bank = JSON.stringify(JSON.parse(readFileSync(join(root, 'data/bank.json'), 'utf8'))).replace(/</g, '\\u003c');
+const theory = JSON.stringify(JSON.parse(readFileSync(join(root, 'data/theory.json'), 'utf8'))).replace(/</g, '\\u003c');
 
 const html = `<title>Рамки</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -31,7 +32,7 @@ const html = `<title>Рамки</title>
 <div class="strip" id="strip"></div>
 <main class="app"><div class="view" id="view"></div></main>
 <nav class="nav" id="nav" aria-label="Разделы"></nav>
-<script>window.__RAMKI_PREVIEW__ = true; window.__RAMKI_BANK__ = ${bank};</script>
+<script>window.__RAMKI_PREVIEW__ = true; window.__RAMKI_BANK__ = ${bank}; window.__RAMKI_THEORY__ = ${theory};</script>
 <script>${js.replace(/<\/script/gi, '<\\/script')}</script>
 `;
 

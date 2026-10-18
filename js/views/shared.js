@@ -9,6 +9,8 @@ import {
   buildItems, buildTodayPlan, pastDay, planDay, recordDone, simulate, streakInfo, subjectOf, undoRecord,
 } from '../planner.js';
 import { addDays, clamp, dateOf, esc, fmtDur, fmtTime, minutesNow, relDays, todayKey, WD_SHORT } from '../util.js';
+import { hasTheory } from '../theory.js';
+import { moduleHref, modulesFor } from '../modules.js';
 import { icon, toast } from '../ui.js';
 
 export const today = () => todayKey();
@@ -149,6 +151,20 @@ function practiceLink(b) {
   return `<button class="btn small quiet" type="button" data-act="go" data-to="${esc(to)}">Отработка →</button>`;
 }
 
+/** «Теория →» и «Игра →» по темам учебного блока (первая тема с теорией, первая игра). */
+export function topicLinks(b) {
+  const ids = b.topicIds?.length ? b.topicIds : b.topicId ? [b.topicId] : [];
+  const parts = [];
+  const th = ids.find(hasTheory);
+  if (th) parts.push(`<button class="btn small quiet" type="button" data-act="go" data-to="topic/${esc(th)}">Теория →</button>`);
+  const mod = ids.flatMap((id) => modulesFor({ topic: id }))[0];
+  if (mod) {
+    const href = moduleHref(mod);
+    parts.push(`<a class="btn small quiet" href="${esc(href)}"${href === mod.href ? '' : ' target="_blank" rel="noopener"'}>Игра →</a>`);
+  }
+  return parts.join('');
+}
+
 function blockActions(key, b, ctx, status) {
   if (b.type === 'class' && (ctx.isToday || ctx.isPast)) {
     const k = `${key}|${b.classId}`;
@@ -171,7 +187,7 @@ function blockActions(key, b, ctx, status) {
   const parts = [`<button class="btn small" type="button" data-act="block-done" data-key="${key}" data-id="${id}">${icon('check', 's')}Готово</button>`];
   if (started) parts.push(`<button class="btn small ghost" type="button" data-act="block-skip" data-key="${key}" data-id="${id}">Не успел</button>`);
   if (b.type === 'study' && ctx.isToday) parts.push(`<button class="btn small ghost" type="button" data-act="timer-start" aria-label="Таймер фокуса 25 минут">${icon('clock', 's')}25:00</button>`);
-  if (b.type === 'study') parts.push(practiceLink(b));
+  if (b.type === 'study') parts.push(practiceLink(b), topicLinks(b));
   return `<div class="blk-acts">${parts.join('')}</div>`;
 }
 

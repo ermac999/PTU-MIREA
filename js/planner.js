@@ -111,17 +111,51 @@ export function catchUpWindow(s, today) {
   return { from, until: addDays(from, weeks * 7 - 1) };
 }
 
-/** Темы предмета, пройденные в блоках «догнать» с отметкой «готово». */
-export function coveredTopics(state, subjectId) {
-  const ids = new Set(state.topics.filter((t) => t.subject === subjectId).map((t) => t.id));
+/** Темы из списка, пройденные в блоках с отметкой «готово»; kind — считать только лёгкие или только тяжёлые блоки. */
+function coveredAmong(state, topicIds, kind = null) {
+  const ids = new Set(topicIds);
   const out = new Set();
   for (const day of Object.values(state.done || {})) {
     for (const rec of Object.values(day || {})) {
       if (rec?.status !== 'done' || !Array.isArray(rec.topics)) continue;
+      if (kind && rec.kind && rec.kind !== kind) continue;
       for (const id of rec.topics) if (ids.has(id)) out.add(id);
     }
   }
   return out;
+}
+
+/** Темы предмета, пройденные в блоках с отметкой «готово». */
+export function coveredTopics(state, subjectId) {
+  return coveredAmong(state, state.topics.filter((t) => t.subject === subjectId).map((t) => t.id));
+}
+
+const isClosed = (t) => t.status === 'understood' || t.status === 'reviewed';
+
+/** Очередь тем контрольной: отдельно для лёгких (прочитать) и тяжёлых (решать) блоков. */
+function eventCursor(state, items, ev, kind) {
+  const cur = (items.cursor ||= {});
+  const key = `${ev.id}:${kind}`;
+  if (!cur[key]) cur[key] = { taken: coveredAmong(state, ev.topics || [], kind) };
+  return cur[key];
+}
+
+/** Темы события, которые ставим в этот блок: по порядку, не пройденные и не закрытые; кончились — второй круг. */
+function eventTopicsFor(state, it, items, min) {
+  const ev = eventById(state, it.eventId);
+  const all = (ev?.topics || []).map((id) => state.topics.find((t) => t.id === id)).filter(Boolean);
+  if (!all.length) return [];
+  const c = eventCursor(state, items, ev, it.kind);
+  let open = all.filter((t) => !c.taken.has(t.id) && !isClosed(t));
+  if (!open.length) { // круг закончился — повторяем с начала (кроме уже закрытых)
+    c.taken.clear();
+    open = all.filter((t) => !isClosed(t));
+  }
+  if (!open.length) open = all;
+  const k = Math.min(open.length, 3, Math.max(1, Math.round(min / (it.kind === 'light' ? 30 : 50))));
+  const pick = open.slice(0, k);
+  for (const t of pick) c.taken.add(t.id);
+  return pick;
 }
 
 /**
@@ -141,10 +175,15 @@ function topicCursor(state, items, subjectId) {
 
 /** Блок сегодняшнего плана ещё впереди — его темы и минуты уже заняты. */
 function reserveTopics(state, items, b) {
-  if (!b.catchUp || !b.topicIds?.length) return;
-  const c = topicCursor(state, items, b.subject);
-  for (const id of b.topicIds) c.taken.add(id);
-  c.minLeft = Math.max(0, c.minLeft - (b.min || 0));
+  if (!b.topicIds?.length) return;
+  if (b.catchUp) {
+    const c = topicCursor(state, items, b.subject);
+    for (const id of b.topicIds) c.taken.add(id);
+    c.minLeft = Math.max(0, c.minLeft - (b.min || 0));
+  } else if (b.eventId) {
+    const ev = eventById(state, b.eventId);
+    if (ev) for (const id of b.topicIds) eventCursor(state, items, ev, b.kind).taken.add(id);
+  }
 }
 
 /* ---------- С какого дня можно готовиться ---------- */
@@ -344,7 +383,7 @@ export function chunkTitle(state, it, topics = []) {
   return `${name}: ${weak?.[it.kind] || PREP[ev?.type]?.[it.kind] || 'подготовка'}`;
 }
 
-export function chunkDetail(state, it) {
+export function chunkDetail(state, it, topics = []) {
   if (it.catchUp) {
     const subj = subjectOf(state, it.subject);
     return subj?.catchUpByTopic ? 'Догоняю: с нуля, по темам докладов' : `Догоняю отставание${subj?.behindDays ? ` (${subj.behindDays} дн.)` : ''}`;
@@ -352,7 +391,8 @@ export function chunkDetail(state, it) {
   if (it.maint) return 'Поддержка слабого предмета';
   const ev = eventById(state, it.eventId);
   if (!ev) return '';
-  return `${EVENT_TYPES[ev.type]?.label ?? 'Событие'} · ${shortDate(ev.date)}`;
+  const names = topics.length ? ` · ${topics.map((t) => `«${t.name}»`).join(', ')}` : '';
+  return `${EVENT_TYPES[ev.type]?.label ?? 'Событие'} · ${shortDate(ev.date)}${names}`;
 }
 
 export function firstStep(state, it, topics = []) {
@@ -385,6 +425,7 @@ export function firstStep(state, it, topics = []) {
  * Иначе — первая незакрытая тема предмета.
  */
 function topicsForChunk(state, it, items, min) {
+  if (it.eventId) return eventTopicsFor(state, it, items, min);
   if (!it.maint && !it.catchUp) return [];
   if (!(it.catchUp && subjectOf(state, it.subject)?.catchUpByTopic)) {
     const t = nextTopicFor(state, it.subject);
@@ -412,8 +453,8 @@ function studyBlock(state, chunk, place, start, end, mk, items) {
   return mk('study', start, end, {
     place, itemKey: it.key, progressKey: it.progressKey || it.key, eventId: it.eventId || null, subject: it.subject, kind: it.kind,
     min: chunk.min, maint: !!it.maint, catchUp: !!it.catchUp, topicId: topics[0]?.id || null,
-    ...(it.catchUp && topics.length ? { topicIds: topics.map((t) => t.id) } : {}),
-    title: chunkTitle(state, it, topics), detail: chunkDetail(state, it), first: firstStep(state, it, topics),
+    ...((it.catchUp || it.eventId) && topics.length ? { topicIds: topics.map((t) => t.id) } : {}),
+    title: chunkTitle(state, it, topics), detail: chunkDetail(state, it, topics), first: firstStep(state, it, topics),
   });
 }
 
@@ -840,10 +881,11 @@ export function recordDone(state, key, b, at = Date.now()) {
   const pk = b.progressKey || b.itemKey || null; // у «догнать» прогресс общий на предмет, а не на неделю
   const rec = { status: 'done', min: b.min || 0, itemKey: pk, type: b.type, at };
   if (pk && b.min) state.progress[pk] = (state.progress[pk] || 0) + b.min;
-  if (b.catchUp && b.topicIds?.length) {
+  if ((b.catchUp || b.eventId) && b.topicIds?.length) {
+    // темы пройдены: в план больше не ставятся (в этом кругу), «не начал» → «учу»
     const fresh = state.topics.filter((t) => b.topicIds.includes(t.id) && t.status === 'new');
     for (const t of fresh) t.status = 'learning';
-    Object.assign(rec, { topics: b.topicIds, wasNew: fresh.map((t) => t.id) });
+    Object.assign(rec, { topics: b.topicIds, wasNew: fresh.map((t) => t.id), kind: b.kind });
   }
   const ev = b.eventId ? eventById(state, b.eventId) : null;
   const subj = ev && CREDIT_TYPES.has(ev.type) ? subjectOf(state, ev.subject) : null;

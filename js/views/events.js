@@ -7,6 +7,8 @@ import { CONFIG, EVENT_TYPES, PREP } from '../config.js';
 import { commit, store } from '../store.js';
 import { buildTodayPlan, defaultNeedMin, eventProgress, isWeak, plannedByEvent, prepStartOf, splitNeed, subjectOf } from '../planner.js';
 import { parseDeadlines } from '../parse.js';
+import { STATUS } from '../practice.js';
+import { hasTheory } from '../theory.js';
 import { esc, fmtDur, round5, shortDate, uid } from '../util.js';
 import { closeSheet, confirmSheet, icon, openSheet, toast } from '../ui.js';
 import { getSim, nowMin, today } from './shared.js';
@@ -41,6 +43,14 @@ export const segValue = (root, group) => root.querySelector(`[data-seg="${group}
 export const switchValue = (root, name) => root.querySelector(`[data-switch="${name}"]`)?.getAttribute('aria-pressed') === 'true';
 export { segButtons, switchBtn };
 
+/** Темы предмета кнопками: какие входят в контрольную. */
+function topicChips(subject, selected) {
+  if (!subject) return '<p class="small muted" style="margin:0">Выбери предмет — появятся его темы.</p>';
+  const ts = store.state.topics.filter((t) => t.subject === subject);
+  if (!ts.length) return '<p class="small muted" style="margin:0">У предмета пока нет тем — добавь их на «Темах».</p>';
+  return `<div class="tchips">${ts.map((t) => `<button class="tchip" type="button" data-topic="${esc(t.id)}" aria-pressed="${selected.has(t.id)}">${esc(t.name)}</button>`).join('')}</div>`;
+}
+
 /** Блок «Как готовиться»: шаги, часы, прогресс. */
 export function howToHtml(ev) {
   const st = store.state;
@@ -55,6 +65,7 @@ export function howToHtml(ev) {
   const factor = CONFIG.levelFactor[Number(subj?.level) || 3];
   const pct = need ? Math.min(100, Math.round((prog.done / need) * 100)) : 0;
   const prepStart = prepStartOf(st, ev);
+  const tps = (ev.topics || []).map((id) => st.topics.find((t) => t.id === id)).filter(Boolean);
   return `<section>
     <div class="sec-row"><h3 class="sec">Как готовиться</h3></div>
     ${need ? `<p class="lead small">Закладываю на подготовку <b>${fmtDur(need)}</b>${ev.prepMin != null && ev.prepMin !== '' ? ' (ты задал сам)' : ` — ${String(p.hours).replace('.', ',')} ч × ${String(factor).replace('.', ',')} за уровень предмета ${subj?.level ?? 3}`}.
@@ -64,6 +75,9 @@ export function howToHtml(ev) {
       <p class="small muted">Сделано ${fmtDur(prog.done)} из ${fmtDur(need)} · в плане ещё ${fmtDur(planned)}${short ? ` · <b style="color:var(--danger)">не хватает ~${fmtDur(short.short)}</b>` : ''}</p>` : ''}
     ${prepStart ? `<p class="small" style="margin:0">${ev.type === 'lab' && !ev.prepFrom ? 'Отчёт можно делать' : 'Подготовка начнётся'} ${esc(shortDate(prepStart))}${ev.type === 'lab' && !ev.prepFrom ? ' — после прошлой лабы' : ''} — раньше в план не ставлю.</p>` : ''}
     <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:6px">${(w?.steps || p.steps).map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+    ${tps.length ? `<div class="stack" style="gap:4px"><span class="eyebrow">Темы — подготовка идёт по ним по порядку</span>
+      <ul class="list">${tps.map((t) => `<li><button class="li" type="button" data-act="go" data-to="topic/${esc(t.id)}">
+        <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${esc(STATUS[t.status] || t.status)}${hasTheory(t.id) ? ' · есть теория' : ''}</span></span>${icon('chev', 'chev s')}</button></li>`).join('')}</ul></div>` : ''}
   </section>`;
 }
 
@@ -76,6 +90,7 @@ export function openEventSheet(id, presetDate) {
   };
   const hours = draft.prepMin != null && draft.prepMin !== '' ? String(Math.round((draft.prepMin / 60) * 10) / 10).replace('.', ',') : '';
   const defHours = Math.round((defaultNeedMin(st, { ...draft, subject: draft.subject || null }) / 60) * 10) / 10;
+  const sel = new Set(draft.topics || []);
 
   openSheet({
     title: ev ? 'Событие' : 'Новый дедлайн',
@@ -85,6 +100,7 @@ export function openEventSheet(id, presetDate) {
       <div class="field"><span class="eyebrow">Тип</span>${segButtons('type', TYPE_ORDER.map((t) => [t, EVENT_TYPES[t].short]), draft.type)}</div>
       <div class="field"><label for="ev-subject">Предмет</label>
         <select class="inp" id="ev-subject"><option value="">— без предмета —</option>${st.subjects.map((s) => `<option value="${esc(s.id)}" ${s.id === draft.subject ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="field"><span class="eyebrow">Темы — что входит (подготовка пойдёт по ним)</span><div id="ev-topics">${topicChips(draft.subject, sel)}</div></div>
       <div class="times">
         <div class="field"><label for="ev-date">Дата</label><input class="inp" type="date" id="ev-date" value="${esc(draft.date)}"></div>
         <div class="field"><label for="ev-time">Время</label><input class="inp" type="time" id="ev-time" value="${esc(draft.time || '')}"></div>
@@ -102,6 +118,16 @@ export function openEventSheet(id, presetDate) {
       </div>`,
     onMount: (body) => {
       wireControls(body);
+      const box = body.querySelector('#ev-topics');
+      box.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-topic]');
+        if (!b) return;
+        const on = b.getAttribute('aria-pressed') !== 'true';
+        b.setAttribute('aria-pressed', String(on));
+        if (on) sel.add(b.dataset.topic);
+        else sel.delete(b.dataset.topic);
+      });
+      body.querySelector('#ev-subject').addEventListener('change', (e) => { box.innerHTML = topicChips(e.target.value, sel); });
       body.querySelector('#ev-save').addEventListener('click', () => {
         const date = body.querySelector('#ev-date').value;
         if (!date) {
@@ -115,11 +141,13 @@ export function openEventSheet(id, presetDate) {
           toast('Часы на подготовку — число, например 2,5.');
           return;
         }
+        const subject = body.querySelector('#ev-subject').value || null;
         const next = {
           ...draft,
           type,
           title: body.querySelector('#ev-title').value.trim() || EVENT_TYPES[type].label,
-          subject: body.querySelector('#ev-subject').value || null,
+          subject,
+          topics: store.state.topics.filter((t) => t.subject === subject && sel.has(t.id)).map((t) => t.id), // в порядке тем предмета
           date,
           time: body.querySelector('#ev-time').value || null,
           timeAssumed: ev && body.querySelector('#ev-time').value === ev.time ? ev.timeAssumed : false,

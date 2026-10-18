@@ -12,7 +12,7 @@ import { addDays, daysBetween, esc, fmtDur, fmtHours, fmtTime, humanDate, monday
 import { icon, toast } from '../ui.js';
 import { bank } from '../bank.js';
 import {
-  KIND_LABEL, PLACE_LABEL, eventRow, eventTitle, getSim, nowMin, planFor, statusOf, subjShort, today, upcoming,
+  KIND_LABEL, PLACE_LABEL, eventRow, eventTitle, getSim, nowMin, planFor, statusOf, subjShort, today, topicLinks, upcoming,
 } from './shared.js';
 
 /* ---------- Таймер фокуса 25/5 ---------- */
@@ -219,7 +219,7 @@ function taskItem(t, b, i) {
           ? `<span class="chip ${status === 'done' ? 'ok' : ''}">${status === 'done' ? 'сделано' : 'перенесено'}</span><button class="btn quiet small" type="button" data-act="block-undo" data-key="${t}" data-id="${esc(b.id)}">Отменить</button>`
           : `<button class="btn small" type="button" data-act="block-done" data-key="${t}" data-id="${esc(b.id)}">${icon('check', 's')}Готово</button>
              ${started ? `<button class="btn small ghost" type="button" data-act="block-skip" data-key="${t}" data-id="${esc(b.id)}">Не успел</button>` : ''}
-             <button class="btn small ghost" type="button" data-act="timer-start">${icon('clock', 's')}25:00</button>${link}`}
+             <button class="btn small ghost" type="button" data-act="timer-start">${icon('clock', 's')}25:00</button>${link}${topicLinks(b)}`}
       </div>
     </div>
   </li>`;

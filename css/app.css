@@ -302,14 +302,6 @@ input[type="time"].inp, input[type="date"].inp { -webkit-appearance: none; appea
 .sheet-head { position: sticky; top: 0; background: var(--paper); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px 10px; border-bottom: 1px solid var(--line-soft); z-index: 1; }
 .sheet-head h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.1; }
 
-/* ---------- Раскрывающиеся предметы на «Темах» ---------- */
-details.subj { display: grid; gap: 14px; min-width: 0; }
-details.subj > summary { cursor: pointer; list-style: none; }
-details.subj > summary::-webkit-details-marker { display: none; }
-details.subj > .stack { padding-top: 12px; }
-.subj-chev { transition: transform .15s; transform: rotate(90deg); }
-details.subj:not([open]) .subj-chev { transform: none; }
-
 /* ---------- Календарь ---------- */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .cal-nav .m { font-family: var(--font-display); font-size: 24px; text-transform: capitalize; }
@@ -427,6 +419,43 @@ details.subj:not([open]) .subj-chev { transform: none; }
 .flash .fq { font-family: var(--font-display); font-size: 25px; line-height: 1.25; overflow-wrap: anywhere; }
 .flash .fa { font-size: 18px; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 pre.code { margin: 0; padding: 12px; background: var(--bg); border: 1px solid var(--line-soft); border-radius: var(--radius); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- Теория ---------- */
+.seg.mini { flex: none; flex-wrap: nowrap; }
+.seg.mini button { flex: none; min-height: 34px; padding: 0 10px; font-size: 10.5px; }
+.md { display: grid; gap: 12px; min-width: 0; font-size: 15.5px; line-height: 1.55; overflow-wrap: anywhere; }
+.md p { margin: 0; max-width: 62ch; }
+.md b { font-weight: 650; }
+.md .md-h { margin: 8px 0 0; font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 1.2; }
+.md .md-ul, .md .md-ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.md .md-note { border-left: 2px solid var(--accent); padding: 4px 0 4px 12px; color: var(--ink-2); font-size: 14.5px; }
+.md code, .md .fm { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .92em; background: var(--line-soft); border-radius: 2px; padding: 1px 4px; overflow-wrap: anywhere; }
+.md .fm { font-weight: 500; }
+.md pre.md-code { margin: 0; padding: 12px; background: var(--paper); border: 1px solid var(--line-soft); border-radius: var(--radius); font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.md pre.md-code code { background: none; padding: 0; font-size: inherit; }
+.md-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.md-table { border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; min-width: 100%; }
+.md-table th, .md-table td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; vertical-align: top; }
+.md-table th { background: var(--paper); font-weight: 600; }
+
+/* ---------- Модули: игры и тренажёры ---------- */
+.mod {
+  display: grid; gap: 6px; padding: 14px 16px; border: 1px solid var(--ink); border-radius: var(--radius);
+  background: var(--paper); color: var(--ink); text-decoration: none; min-width: 0;
+}
+.mod:active { transform: scale(.99); }
+.mod-k { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.mod .t { font-family: var(--font-display); font-size: 22px; line-height: 1.15; overflow-wrap: anywhere; }
+.mod .m { font-size: 14px; color: var(--ink-2); }
+.mod-p { display: grid; gap: 4px; margin-top: 2px; }
+.mod-p .tiny { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mod-go { font-size: 11.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; margin-top: 2px; }
+.tchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tchip {
+  min-height: 38px; padding: 6px 11px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: transparent; font-size: 14px; line-height: 1.25; text-align: left; overflow-wrap: anywhere; max-width: 100%;
+}
+.tchip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
 /* ---------- Движение: уважаем «Уменьшить движение» и выбор в настройках ---------- */
 @media (prefers-reduced-motion: reduce) {

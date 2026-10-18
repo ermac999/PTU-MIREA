@@ -1,6 +1,7 @@
 /* =====================================================================
-   «Темы»: статусы тем, конспект, банк заданий, отработка, карточки,
-   добавление заданий текстом.
+   «Темы»: список предметов → страница предмета (темы, игры) → тема
+   (теория кратко/подробно, игры, статус, конспект, банк заданий);
+   отработка, карточки, добавление заданий текстом.
    ===================================================================== */
 
 import { CONFIG } from '../config.js';
@@ -11,7 +12,9 @@ import {
   recordAnswer, requeue, tasksForScope, topicStats, weakCards,
 } from '../practice.js';
 import { parseCards, parseTasks } from '../parse.js';
-import { esc, fmtDur, humanDate, plural, uid } from '../util.js';
+import { daysBetween, esc, fmtDur, humanDate, plural, uid } from '../util.js';
+import { autoMode, hasTheory, renderMd, theory, theoryOf } from '../theory.js';
+import { moduleHref, modulesFor } from '../modules.js';
 import { closeSheet, confirmSheet, copyText, icon, openSheet, toast } from '../ui.js';
 import { go } from '../nav.js';
 import { bank } from '../bank.js';
@@ -22,14 +25,9 @@ const cardsAll = () => allCards(bank.data, store.state);
 const topicById = (id) => store.state.topics.find((t) => t.id === id);
 const statusChip = (s) => `<span class="chip ${s === 'understood' || s === 'reviewed' ? 'ok' : s === 'learning' ? '' : 'warn'}">${STATUS[s] || s}</span>`;
 
-/* ---------- Список тем ---------- */
+/* ---------- Предметы ---------- */
 
-const openSubjects = {}; // какие предметы раскрыты (запоминаем, пока приложение открыто)
-
-/** Запомнить, раскрыт ли предмет (вызывается из app.js на событие toggle). */
-export function rememberToggle(el) {
-  if (el?.dataset?.subj) openSubjects[el.dataset.subj] = el.open;
-}
+const isClosedTopic = (t) => t.status === 'understood' || t.status === 'reviewed';
 
 function catchUpLine(st, s) {
   const total = catchUpTotal(st, s);
@@ -43,43 +41,116 @@ function catchUpLine(st, s) {
   </div>`;
 }
 
+/** Карточка модуля (игры, тренажёра): название, о чём, прогресс. */
+function moduleCard(m) {
+  const pr = m.progress?.();
+  const ext = moduleHref(m) !== m.href;
+  return `<a class="mod" href="${esc(moduleHref(m))}"${ext ? ' target="_blank" rel="noopener"' : ''}>
+    <span class="mod-k">${icon('target', 's')}${esc(m.kind)}</span>
+    <span class="t">${esc(m.title)}</span>
+    <span class="m">${esc(m.about)}</span>
+    ${pr ? `<span class="mod-p"><span class="progress ${pr.stars >= pr.maxStars ? 'ok' : ''}"><i style="width:${Math.round((pr.stars / pr.maxStars) * 100)}%"></i></span><span class="tiny">${esc(pr.label)}</span></span>` : ''}
+    <span class="mod-go">${ext ? 'Открыть на сайте' : 'Открыть'} →</span>
+  </a>`;
+}
+
+/** Сколько дней до ближайшей несданной контрольной, в которую входит тема (или null). */
+function daysToEvent(st, topicId) {
+  const t = today();
+  const ds = st.events.filter((e) => !e.done && (e.topics || []).includes(topicId) && e.date >= t).map((e) => daysBetween(t, e.date));
+  return ds.length ? Math.min(...ds) : null;
+}
+
+function theorySection(st, topic) {
+  if (!theory.loaded) return '';
+  const th = theoryOf(topic.id);
+  if (!th) {
+    return `<section><div class="sec-row"><h2 class="sec">Теория</h2></div>
+      <p class="small muted" style="margin:0">Теории по этой теме пока нет. Пришли в чат конспект, презентацию или скриншоты практики — добавлю.</p></section>`;
+  }
+  const mode = topic.theoryMode || autoMode(topic.status, daysToEvent(st, topic.id));
+  const id = esc(topic.id);
+  return `<section>
+    <div class="sec-row"><h2 class="sec">Теория</h2>
+      <div class="seg mini" role="group" aria-label="Подробность">
+        <button type="button" data-act="theory-mode" data-id="${id}" data-v="brief" aria-pressed="${mode === 'brief'}">Кратко</button>
+        <button type="button" data-act="theory-mode" data-id="${id}" data-v="detailed" aria-pressed="${mode === 'detailed'}">Подробно</button>
+      </div></div>
+    ${topic.theoryMode ? '' : `<p class="tiny muted" style="margin:0">${mode === 'brief' ? 'Сейчас кратко: тема уже знакома или контрольная совсем близко.' : 'Сейчас подробно: тема ещё не закрыта. Перед контрольной переключится на «кратко».'}</p>`}
+    <div class="md">${renderMd(mode === 'brief' ? th.brief : th.detailed)}</div>
+    <button class="btn small" type="button" data-act="topic-read" data-id="${id}">${icon('check', 's')}Прочитал — к задачам</button>
+  </section>`;
+}
+
+function topicRow(t, tasks) {
+  const n = tasks.filter((x) => x.topic === t.id).length;
+  return `<li><button class="li" type="button" data-act="go" data-to="topic/${esc(t.id)}">
+    <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${t.num ? `доклад №${t.num} · ` : ''}${n ? `${n} ${plural(n, 'задание', 'задания', 'заданий')}` : 'заданий пока нет'}${hasTheory(t.id) ? ' · теория' : ''}${modulesFor({ topic: t.id }).length ? ' · игра' : ''}${t.example ? ' · примерная тема' : ''}</span></span>
+    ${statusChip(t.status)}${icon('chev', 'chev s')}</button></li>`;
+}
+
+function subjectRow(st, s) {
+  const ts = st.topics.filter((t) => t.subject === s.id);
+  const th = ts.filter((t) => hasTheory(t.id)).length;
+  const mods = modulesFor({ subject: s.id }).length;
+  const behind = catchUpTotal(st, s) > catchUpDone(st, s);
+  const meta = [
+    ts.length ? `${ts.length} ${plural(ts.length, 'тема', 'темы', 'тем')} · закрыто ${ts.filter(isClosedTopic).length}` : 'тем пока нет',
+    th ? `теория: ${th}` : '',
+    mods ? `${mods} ${plural(mods, 'игра', 'игры', 'игр')}` : '',
+  ].filter(Boolean).join(' · ');
+  return `<li><button class="li" type="button" data-act="go" data-to="subject/${esc(s.id)}">
+    <span class="grow"><span class="t">${esc(s.short)}</span><span class="m">${levelDots(s.level)} ${meta}</span></span>
+    ${behind ? '<span class="chip danger">догоняю</span>' : Number(s.level) <= CONFIG.weakLevelMax ? '<span class="chip warn">слабый</span>' : ''}${icon('chev', 'chev s')}</button></li>`;
+}
+
 export function renderTopics() {
   const st = store.state;
-  const tasks = tasksAll();
   // сначала те, кого догоняем, потом слабые, потом остальные
   const score = (s) => (catchUpTotal(st, s) > catchUpDone(st, s) ? 0 : 1) * 10 + (Number(s.level) || 3);
   const subjects = st.subjects.filter((s) => !s.noStudy).sort((a, b) => score(a) - score(b));
   return `
     <header class="head">
-      <span class="eyebrow">Темы и отработка</span>
+      <span class="eyebrow">Предметы · теория · игры</span>
       <h1 class="display">Темы</h1>
     </header>
+    <ul class="list">${subjects.map((s) => subjectRow(st, s)).join('')}</ul>
+    <section>
+      <div class="grid2">
+        <button class="btn" type="button" data-act="go" data-to="practice/weak">${icon('target', 's')}Отработка</button>
+        <button class="btn ghost" type="button" data-act="go" data-to="cards">${icon('cards', 's')}Карточки</button>
+      </div>
+      <button class="btn ghost block" type="button" data-act="go" data-to="import">${icon('paste', 's')}Добавить задания текстом</button>
+      <p class="small muted" style="margin:0">Отработка без выбора темы — по слабым предметам. Задания с пометкой «пример» — для старта, пока нет твоих материалов.</p>
+    </section>`;
+}
+
+export function renderSubject([id]) {
+  const st = store.state;
+  const s = subjectOf(st, id);
+  if (!s) return `<p class="lead">Предмет не найден.</p><button class="btn" type="button" data-act="go" data-to="topics">К темам</button>`;
+  const tasks = tasksAll();
+  const ts = st.topics.filter((t) => t.subject === id);
+  const mods = modulesFor({ subject: id });
+  const nTasks = tasks.filter((x) => x.subject === id).length;
+  const nCards = cardsAll().filter((c) => c.subject === id).length;
+  return `
+    <header class="head">
+      <button class="back" type="button" data-act="go" data-to="topics">${icon('back', 's')}Темы</button>
+      <span class="eyebrow">${s.name !== s.short ? `${esc(s.name)} · ` : ''}уровень ${Number(s.level) || 3} из 5</span>
+      <h1 class="display m">${esc(s.short)}</h1>
+    </header>
+    ${catchUpLine(st, s)}
+    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${mods.map(moduleCard).join('')}</section>` : ''}
+    <section>
+      <div class="sec-row"><h2 class="sec">Темы</h2>${ts.length ? `<span class="small muted">закрыто ${ts.filter(isClosedTopic).length} из ${ts.length}</span>` : ''}</div>
+      ${ts.length ? `<ul class="list">${ts.map((t) => topicRow(t, tasks)).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}
+      <button class="btn quiet small" type="button" data-act="topic-add" data-subject="${esc(id)}">${icon('plus', 's')}Тема</button>
+    </section>
     <div class="grid2">
-      <button class="btn" type="button" data-act="go" data-to="practice/weak">${icon('target', 's')}Отработка</button>
-      <button class="btn ghost" type="button" data-act="go" data-to="cards">${icon('cards', 's')}Карточки</button>
-    </div>
-    <button class="btn ghost block" type="button" data-act="go" data-to="import">${icon('paste', 's')}Добавить задания текстом</button>
-    <p class="small muted">Отработка без выбора темы — по слабым предметам. Задания с пометкой «пример» — для старта, пока нет твоих материалов.</p>
-    ${subjects.map((s) => {
-      const ts = st.topics.filter((t) => t.subject === s.id);
-      const closed = ts.filter((t) => t.status === 'understood' || t.status === 'reviewed').length;
-      const behind = catchUpTotal(st, s) > catchUpDone(st, s);
-      const open = openSubjects[s.id] ?? (behind || Number(s.level) <= CONFIG.weakLevelMax);
-      return `<details class="subj" data-subj="${esc(s.id)}" ${open ? 'open' : ''}>
-        <summary class="sec-row"><h2 class="sec">${esc(s.short)}</h2><span class="row" style="gap:8px">${levelDots(s.level)}${behind ? '<span class="chip danger">догоняю</span>' : Number(s.level) <= CONFIG.weakLevelMax ? '<span class="chip warn">слабый</span>' : ''}${icon('chev', 'chev s subj-chev')}</span></summary>
-        <div class="stack">
-        ${catchUpLine(st, s)}
-        ${ts.length ? `<p class="small muted" style="margin:0">Закрыто ${closed} из ${ts.length}</p>
-        <ul class="list">${ts.map((t) => {
-          const n = tasks.filter((x) => x.topic === t.id).length;
-          return `<li><button class="li" type="button" data-act="go" data-to="topic/${esc(t.id)}">
-            <span class="grow"><span class="t">${esc(t.name)}</span><span class="m">${t.num ? `доклад №${t.num} · ` : ''}${n ? `${n} ${plural(n, 'задание', 'задания', 'заданий')}` : 'заданий пока нет'}${t.example ? ' · примерная тема' : ''}</span></span>
-            ${statusChip(t.status)}${icon('chev', 'chev s')}</button></li>`;
-        }).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}
-        <button class="btn quiet small" type="button" data-act="topic-add" data-subject="${esc(s.id)}">${icon('plus', 's')}Тема</button>
-        </div>
-      </details>`;
-    }).join('')}`;
+      <button class="btn" type="button" data-act="go" data-to="practice/s:${esc(id)}" ${nTasks ? '' : 'disabled'}>${icon('target', 's')}Отработка</button>
+      <button class="btn ghost" type="button" data-act="go" data-to="drill/s:${esc(id)}" ${nCards ? '' : 'disabled'}>${icon('cards', 's')}Карточки</button>
+    </div>`;
 }
 
 /* ---------- Тема ---------- */
@@ -94,11 +165,15 @@ export function renderTopic([id]) {
   const cards = cardsAll().filter((c) => c.topic === id);
   return `
     <header class="head">
-      <button class="back" type="button" data-act="go" data-to="topics">${icon('back', 's')}Темы</button>
+      <button class="back" type="button" data-act="go" data-to="subject/${esc(topic.subject)}">${icon('back', 's')}${esc(subjShort(topic.subject) || 'Темы')}</button>
       <span class="eyebrow">${esc(subjectOf(st, topic.subject)?.name || '')}${topic.num ? ` · доклад №${topic.num}` : ''}</span>
       <h1 class="display m">${esc(topic.name)}</h1>
       ${topic.example ? '<span class="small muted">Примерная тема — переименуй под свою программу или удали.</span>' : ''}
     </header>
+
+    ${theorySection(st, topic)}
+
+    ${modulesFor({ topic: id }).length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${modulesFor({ topic: id }).map(moduleCard).join('')}</section>` : ''}
 
     <section>
       <span class="eyebrow">Статус — меняется сам по результатам, можно поправить</span>
@@ -142,7 +217,7 @@ function scopeOf(param) {
   if (!param || param === 'weak') return { weak: true, label: 'слабые предметы', back: 'topics' };
   const [k, v] = param.split(':');
   if (k === 't') return { topic: v, label: topicById(v)?.name || 'тема', back: `topic/${v}` };
-  if (k === 's') return { subject: v, label: subjShort(v) || 'предмет', back: 'topics' };
+  if (k === 's') return { subject: v, label: subjShort(v) || 'предмет', back: `subject/${v}` };
   return { weak: true, label: 'слабые предметы', back: 'topics' };
 }
 
@@ -435,6 +510,23 @@ export const topicsInputs = {
 };
 
 export const topicsActions = {
+  'theory-mode': (el) => commit((st) => {
+    const t = st.topics.find((x) => x.id === el.dataset.id);
+    if (t) t.theoryMode = el.dataset.v;
+  }),
+  'topic-read': (el) => {
+    const id = el.dataset.id;
+    commit((st) => {
+      const t = st.topics.find((x) => x.id === id);
+      if (t && t.status === 'new') t.status = 'learning';
+    }, { silent: true });
+    if (tasksAll().some((x) => x.topic === id)) go(`practice/t:${id}`);
+    else if (cardsAll().some((c) => c.topic === id)) go(`drill/t:${id}`);
+    else {
+      toast('Отметил «учу». Задач по теме пока нет — пришли материалы, сделаю.');
+      go(`topic/${id}`, { replace: true });
+    }
+  },
   'topic-status': (el) => commit((st) => {
     const t = st.topics.find((x) => x.id === el.dataset.id);
     if (t) {
@@ -463,8 +555,11 @@ export const topicsActions = {
     const t = topicById(el.dataset.id);
     const ok = await confirmSheet({ title: 'Удалить тему?', text: `«${t?.name}» и конспект удалятся. Задания банка останутся, но без темы.`, ok: 'Удалить', danger: true });
     if (!ok) return;
-    commit((st) => { st.topics = st.topics.filter((x) => x.id !== el.dataset.id); });
-    go('topics');
+    commit((st) => {
+      st.topics = st.topics.filter((x) => x.id !== el.dataset.id);
+      for (const e of st.events) if (e.topics) e.topics = e.topics.filter((x) => x !== el.dataset.id);
+    });
+    go(t ? `subject/${t.subject}` : 'topics');
   },
   'task-del': async (el) => {
     const ok = await confirmSheet({ title: 'Удалить задание?', text: 'Оно пропадёт из банка.', ok: 'Удалить', danger: true });

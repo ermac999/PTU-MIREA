@@ -6,6 +6,8 @@
 import { CONFIG } from './config.js';
 import { commit, loadState, onChange, persistNow, store } from './store.js';
 import { loadBank } from './bank.js';
+import { loadTheory } from './theory.js';
+import { seedModules, startedTopics } from './modules.js';
 import { go, initNav, route, setRenderer } from './nav.js';
 import { closeSheet, icon, sheetIsOpen } from './ui.js';
 import { buildTodayPlan, catchUpWindow, streakInfo, subjectOf } from './planner.js';
@@ -16,7 +18,7 @@ import { eventActions } from './views/events.js';
 import { dayActions, renderDay } from './views/day.js';
 import { ensureTicker, paintTimer, renderBurning, renderToday, todayActions } from './views/today.js';
 import {
-  rememberToggle, renderCards, renderDrill, renderImport, renderPractice, renderTopic, renderTopics, topicsActions, topicsInputs,
+  renderCards, renderDrill, renderImport, renderPractice, renderSubject, renderTopic, renderTopics, topicsActions, topicsInputs,
 } from './views/topics.js';
 import {
   applyLook, mountSettings, renderAttendance, renderClasses, renderSettings, renderSubjects, settingsActions,
@@ -28,6 +30,7 @@ const ROUTES = {
   burning: { tab: 'calendar', title: 'Горит', render: renderBurning },
   today: { tab: 'today', title: 'Сегодня', render: renderToday },
   topics: { tab: 'topics', title: 'Темы', render: renderTopics },
+  subject: { tab: 'topics', title: 'Предмет', render: renderSubject },
   topic: { tab: 'topics', title: 'Тема', render: renderTopic },
   practice: { tab: 'topics', title: 'Отработка', render: renderPractice },
   cards: { tab: 'topics', title: 'Карточки', render: renderCards },
@@ -96,8 +99,12 @@ function updateNote() {
   if (seen < 6) {
     parts.push('Воскресенье 18.10: до обеда — информатика (КР в пятницу), после обеда — линал. Учёбы около 4,5 ч с перерывами, вечер свободен.');
   }
-  return `<div class="note"><b>Обновление плана.</b> ${parts.join(' ')} Поправить — «Настройки → Предметы».
-    <button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div>`;
+  const hub = seen < 7
+    ? 'В «Темах» у каждого предмета своя страница: темы, теория (кратко или подробно) и игры. Физика → «Кинематика на зачёт» — твоя игра уже здесь, прогресс перенесён: 25 звёзд, дальше 12-й уровень. В карточке контрольной можно отметить темы — подготовка пойдёт по ним, а в плане появится «Теория →».'
+    : '';
+  return `<div class="note">${parts.length ? `<span><b>Обновление плана.</b> ${parts.join(' ')} Поправить — «Настройки → Предметы».</span>` : ''}
+    ${hub ? `<span><b>Новое.</b> ${hub}</span>` : ''}
+    <div class="row" style="gap:4px">${hub ? '<button class="btn quiet small" type="button" data-act="go" data-to="subject/phys">Открыть физику →</button>' : ''}<button class="btn quiet small" type="button" data-act="update-dismiss">Понятно</button></div></div>`;
 }
 
 function introNote() {
@@ -182,7 +189,6 @@ document.addEventListener('submit', (e) => {
   e.preventDefault();
   actions[f.dataset.submit]?.(f, e);
 });
-document.addEventListener('toggle', (e) => rememberToggle(e.target), true); // toggle не всплывает — ловим на погружении
 document.addEventListener('input', (e) => {
   const el = e.target.closest('[data-input]');
   if (el) inputs[el.dataset.input]?.(el, e);
@@ -223,6 +229,13 @@ function start() {
   onChange(scheduleRender);
   render();
   loadBank().then(scheduleRender);
+  loadTheory().then(scheduleRender);
+  seedModules().then(() => {
+    // игру по теме уже начали — тема «учу», а не «не начал»
+    const ids = startedTopics(store.state);
+    if (ids.length) commit((st) => { for (const t of st.topics) if (ids.includes(t.id)) t.status = 'learning'; });
+    else scheduleRender();
+  });
   ensureTicker();
   registerServiceWorker();
 

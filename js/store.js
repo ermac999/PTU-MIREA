@@ -69,6 +69,7 @@ export function migrate(raw) {
   if (from < 5) upgradeTo5(st);
   if (from < 6) upgradeTo6(st);
   if (from < 7) upgradeTo7(st);
+  if (from < 9) upgradeTo9(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -160,6 +161,12 @@ function upgradeTo7(st) {
   if (ov && ov.study === true && Number(ov.studyMin) === 180 && ov.hot === 'ev-linal-kr') {
     st.dayOverrides['2026-10-18'] = { ...ov, studyMin: fresh.studyMin, hot: [...fresh.hot] };
   }
+}
+
+/** Версия 9 (18.10): «Кинематика» — настоящая тема курса (практики 2–3, игра «Кинематика на зачёт»), а не примерная. */
+function upgradeTo9(st) {
+  const t = st.topics.find((x) => x.id === 'phys-1');
+  if (t && t.example && t.name === 'Кинематика') t.example = false;
 }
 
 export const store = {
