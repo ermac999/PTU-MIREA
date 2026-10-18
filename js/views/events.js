@@ -5,7 +5,7 @@
 
 import { CONFIG, EVENT_TYPES, PREP } from '../config.js';
 import { commit, store } from '../store.js';
-import { buildTodayPlan, defaultNeedMin, eventProgress, plannedByEvent, prepStartOf, splitNeed, subjectOf } from '../planner.js';
+import { buildTodayPlan, defaultNeedMin, eventProgress, isWeak, plannedByEvent, prepStartOf, splitNeed, subjectOf } from '../planner.js';
 import { parseDeadlines } from '../parse.js';
 import { esc, fmtDur, round5, shortDate, uid } from '../util.js';
 import { closeSheet, confirmSheet, icon, openSheet, toast } from '../ui.js';
@@ -47,6 +47,7 @@ export function howToHtml(ev) {
   const p = PREP[ev.type];
   if (!p) return '';
   const subj = subjectOf(st, ev.subject);
+  const w = isWeak(subj) ? p.weak : null; // слабый предмет — готовимся с нуля
   const { need, light, heavy } = splitNeed(st, ev);
   const prog = eventProgress(st, ev);
   const planned = plannedByEvent(getSim(), st)[ev.id] || 0;
@@ -57,12 +58,12 @@ export function howToHtml(ev) {
   return `<section>
     <div class="sec-row"><h3 class="sec">Как готовиться</h3></div>
     ${need ? `<p class="lead small">Закладываю на подготовку <b>${fmtDur(need)}</b>${ev.prepMin != null && ev.prepMin !== '' ? ' (ты задал сам)' : ` — ${String(p.hours).replace('.', ',')} ч × ${String(factor).replace('.', ',')} за уровень предмета ${subj?.level ?? 3}`}.
-      ${light ? `Лёгкая часть — ${fmtDur(light)}: ${esc(p.light)}, удобно в электричке.` : ''}
-      ${heavy ? `Тяжёлая — ${fmtDur(heavy)}: ${esc(p.heavy)}, дома.` : ''}</p>
+      ${light ? `Лёгкая часть — ${fmtDur(light)}: ${esc(w?.light || p.light)}, удобно в электричке.` : ''}
+      ${heavy ? `Тяжёлая — ${fmtDur(heavy)}: ${esc(w?.heavy || p.heavy)}, дома.` : ''}</p>
       <div class="progress ${pct >= 100 ? 'ok' : ''}"><i style="width:${pct}%"></i></div>
       <p class="small muted">Сделано ${fmtDur(prog.done)} из ${fmtDur(need)} · в плане ещё ${fmtDur(planned)}${short ? ` · <b style="color:var(--danger)">не хватает ~${fmtDur(short.short)}</b>` : ''}</p>` : ''}
     ${prepStart ? `<p class="small" style="margin:0">${ev.type === 'lab' && !ev.prepFrom ? 'Отчёт можно делать' : 'Подготовка начнётся'} ${esc(shortDate(prepStart))}${ev.type === 'lab' && !ev.prepFrom ? ' — после прошлой лабы' : ''} — раньше в план не ставлю.</p>` : ''}
-    <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:6px">${p.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+    <ol class="small" style="margin:0;padding-left:20px;display:grid;gap:6px">${(w?.steps || p.steps).map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
   </section>`;
 }
 

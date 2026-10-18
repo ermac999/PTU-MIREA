@@ -340,7 +340,8 @@ export function chunkTitle(state, it, topics = []) {
   }
   if (it.maint) return it.kind === 'light' ? `${name}: карточки и теория` : `${name}: отработка — ${topic?.name ?? 'слабая тема'}`;
   const ev = eventById(state, it.eventId);
-  return `${name}: ${PREP[ev?.type]?.[it.kind] || 'подготовка'}`;
+  const weak = isWeak(subj) ? PREP[ev?.type]?.weak : null; // «с нуля»
+  return `${name}: ${weak?.[it.kind] || PREP[ev?.type]?.[it.kind] || 'подготовка'}`;
 }
 
 export function chunkDetail(state, it) {
@@ -374,7 +375,8 @@ export function firstStep(state, it, topics = []) {
       : `Открой «Отработку» по теме «${topic?.name ?? 'первая тема'}» и реши 3 задачи.`;
   }
   const ev = eventById(state, it.eventId);
-  return PREP[ev?.type]?.first?.[it.kind] || 'Начни с самого простого шага на 15 минут.';
+  const weak = isWeak(subjectOf(state, it.subject)) ? PREP[ev?.type]?.weak : null; // «с нуля»
+  return weak?.first?.[it.kind] || PREP[ev?.type]?.first?.[it.kind] || 'Начни с самого простого шага на 15 минут.';
 }
 
 /**

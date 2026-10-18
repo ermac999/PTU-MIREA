@@ -256,6 +256,27 @@ test('воскресенье 18.10: до обеда информатика (КР
   assert.deepEqual(hotList(null), []);
 });
 
+test('слабый предмет (информатика «с нуля»): подготовка к КР — по порядку, а не «реши без подсказок»; сильный — как раньше', () => {
+  const st = defaultState();
+  const sim = simulate(st, TODAY, 7 * 60, 7);
+  const blocks = Object.values(sim.plans).flatMap((p) => p.blocks).filter((b) => b.type === 'study' && !b.catchUp && !b.maint);
+  const inf = blocks.filter((b) => b.eventId === 'ev-inf-kr');
+  const matan = blocks.filter((b) => b.eventId === 'ev-matan-kr' && b.kind === 'heavy');
+  assert.ok(inf.length && matan.length);
+  for (const b of inf) {
+    assert.ok(!/заново, без подсказок/.test(b.first), `информатика: «${b.first}»`);
+    assert.ok(/первую практику|первой темы|по порядку/.test(b.first), `информатика: «${b.first}»`);
+  }
+  assert.match(inf.find((b) => b.kind === 'heavy').title, /с нуля/);
+  for (const b of matan) assert.match(b.first, /последнюю практику/, 'уровень 3 — как раньше');
+  // уровень предмета поменяли на 4 — тексты как у остальных
+  const strong = defaultState();
+  strong.subjects.find((s) => s.id === 'inf').level = 4;
+  const sbs = Object.values(simulate(strong, TODAY, 7 * 60, 7).plans).flatMap((p) => p.blocks).filter((b) => b.eventId === 'ev-inf-kr');
+  assert.ok(sbs.length);
+  for (const b of sbs) assert.ok(!/первую практику|первой темы/.test(b.first) && !/с нуля/.test(b.title), `сильный предмет: «${b.first}»`);
+});
+
 test('подготовка к КР по предмету, который догоняем, засчитывается и в догоняние (и отменяется вместе с отметкой)', () => {
   const st = defaultState();
   const inf = st.subjects.find((s) => s.id === 'inf');
