@@ -1,0 +1,44 @@
+{
+  "answered": 15,
+  "best": 2,
+  "correct": 4,
+  "days": [
+    "2026-10-15",
+    "2026-10-18"
+  ],
+  "flags": {
+    "intro": true
+  },
+  "last": {
+    "level": "w1l1",
+    "world": "w1"
+  },
+  "levels": {
+    "w1l1": {
+      "plays": 1,
+      "stars": 1
+    }
+  },
+  "mistakes": {
+    "w1.bitsNeeded": 2,
+    "w1.hartleyInverse": 2,
+    "w1.hartleyMsg": 1,
+    "w1.hartleyNonPow2": 3,
+    "w6.binAdd": 1,
+    "w6.carryCount": 2
+  },
+  "opts": {
+    "mat": true,
+    "sound": true
+  },
+  "status": {},
+  "story": {
+    "intro": true,
+    "order": [],
+    "seen": {}
+  },
+  "theory": {},
+  "updatedAt": 1792315312378,
+  "v": 1,
+  "xp": 55
+}

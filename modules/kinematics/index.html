@@ -1,0 +1,1971 @@
+<!doctype html><html lang="ru"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Кинематика на зачёт</title>
+<script>/* тема и движение — как в «Рамках» */try{const s=JSON.parse(localStorage.getItem('ramki.v1')||'{}').settings||{};const r=document.documentElement;if(s.theme==='light'||s.theme==='dark')r.dataset.theme=s.theme;if(s.motion==='none')r.dataset.motion='none';}catch(e){}</script>
+<style>
+/* Layout: одна колонка-«тетрадь» на миллиметровке, как в конспектах; карта уровней — вертикальная ось с точками-станциями; ошибки помечены «красной ручкой» */
+:root{
+  --paper:#F5F7F2;--grid:rgba(48,92,170,.12);--grid-2:rgba(48,92,170,.24);
+  --card:#FFFFFF;--card-2:#ECF0F7;--ink:#15223D;--ink-2:#4A5674;--line:#D2DAE6;
+  --accent:#2B53D3;--on-accent:#FFFFFF;--pen:#C4332A;--on-pen:#FFFFFF;--ok:#17804F;
+  --hi:#FFD23F;--on-hi:#2E2400;--margin:rgba(196,51,42,.28);--shade:rgba(21,34,61,.34);
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --hand:"Caveat","Segoe Print","Bradley Hand","Comic Sans MS",cursive;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0C1D38;--grid:rgba(140,185,255,.09);--grid-2:rgba(140,185,255,.2);
+  --card:#122849;--card-2:#1A355E;--ink:#E9F0FF;--ink-2:#A6B7D6;--line:#2A4774;
+  --accent:#8AABFF;--on-accent:#0C1D38;--pen:#FF7A6C;--on-pen:#240A06;--ok:#55D59C;
+  --hi:#FFD23F;--on-hi:#2E2400;--margin:rgba(255,122,108,.3);--shade:rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C1D38;--grid:rgba(140,185,255,.09);--grid-2:rgba(140,185,255,.2);
+  --card:#122849;--card-2:#1A355E;--ink:#E9F0FF;--ink-2:#A6B7D6;--line:#2A4774;
+  --accent:#8AABFF;--on-accent:#0C1D38;--pen:#FF7A6C;--on-pen:#240A06;--ok:#55D59C;
+  --hi:#FFD23F;--on-hi:#2E2400;--margin:rgba(255,122,108,.3);--shade:rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--body);font-size:17px;line-height:1.5;color:var(--ink);
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;-webkit-text-size-adjust:100%}
+@media (min-width:900px){body::before{content:"";position:fixed;top:0;bottom:0;left:calc(50% - 430px);width:2px;background:var(--margin);pointer-events:none}}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:780px;margin:0 auto;padding-inline:16px;padding-block:8px 72px}
+h1,h2,h3{text-wrap:balance}
+
+/* шапка */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line)}
+.top .in{max-width:780px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--display);font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;margin-right:auto;min-width:0}
+.brand svg{flex:none;width:30px;height:22px}
+.brand b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.save{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.save i{width:9px;height:9px;border-radius:50%;background:var(--ink-2);flex:none}
+.save[data-s="cloud"] i{background:var(--ok)}
+.save[data-s="saving"] i{background:var(--hi)}
+.save[data-s="none"] i{background:var(--pen)}
+@media (max-width:560px){.save span{display:none}}
+.stotal{font-family:var(--mono);font-weight:700;font-size:14px;display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:var(--hi);color:var(--on-hi);white-space:nowrap;font-variant-numeric:tabular-nums}
+.stotal .star{width:16px;height:16px}
+.icon-btn{appearance:none;border:1.5px solid var(--line);background:var(--card);border-radius:12px;width:44px;height:44px;display:grid;place-items:center;cursor:pointer;flex:none}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn.home{text-decoration:none;color:var(--ink)}
+
+/* кнопки */
+.btn{appearance:none;border:0;border-radius:12px;padding:11px 18px;font-weight:600;font-size:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;transition:transform .08s ease}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:var(--card);border:1.5px solid var(--line);color:var(--ink)}
+.btn.warn{background:var(--pen);color:var(--on-pen)}
+.btn.sm{min-height:40px;padding:7px 12px;font-size:14px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;justify-content:flex-end}
+.actions.center{justify-content:center}
+
+/* карта */
+.eyebrow{font-family:var(--display);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:0}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:12px;margin-top:16px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(24px,5.6vw,36px);line-height:1.1;margin:0}
+.hero p{margin:0;color:var(--ink-2)}
+.hero .actions{justify-content:flex-start;margin-top:4px}
+.bar{height:10px;border-radius:99px;background:var(--card-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;min-width:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--mono);font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.weak{margin-top:16px;padding:14px 16px;border-radius:var(--r);border:1.5px dashed var(--pen);background:var(--card)}
+.weak h3{font-family:var(--hand);font-size:30px;line-height:1;color:var(--pen);margin:0 0 6px;font-weight:700}
+.weak p{margin:0 0 10px;color:var(--ink-2);font-size:15px}
+.wl{display:flex;flex-wrap:wrap;gap:8px}
+.chipbtn{appearance:none;border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 14px;cursor:pointer;font-size:15px;min-height:40px}
+.chipbtn b{color:var(--pen);margin-left:4px;font-family:var(--mono)}
+.chapter{margin-top:28px}
+.chapter h2{font-family:var(--display);font-weight:800;font-size:20px;margin:6px 0 8px}
+.track{list-style:none;margin:0;padding:0}
+.st{display:grid;grid-template-columns:52px minmax(0,1fr)}
+.axis{position:relative}
+.axis::before{content:"";position:absolute;left:25px;top:0;bottom:0;width:2px;background:var(--grid-2)}
+.st:first-child .axis::before{top:30px}
+.st:last-child .axis::before{bottom:calc(100% - 30px)}
+.node{position:absolute;left:8px;top:13px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:14px;background:var(--card);border:2px solid var(--grid-2);color:var(--ink-2)}
+.st.done .node{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.st.now .node{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 5px var(--card-2)}
+.lv{appearance:none;margin:6px 0;display:grid;gap:4px;text-align:left;width:100%;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;cursor:pointer}
+.lv:hover:not([disabled]){border-color:var(--accent)}
+.lv-top{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.lv-t{font-weight:600;font-size:16px;min-width:0}
+.lv-bot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.st.locked .lv{opacity:.55;cursor:not-allowed}
+.lock{width:16px;height:16px;flex:none}
+.tag{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor}
+.tag.acc{color:var(--accent)}
+.tag.pen{color:var(--pen)}
+.stars{display:inline-flex;gap:2px;flex:none}
+.star{width:18px;height:18px;fill:none;stroke:var(--ink-2);stroke-width:1.6;stroke-linejoin:round}
+.star.on{fill:var(--hi);stroke:var(--on-hi)}
+.fm{font-family:var(--mono);font-weight:500;font-size:.9em;white-space:nowrap;background:var(--card-2);padding:1px 6px;border-radius:6px}
+
+/* уровень */
+.lvhead{display:grid;gap:10px;margin-top:14px}
+.crumbs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mist{font-family:var(--mono);font-size:13px;color:var(--pen);margin-left:auto}
+.lvhead h1{font-family:var(--display);font-weight:800;font-size:clamp(20px,4.6vw,28px);margin:0;line-height:1.15}
+.ruler{display:flex;gap:4px;align-items:flex-end;height:20px}
+.ruler i{flex:1;height:9px;border-radius:3px;background:var(--card-2);border:1px solid var(--line)}
+.ruler i.done{background:var(--accent);border-color:var(--accent)}
+.ruler i.miss{background:var(--pen);border-color:var(--pen)}
+.ruler i.cur{height:18px;border:2px solid var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-top:14px}
+.intro .big{font-family:var(--mono);font-weight:700;font-size:clamp(22px,5.4vw,34px);line-height:1.2;color:var(--accent);margin:6px 0 14px;overflow-wrap:anywhere}
+.intro ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.intro li{padding-left:24px;position:relative}
+.intro li::before{content:"";position:absolute;left:4px;top:.6em;width:8px;height:8px;background:var(--accent);border-radius:2px}
+.q{font-size:19px;line-height:1.45;margin:8px 0 12px}
+.vis{margin:4px 0 14px;overflow-x:auto}
+.vis svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto}
+.numrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.numrow input{font-family:var(--mono);font-size:24px;font-weight:700;flex:1 1 140px;max-width:220px;min-width:0;padding:9px 14px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--ink)}
+.numrow input:focus{border-color:var(--accent);outline:none}
+.numrow input:disabled{opacity:1}
+.numrow.right input{border-color:var(--ok)}
+.unit{font-family:var(--mono);font-size:18px;color:var(--ink-2)}
+.pm{min-width:48px;font-family:var(--mono);font-size:20px}
+.opts{display:grid;gap:10px}
+@media (min-width:600px){.opts.two{grid-template-columns:1fr 1fr}}
+.opt{appearance:none;text-align:left;border:2px solid var(--line);background:var(--paper);border-radius:12px;padding:11px 14px;font-size:17px;cursor:pointer;min-height:52px}
+.opt.mono{font-family:var(--mono);font-weight:500}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt[disabled]{cursor:default}
+.opt.no{border-color:var(--pen);color:var(--pen);text-decoration:line-through}
+.opt.yes{border-color:var(--ok);color:var(--ok);font-weight:600}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match .col{display:grid;gap:8px;align-content:start;min-width:0}
+.mi{appearance:none;border:2px solid var(--line);background:var(--paper);border-radius:12px;padding:10px 12px;font-size:15px;text-align:left;cursor:pointer;min-height:48px;overflow-wrap:anywhere}
+.mi.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--card-2)}
+.mi.ok{border-color:var(--ok);color:var(--ok);cursor:default}
+.mi.bad{border-color:var(--pen);animation:shake .35s}
+.signs{display:flex;flex-wrap:wrap;gap:14px 28px}
+.sg{display:flex;align-items:center;gap:10px}
+.sg b{font-family:var(--mono);font-size:17px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{appearance:none;border:0;background:var(--paper);font-family:var(--mono);font-size:22px;font-weight:700;width:56px;height:48px;cursor:pointer}
+.seg button+button{border-left:2px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.fb{margin-top:14px;border-radius:12px;padding:12px 14px;display:grid;gap:6px;background:var(--card)}
+.fb.ok{border:2px solid var(--ok)}
+.fb.no{border:2px dashed var(--pen)}
+.fb.hint,.fb.warn{border:2px solid var(--line);background:var(--paper)}
+.pen-t{font-family:var(--hand);font-size:30px;line-height:1;color:var(--pen);font-weight:700}
+.okh{font-weight:700;color:var(--ok)}
+.sol{font-size:16px}
+.game .ctrl{display:grid;gap:8px;margin-top:4px}
+.game label{font-weight:600;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.val{font-family:var(--mono);font-weight:700;font-size:22px;color:var(--accent);font-variant-numeric:tabular-nums}
+.game input[type=range]{width:100%;accent-color:var(--accent);height:34px;margin:0}
+.gbtns{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.gres{font-weight:600}
+
+/* итоги */
+.res{text-align:center;display:grid;gap:14px;justify-items:center;padding-block:26px}
+.mark{font-family:var(--hand);font-weight:700;font-size:92px;line-height:1;color:var(--pen);width:128px;height:128px;border:4px solid var(--pen);border-radius:50%;display:grid;place-items:center;transform:rotate(-8deg)}
+.stars.big .star{width:46px;height:46px}
+.stars.big .star.on{animation:pop .5s both}
+.stars.big .star:nth-child(2){animation-delay:.12s}
+.stars.big .star:nth-child(3){animation-delay:.24s}
+.rtext{margin:0;max-width:46ch;color:var(--ink-2)}
+.res h2{font-family:var(--display);font-weight:800;font-size:22px;margin:0}
+
+/* настройки и сообщения */
+.sheet{position:fixed;inset:0;z-index:50;background:var(--shade);display:grid;align-items:end;justify-items:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.sheet{align-items:center}}
+.panel{width:min(560px,100%);background:var(--card);border-radius:18px;border:1px solid var(--line);padding:20px;display:grid;gap:12px;max-height:85vh;overflow:auto}
+.panel h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0}
+.panel p{margin:0}
+.panel hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+.sh-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.danger{display:grid;gap:10px;border:2px dashed var(--pen);border-radius:12px;padding:12px 14px}
+.danger .actions{margin-top:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+
+/* рисунки */
+.svgt{font-family:var(--mono)}
+.f-ink{fill:var(--ink)}.f-ink2{fill:var(--ink-2)}.f-acc{fill:var(--accent)}.f-pen{fill:var(--pen)}.f-ok{fill:var(--ok)}
+.f-hi{fill:var(--hi)}.f-card{fill:var(--card)}.f-card2{fill:var(--card-2)}.f-paper{fill:var(--paper)}.f-none{fill:none}
+.s-ink{stroke:var(--ink)}.s-ink2{stroke:var(--ink-2)}.s-acc{stroke:var(--accent)}.s-pen{stroke:var(--pen)}.s-ok{stroke:var(--ok)}
+.s-line{stroke:var(--line)}.s-grid{stroke:var(--grid-2)}.s-hi{stroke:var(--hi)}
+.hiA{fill:var(--hi);fill-opacity:.5}
+
+/* вкладки */
+.tabbar{max-width:780px;margin:0 auto;padding:0 16px 10px;display:flex;gap:6px}
+.tab{appearance:none;flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:12px;min-height:42px;font-weight:700;font-size:15px;cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* листание решённых заданий */
+.ruler .rs{appearance:none;flex:1;height:9px;padding:0;margin:0;border-radius:3px;border:1px solid var(--accent);background:var(--accent);cursor:pointer;position:relative}
+.ruler .rs.miss{background:var(--pen);border-color:var(--pen)}
+.ruler .rs::after{content:"";position:absolute;left:0;right:0;top:-14px;bottom:-10px}
+.ruler .rs.view{height:18px;box-shadow:0 0 0 3px var(--card-2)}
+.peek-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tag.ok{color:var(--ok)}
+.pairs{margin:0 0 4px;padding-left:20px;display:grid;gap:6px}
+.swipe-hint{margin-right:auto;align-self:center;font-size:13px;color:var(--ink-2)}
+.back{margin-right:auto}
+
+/* нарешка */
+.dcount{font-family:var(--mono);font-size:13px;color:var(--ink-2);white-space:nowrap}
+.glist{list-style:none;margin:6px 0 0;padding:0}
+.gname{margin:0;color:var(--ink-2);font-weight:600}
+.streak{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ok);margin-left:auto}
+details.theory{margin-top:14px}
+details.theory summary{cursor:pointer;font-weight:600;list-style-position:inside}
+details.theory .big{font-family:var(--mono);font-weight:700;font-size:clamp(18px,4.6vw,26px);color:var(--accent);margin:10px 0;overflow-wrap:anywhere}
+details.theory ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+details.theory li{padding-left:22px;position:relative}
+details.theory li::before{content:"";position:absolute;left:4px;top:.6em;width:7px;height:7px;background:var(--accent);border-radius:2px}
+.dmix{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* =====================================================================
+   Стиль «Спирали»: мир «Физика · Траектории». Дымка с лучами и пылью,
+   стекло, тонкий шрифт, большая мягкая цифра звёзд и мяч на параболе.
+   Тема — как в «Рамках» (data-theme) или как у iPhone.
+   ===================================================================== */
+:root{
+  --paper:#eef3f8;--card:#ffffff;--card-2:#e3ecf6;--ink:#132232;--ink-2:#566577;--line:#d2dce7;
+  --accent:#2f7fcf;--on-accent:#fff;--pen:#c4473a;--on-pen:#fff;--ok:#1f8a5a;--hi:#f5c542;--on-hi:#3a2c00;
+  --grid-2:rgba(47,127,207,.28);--shade:rgba(10,20,30,.32);
+  --glass:rgba(255,255,255,.62);--glass-strong:rgba(250,252,254,.9);--glass-line:rgba(255,255,255,.85);
+  --soft-shadow:0 12px 32px rgba(20,35,55,.09),0 2px 6px rgba(20,35,55,.05);
+  --bg-top:#cbd5e0;--bg-mid:#e1e7ee;--bg-low:#f2f5f8;--ray:rgba(255,255,255,.55);--halo:rgba(255,255,255,.95);--dust:#ffffff;--num:#ffffff;--num-shadow:rgba(30,60,100,.16);
+  --display:-apple-system,"SF Pro Display",BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --hand:var(--display);--r:20px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0a121b;--card:#13202d;--card-2:#1b2b3b;--ink:#e6eef6;--ink-2:#93a4b5;--line:#26384a;
+  --accent:#5aa9e6;--on-accent:#06121d;--pen:#ff7d6e;--on-pen:#240a06;--ok:#4fd18b;--hi:#ffd54f;--on-hi:#2e2400;
+  --grid-2:rgba(90,169,230,.3);--shade:rgba(0,0,0,.55);
+  --glass:rgba(24,36,50,.58);--glass-strong:rgba(15,24,34,.92);--glass-line:rgba(255,255,255,.06);
+  --soft-shadow:0 14px 36px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --bg-top:#03060a;--bg-mid:#0a1119;--bg-low:#101821;--ray:rgba(140,190,240,.08);--halo:rgba(120,180,240,.18);--dust:#bcd6f0;--num:#dfe9f3;--num-shadow:rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0a121b;--card:#13202d;--card-2:#1b2b3b;--ink:#e6eef6;--ink-2:#93a4b5;--line:#26384a;
+  --accent:#5aa9e6;--on-accent:#06121d;--pen:#ff7d6e;--on-pen:#240a06;--ok:#4fd18b;--hi:#ffd54f;--on-hi:#2e2400;
+  --grid-2:rgba(90,169,230,.3);--shade:rgba(0,0,0,.55);
+  --glass:rgba(24,36,50,.58);--glass-strong:rgba(15,24,34,.92);--glass-line:rgba(255,255,255,.06);
+  --soft-shadow:0 14px 36px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --bg-top:#03060a;--bg-mid:#0a1119;--bg-low:#101821;--ray:rgba(140,190,240,.08);--halo:rgba(120,180,240,.18);--dust:#bcd6f0;--num:#dfe9f3;--num-shadow:rgba(0,0,0,.6);color-scheme:dark}
+
+/* фон: дымка, лучи, пыль */
+html{background:linear-gradient(180deg,var(--bg-top) 0,var(--bg-mid) 380px,var(--bg-low) 820px) var(--bg-low) no-repeat;min-height:100%}
+body{background:transparent;background-image:none}
+body::before{content:"";display:block;position:fixed;left:50%;top:-14vh;bottom:auto;width:170vw;max-width:1400px;height:72vh;z-index:-2;pointer-events:none;transform:translateX(-50%);
+  background:radial-gradient(ellipse 30% 55% at 50% 0%,var(--halo),transparent 72%),repeating-conic-gradient(from 160deg at 50% -8%,var(--ray) 0deg 1.2deg,transparent 1.2deg 5.5deg);
+  -webkit-mask:radial-gradient(ellipse 60% 100% at 50% 0%,#000 30%,transparent 75%);mask:radial-gradient(ellipse 60% 100% at 50% 0%,#000 30%,transparent 75%)}
+#kdust{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;color:var(--dust)}
+.spark{position:fixed;inset:0;width:100%;height:100%;z-index:70;pointer-events:none}
+
+/* поверхности */
+.top{background:var(--glass-strong);border-bottom:1px solid var(--glass-line);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.brand{font-weight:600;letter-spacing:-.01em}
+.icon-btn{border:1px solid var(--glass-line);background:var(--glass);border-radius:999px;box-shadow:var(--soft-shadow)}
+.stotal{box-shadow:0 4px 14px color-mix(in srgb,var(--hi) 40%,transparent)}
+.tabbar{padding-bottom:12px}
+.tab{border:1px solid var(--glass-line);background:var(--glass);border-radius:999px;font-weight:600;letter-spacing:.02em;transition:background .25s,color .25s}
+.tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent)}
+.hero,.card,.lv,.weak,.panel,.fb{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.hero,.card,.lv,.weak{border-radius:var(--r)}
+.panel{background:var(--glass-strong);border-radius:24px}
+.btn{border-radius:999px;transition:transform .15s ease,box-shadow .25s ease,background .25s}
+.btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 82%,#fff),var(--accent));box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 38%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.primary:hover:not([disabled]){box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 50%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.ghost{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow)}
+.btn.warn{box-shadow:0 8px 22px color-mix(in srgb,var(--pen) 30%,transparent)}
+.opt,.mi,.chipbtn,.seg button,.numrow input{background:var(--glass)}
+.opt,.mi,.numrow input{border:1.5px solid var(--line);border-radius:16px;transition:border-color .2s,background .2s,transform .15s}
+.opt:active:not([disabled]),.mi:active{transform:scale(.99)}
+.opt.yes{background:color-mix(in srgb,var(--ok) 12%,var(--glass))}
+.opt.no{background:color-mix(in srgb,var(--pen) 8%,var(--glass))}
+.seg{border:1.5px solid var(--line);border-radius:16px}
+.fm{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:8px}
+.bar{height:6px;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.bar i{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 60%,#fff),var(--accent));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 50%,transparent)}
+.ruler i{background:color-mix(in srgb,var(--ink) 7%,transparent);border-color:transparent;border-radius:99px}
+.ruler i.done,.ruler .rs{border-radius:99px}
+.ruler i.cur{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+
+/* шрифты: тонкий дисплейный */
+.hero h1,.chapter h2,.lvhead h1,.res h2,.panel h2{font-weight:300;letter-spacing:-.02em}
+.hero h1{font-size:clamp(26px,7vw,36px)}
+.chapter h2{font-size:28px;margin:2px 0 10px}
+.lvhead h1{font-size:clamp(24px,6vw,30px)}
+.eyebrow{font-family:var(--body);font-weight:500;letter-spacing:.2em;font-size:10.5px}
+.intro .big,details.theory .big{font-weight:600;letter-spacing:-.01em}
+.intro .big{padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--accent) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);text-align:center}
+.intro li::before,details.theory li::before{border-radius:50%}
+.weak{border-left:3px solid var(--pen)}
+.weak h3,.pen-t{font-weight:300;font-size:24px;letter-spacing:-.01em}
+.mist{font-family:var(--body)}
+
+/* сцена карты: большая мягкая цифра и мяч на параболе */
+.hero.kscene{position:relative;overflow:hidden;padding-top:8px;gap:10px}
+.kscene .kstage{position:relative;height:190px;margin:0 -20px}
+.kscene .traj{position:absolute;left:0;right:0;bottom:6px;width:100%;height:150px;overflow:visible}
+.traj-p{fill:none;stroke:var(--grid-2);stroke-width:2;stroke-dasharray:3 7;stroke-linecap:round}
+.traj-g{stroke:color-mix(in srgb,var(--ink) 10%,transparent);stroke-width:1.5}
+.traj-b{fill:var(--accent);filter:drop-shadow(0 0 6px var(--accent))}
+.knum{position:absolute;left:50%;top:0;width:min(62vw,280px);height:auto;transform:translateX(-50%);overflow:visible;filter:drop-shadow(0 22px 18px var(--num-shadow));animation:float 7s ease-in-out infinite alternate}
+.knum text{font-family:var(--body);font-weight:300;font-size:270px;letter-spacing:-6px;fill:var(--num);stroke:var(--num);stroke-width:26px;stroke-linejoin:round;paint-order:stroke}
+.kcap{margin:-4px 0 0;text-align:center;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
+@keyframes float{to{transform:translate(-50%,-8px)}}
+
+/* карта уровней: орбиты-станции */
+.axis::before{left:25px;width:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 45%,transparent),color-mix(in srgb,var(--accent) 12%,transparent))}
+.node{border:1px solid var(--glass-line);background:var(--glass);box-shadow:var(--soft-shadow);font-family:var(--body);font-weight:600;font-size:13px}
+.st.done .node{border:0;color:var(--on-accent);font-weight:700;background:radial-gradient(circle at 30% 26%,rgba(255,255,255,.7) 0,transparent 34%),radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--accent) 80%,#fff),var(--accent) 75%);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 14%,transparent),0 6px 16px color-mix(in srgb,var(--accent) 40%,transparent)}
+.st.now .node{border:2px solid var(--accent);background:var(--glass);color:var(--accent);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent);animation:ping 2.2s ease-out infinite}
+@keyframes ping{70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.lv{transition:transform .2s ease,border-color .2s,box-shadow .2s}
+.lv:hover:not([disabled]){transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.st.now .lv{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.lv-t{font-weight:500}
+
+/* ответы */
+.fb.ok{border:1.5px solid var(--ok);background:color-mix(in srgb,var(--ok) 8%,var(--glass));animation:okglow .9s ease-out}
+.fb.no{border:1.5px solid color-mix(in srgb,var(--pen) 70%,transparent);background:color-mix(in srgb,var(--pen) 6%,var(--glass));animation:shake .35s}
+.fb.hint,.fb.warn{border:1px solid var(--glass-line);background:var(--glass)}
+@keyframes okglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 45%,transparent)}to{box-shadow:0 0 0 14px transparent}}
+
+/* итог: оценка в светящемся кольце */
+.mark{position:relative;font-family:var(--display);font-weight:200;font-size:96px;color:var(--ink);width:150px;height:150px;border:0;transform:none;
+  background:radial-gradient(circle at 50% 42%,var(--glass),transparent 70%);animation:markin .7s cubic-bezier(.2,.8,.2,1) both}
+.mark::before{content:"";position:absolute;inset:0;border-radius:50%;padding:3px;background:conic-gradient(from 0deg,var(--accent),var(--hi),var(--ok),var(--accent));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:spin 8s linear infinite}
+.mark::after{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%);z-index:-1}
+@keyframes spin{to{transform:rotate(1turn)}}
+@keyframes markin{from{opacity:0;transform:scale(.7);filter:blur(8px)}}
+.stars.big .star.on{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--hi) 70%,transparent))}
+
+/* переход между экранами: всплытие из дымки */
+.wrap.enter>*{animation:enter .5s cubic-bezier(.2,.7,.2,1) both}
+.wrap.enter>*:nth-child(2){animation-delay:.06s}
+.wrap.enter>*:nth-child(3){animation-delay:.12s}
+.wrap.enter>*:nth-child(n+4){animation-delay:.18s}
+@keyframes enter{from{opacity:0;transform:translateY(12px);filter:blur(6px)}}
+.toast{background:var(--glass-strong);color:var(--ink);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:999px}
+.danger{border:1px solid color-mix(in srgb,var(--pen) 55%,transparent);border-radius:16px}
+
+@media (prefers-reduced-motion:reduce){.traj-b{display:none}}
+:root[data-motion="none"] .traj-b{display:none}
+:root[data-motion="none"] *,:root[data-motion="none"] *::before,:root[data-motion="none"] *::after{animation:none!important;transition:none!important}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<marker id="ah-ink" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L12,6 L0,12 z" class="f-ink"/></marker>
+<marker id="ah-ink2" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L12,6 L0,12 z" class="f-ink2"/></marker>
+<marker id="ah-acc" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L12,6 L0,12 z" class="f-acc"/></marker>
+<marker id="ah-pen" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L12,6 L0,12 z" class="f-pen"/></marker>
+<marker id="ah-ok" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L12,6 L0,12 z" class="f-ok"/></marker>
+</defs></svg>
+
+<header class="top"><div class="in">
+  <a class="icon-btn home" href="../../#spiral/phys" aria-label="Назад в «Спираль»"><svg viewBox="0 0 24 24" aria-hidden="true" class="f-none s-ink" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <div class="brand"><svg viewBox="0 0 30 22" aria-hidden="true"><path d="M2 20 Q15 -6 28 20" class="f-none s-acc" stroke-width="2.5" stroke-dasharray="3 3"/><circle cx="21" cy="9" r="3.5" class="f-pen"/></svg><b>Кинематика на зачёт</b></div>
+  <div class="save" id="save" data-s="local" title="Сохранено на этом устройстве"><i></i><span>На устройстве</span></div>
+  <div class="stotal" id="stotal" aria-label="Звёзды">0/48</div>
+  <button class="icon-btn" data-act="settings" aria-label="Сохранение и сброс прогресса"><svg viewBox="0 0 24 24" aria-hidden="true" class="f-none s-ink" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
+</div>
+<div class="tabbar" role="group" aria-label="Разделы"><button class="tab" data-act="tab" data-tab="levels" aria-pressed="true">Уровни</button><button class="tab" data-act="tab" data-tab="drill" aria-pressed="false">Нарешка</button></div>
+</header>
+<canvas id="kdust" aria-hidden="true"></canvas>
+<main class="wrap" id="main"></main>
+<div id="overlay"></div>
+<script>
+// ===== утилиты =====
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const rich = s => String(s ?? '').replace(/\{([^{}]+)\}/g, '<span class="fm">$1</span>');
+const clone = o => JSON.parse(JSON.stringify(o));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fmt(x, d = 2) {
+  if (!isFinite(x)) return '—';
+  const r = Math.round(x * 10 ** d) / 10 ** d;
+  let s = String(Math.abs(r));
+  if (s.includes('e')) s = Math.abs(r).toFixed(d);
+  return (r < 0 ? '−' : '') + s.replace('.', ',');
+}
+function parseNum(s) {
+  s = String(s).trim().replace(/\s+/g, '').replace(/[−–—]/g, '-').replace(',', '.');
+  if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return NaN;
+  return parseFloat(s);
+}
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ===== прогресс: браузер + аккаунт =====
+const KEY = 'kin-zachet-v1';
+const emptyProg = () => ({ v: 1, levels: {}, miss: {}, drill: {}, current: null, updatedAt: 0, resetAt: 0 });
+let localOK = false;
+try { localStorage.setItem(KEY + '-t', '1'); localStorage.removeItem(KEY + '-t'); localOK = true; } catch (e) { localOK = false; }
+function loadLocal() {
+  try { const s = localStorage.getItem(KEY); if (!s) return null; const p = JSON.parse(s); return p && p.v === 1 ? p : null; } catch (e) { return null; }
+}
+function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(P)); return true; } catch (e) { return false; } }
+
+// Слияние двух сохранений: сброс выигрывает, если он новее; иначе берём лучшее по каждому уровню
+function mergeProg(a, b) {
+  if (!b || b.v !== 1) return a;
+  if (!a) return clone(b);
+  if ((b.resetAt || 0) > (a.updatedAt || 0)) return clone(b);
+  if ((a.resetAt || 0) > (b.updatedAt || 0)) return a;
+  const out = emptyProg();
+  out.resetAt = Math.max(a.resetAt || 0, b.resetAt || 0);
+  const ids = new Set([...Object.keys(a.levels || {}), ...Object.keys(b.levels || {})]);
+  for (const id of ids) {
+    const x = (a.levels || {})[id], y = (b.levels || {})[id];
+    if (!x || !y) { out.levels[id] = clone(x || y); continue; }
+    out.levels[id] = { stars: Math.max(x.stars || 0, y.stars || 0), best: Math.min(x.best ?? 99, y.best ?? 99), plays: Math.max(x.plays || 0, y.plays || 0), at: Math.max(x.at || 0, y.at || 0) };
+  }
+  const mk = new Set([...Object.keys(a.miss || {}), ...Object.keys(b.miss || {})]);
+  for (const k of mk) out.miss[k] = Math.max((a.miss || {})[k] || 0, (b.miss || {})[k] || 0);
+  const dk = new Set([...Object.keys(a.drill || {}), ...Object.keys(b.drill || {})]);
+  for (const k of dk) {
+    const x = (a.drill || {})[k] || {}, y = (b.drill || {})[k] || {};
+    out.drill[k] = { n: Math.max(x.n || 0, y.n || 0), ok: Math.max(x.ok || 0, y.ok || 0) };
+  }
+  const newer = (a.updatedAt || 0) >= (b.updatedAt || 0) ? a : b;
+  out.current = newer.current ? clone(newer.current) : null;
+  out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0);
+  return out;
+}
+
+const SAVE = {
+  cloud: ['Сохранено', 'Сохранено в аккаунте', 'Прогресс хранится вместе с игрой в твоём аккаунте Claude. Можно закрыть и вернуться позже, в том числе с другого устройства. Claude в нашем чате тоже может посмотреть твои результаты и слабые места.'],
+  saving: ['Сохраняю…', 'Сохраняю', 'Отправляю прогресс в аккаунт.'],
+  local: ['На устройстве', 'Сохранено на этом устройстве', 'Прогресс хранится в этом браузере: можно закрыть игру и вернуться. С другого устройства его видно не будет.'],
+  none: ['Не сохраняется', 'Прогресс не сохраняется', 'Браузер не даёт сохранять данные, например в приватном режиме. Играть можно, но после закрытия прогресс пропадёт.'],
+};
+const SYNC = { ref: null, state: localOK ? 'local' : 'none' };
+let pushTimer = null, pushing = false, pushAgain = false;
+function setSave(s) {
+  SYNC.state = s;
+  const el = $('#save');
+  if (el) { el.dataset.s = s; el.querySelector('span').textContent = SAVE[s][0]; el.title = SAVE[s][1]; }
+  if (typeof sheet !== 'undefined' && sheet) renderSheet();
+}
+function save() {
+  P.updatedAt = Date.now();
+  const ok = saveLocal();
+  if (SYNC.ref) schedulePush(); else setSave(ok ? 'local' : 'none');
+}
+function schedulePush() { if (!SYNC.ref) return; setSave('saving'); clearTimeout(pushTimer); pushTimer = setTimeout(() => { pushTimer = null; pushCloud(); }, 900); }
+async function pushCloud(retry = true) {
+  if (!SYNC.ref) return;
+  if (pushing) { pushAgain = true; return; }
+  pushing = true;
+  try { await SYNC.ref.set(clone(P)); setSave('cloud'); }
+  catch (e) {
+    if (retry && e && e.code === 'unavailable') { pushing = false; setTimeout(() => pushCloud(false), 1500 + Math.random() * 1500); return; }
+    setSave(localOK ? 'local' : 'none');
+  }
+  pushing = false;
+  if (pushAgain) { pushAgain = false; pushCloud(); }
+}
+async function initSync() {
+  const c = window.claude;
+  if (!c || typeof c.use !== 'function') return;
+  let db = null, user = null;
+  try { [db, user] = await Promise.all([c.use('db'), c.use('user')]); } catch (e) { return; }
+  if (!db || !user) return;
+  let uid = null;
+  try { uid = await user.id(); } catch (e) { uid = null; }
+  if (!uid) return;
+  let ref;
+  try { ref = db.doc('saves/' + uid); } catch (e) { return; }
+  setSave('saving');
+  try {
+    const snap = await ref.get();
+    if (snap.exists) {
+      const merged = mergeProg(P, snap.data());
+      const changed = JSON.stringify(merged) !== JSON.stringify(P);
+      P = merged; saveLocal();
+      if (changed && (view === 'map' || view === 'result')) render();
+      else updateTop();
+    }
+    SYNC.ref = ref;
+    await pushCloud();
+  } catch (e) { SYNC.ref = null; setSave(localOK ? 'local' : 'none'); }
+}
+function flushCloud() { if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; pushCloud(); } }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushCloud(); });
+window.addEventListener('pagehide', flushCloud);
+
+// ===== рисунки (SVG) =====
+const svg = (w, h, inner, label) => `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label)}">${inner}</svg>`;
+const ln = (x1, y1, x2, y2, c = 'ink', w = 2, extra = '') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="s-${c}" stroke-width="${w}" ${extra}/>`;
+const ar = (x1, y1, x2, y2, c = 'acc', w = 4) => ln(x1, y1, x2, y2, c, w, `marker-end="url(#ah-${c})"`);
+const tx = (x, y, s, c = 'ink', size = 14, anchor = 'middle', weight = 500) => `<text x="${x}" y="${y}" class="svgt f-${c}" font-size="${size}" text-anchor="${anchor}" font-weight="${weight}">${s}</text>`;
+const DASH = 'stroke-dasharray="6 6"';
+// машина: перёд в точке (0,0), колёса стоят на y = 0
+const carShape = (c = 'acc') => `<path class="f-${c}" d="M-70,-9 L-70,-21 Q-69,-25 -64,-25 L-50,-26 L-40,-37 Q-38,-39 -35,-39 L-14,-39 Q-11,-39 -9,-36 L0,-25 Q2,-24 2,-20 L2,-9 Z"/><path class="f-paper" opacity=".8" d="M-37,-36 L-15,-36 L-7,-26 L-43,-26 Z"/><circle cx="-56" cy="-8" r="8" class="f-ink"/><circle cx="-13" cy="-8" r="8" class="f-ink"/>`;
+const STAR = '<path d="M12 2.6l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.2 1.3-6.6-4.9-4.6 6.6-.8z"/>';
+
+const V = {
+  road() {
+    const X = m => 90 + m * 15;
+    let g = `<rect x="12" y="98" width="576" height="22" rx="4" class="f-card2"/>`;
+    for (let m = 0; m <= 30; m += 5) g += ln(X(m), 120, X(m), 130, 'ink2', 2) + tx(X(m), 148, m === 0 ? '0 м' : String(m), 'ink2', 13);
+    g += `<g transform="translate(${X(0) + 2},99)">${carShape()}</g>`;
+    g += ar(X(0) - 30, 38, X(0) + 60, 38, 'acc', 4) + tx(X(0) + 76, 43, 'v = 5 м/с', 'acc', 15, 'start', 700);
+    return svg(600, 160, g, 'Машина у отметки 0 м, дорога размечена через каждые 5 метров');
+  },
+  graph({ v0 = 0, v1, t }) {
+    const ox = 70, oy = 250, tw = 460, vh = 190, tm = t * 1.18, vm = Math.max(v0, v1) * 1.18;
+    const X = s => ox + s / tm * tw, Y = v => oy - v / vm * vh;
+    let g = `<polygon points="${X(0)},${oy} ${X(0)},${Y(v0)} ${X(t)},${Y(v1)} ${X(t)},${oy}" class="hiA"/>`;
+    if (v0 > 0) g += ln(X(0), Y(v0), X(t), Y(v0), 'ink2', 1.5, DASH);
+    g += ln(X(t), Y(v1), X(t), oy, 'ink2', 1.5, 'stroke-dasharray="5 5"') + ln(ox, Y(v1), X(t), Y(v1), 'ink2', 1.5, 'stroke-dasharray="5 5"');
+    g += ar(ox, oy, ox + tw + 44, oy, 'ink', 2) + ar(ox, oy, ox, oy - vh - 36, 'ink', 2);
+    g += ln(X(0), Y(v0), X(t), Y(v1), 'acc', 4, 'stroke-linecap="round"');
+    g += tx(ox + tw + 44, oy + 28, 't, с', 'ink', 17, 'end') + tx(ox + 10, oy - vh - 26, 'v, м/с', 'ink', 17, 'start');
+    g += tx(X(t), oy + 24, fmt(t), 'ink', 17) + tx(ox - 10, Y(v1) + 6, fmt(v1), 'ink', 17, 'end') + tx(ox - 10, oy + 6, '0', 'ink2', 15, 'end');
+    if (v0 > 0) g += tx(ox - 10, Y(v0) + 6, fmt(v0), 'ink', 17, 'end');
+    g += tx(X(t * 0.62), oy - (oy - Y(v0 + (v1 - v0) * 0.62)) * 0.42, 's', 'ink', 24, 'middle', 700);
+    return svg(600, 285, g, 'График скорости от времени, площадь под графиком закрашена');
+  },
+  vec({ x, y }) {
+    const ox = 300, oy = 292, c = 30, X = i => ox + i * c, Y = j => oy - j * c;
+    let g = '';
+    for (let i = -9; i <= 9; i++) g += ln(X(i), Y(0), X(i), Y(9), 'grid', 1);
+    for (let j = 1; j <= 9; j++) g += ln(X(-9), Y(j), X(9), Y(j), 'grid', 1);
+    g += ar(X(-9.4), oy, X(9.6), oy, 'ink', 2) + ar(ox, oy + 8, ox, Y(9.6), 'ink', 2);
+    g += tx(X(9.6) - 6, oy - 10, 'x', 'ink', 16, 'end', 700) + tx(ox + 12, Y(9.6) + 14, 'y', 'ink', 16, 'start', 700);
+    for (let i = -8; i <= 8; i += 2) if (i) g += tx(X(i), oy + 22, fmt(i), 'ink2', 15);
+    for (let j = 2; j <= 8; j += 2) g += tx(ox + (x < 0 ? 10 : -8), Y(j) + 5, String(j), 'ink2', 15, x < 0 ? 'start' : 'end');
+    g += ln(X(x), Y(y), X(x), oy, 'ink2', 1.5, DASH) + ln(X(x), Y(y), ox, Y(y), 'ink2', 1.5, DASH);
+    g += ln(ox, oy, X(x), oy, 'ok', 7, 'stroke-linecap="round" opacity=".8"') + ln(ox, oy, ox, Y(y), 'ok', 7, 'stroke-linecap="round" opacity=".8"');
+    g += tx(X(x / 2), oy - 12, 'ax', 'ok', 15, 'middle', 700) + tx(ox + (x < 0 ? 14 : -14), Y(y / 2) + 5, 'ay', 'ok', 15, x < 0 ? 'start' : 'end', 700);
+    g += ar(ox, oy, X(x), Y(y), 'acc', 5) + `<circle cx="${ox}" cy="${oy}" r="5" class="f-ink"/>`;
+    g += tx(X(x / 2) + (x < 0 ? 22 : -22), Y(y / 2) - 8, 'a', 'acc', 22, 'middle', 700);
+    return svg(600, 320, g, 'Вектор на клетчатой сетке, одна клетка равна единице');
+  },
+  fall() {
+    const ys = [0, 1, 2, 3, 4, 5].map(n => 26 + 12 * n * n);
+    let g = ln(150, 12, 150, 336, 'ink2', 1.5, 'stroke-dasharray="4 6"');
+    ys.forEach((y, n) => {
+      g += `<circle cx="150" cy="${y}" r="${n === 5 ? 11 : 9}" class="${n === 5 ? 'f-pen' : 'f-acc'}"${n < 5 ? ` opacity="${(0.35 + n * 0.13).toFixed(2)}"` : ''}/>`;
+      g += tx(118, y + 5, n === 0 ? '0' : `${n} с`, 'ink2', 13, 'end');
+    });
+    for (let n = 0; n < 5; n++) {
+      const a = ys[n] + 2, b = ys[n + 1] - 2;
+      g += ln(190, a, 190, b, 'ink', 1.5) + ln(185, a, 195, a, 'ink', 1.5) + ln(185, b, 195, b, 'ink', 1.5) + tx(206, (a + b) / 2 + 5, String(2 * n + 1), 'ink', 15, 'start', 700);
+    }
+    return svg(320, 345, g, 'Падающий шарик через каждую секунду: расстояния растут как 1, 3, 5, 7, 9');
+  },
+  curve() {
+    const P0 = { x: 150, y: 140.2 }, u = { x: 0.866, y: -0.5 }, n = { x: 0.5, y: 0.866 };
+    let g = `<path d="M 18 297.4 A 300 300 0 0 1 582 297.4" class="f-none s-line" stroke-width="7"/>`;
+    g += ln(P0.x, P0.y, 259.6, 330, 'ink2', 1.5, DASH) + tx(232, 306, 'R', 'ink2', 16, 'end', 700);
+    g += ar(P0.x, P0.y, P0.x + 120 * u.x, P0.y + 120 * u.y, 'acc', 4) + tx(P0.x + 124 * u.x + 8, P0.y + 124 * u.y - 4, 'v', 'acc', 18, 'start', 700);
+    const q = { x: P0.x - 16 * n.x, y: P0.y - 16 * n.y };
+    g += ar(q.x, q.y, q.x + 62 * u.x, q.y + 62 * u.y, 'pen', 6) + tx(q.x - 6, q.y - 8, 'aτ', 'pen', 17, 'end', 700);
+    g += ar(P0.x, P0.y, P0.x + 95 * n.x, P0.y + 95 * n.y, 'ok', 6) + tx(P0.x + 95 * n.x + 10, P0.y + 95 * n.y + 10, 'an', 'ok', 17, 'start', 700);
+    const e = { x: P0.x + 62 * u.x + 95 * n.x, y: P0.y + 62 * u.y + 95 * n.y };
+    g += ln(P0.x, P0.y, e.x, e.y, 'ink', 2.5, `stroke-dasharray="7 5" marker-end="url(#ah-ink)"`) + tx(e.x + 10, e.y + 6, 'a', 'ink', 17, 'start', 700);
+    g += `<circle cx="${P0.x}" cy="${P0.y}" r="7" class="f-ink"/>`;
+    return svg(600, 330, g, 'Точка на повороте: скорость по касательной, касательное ускорение вдоль неё, нормальное к центру');
+  },
+  wheel() {
+    const cx = 300, cy = 165, r = 115;
+    let g = `<circle cx="${cx}" cy="${cy}" r="${r}" class="f-card2 s-ink" stroke-width="3"/>`;
+    for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + Math.PI / 6; g += ln(cx, cy, (cx + r * Math.cos(a)).toFixed(1), (cy + r * Math.sin(a)).toFixed(1), 'ink2', 2); }
+    g += ln(cx, cy, cx, cy - r, 'pen', 3, DASH) + tx(cx + 10, cy - r / 2, 'R = 0,5 м', 'pen', 15, 'start', 700);
+    g += `<path d="M ${cx - 40} ${cy + 26} A 48 48 0 1 1 ${cx + 40} ${cy + 26}" class="f-none s-ink" stroke-width="3" marker-end="url(#ah-ink)"/>` + tx(cx, cy + 92, 'ω = 10 рад/с', 'ink', 15, 'middle', 700);
+    g += `<circle cx="${cx}" cy="${cy}" r="7" class="f-ink"/><circle cx="${cx}" cy="${cy - r}" r="9" class="f-acc"/>`;
+    g += ar(cx, cy - r, cx + 125, cy - r, 'acc', 4) + tx(cx + 134, cy - r + 6, 'v', 'acc', 18, 'start', 700);
+    return svg(600, 300, g, 'Колесо радиусом 0,5 м вращается с угловой скоростью 10 рад/с, точка на ободе движется по касательной');
+  },
+  proj({ v0, ang }) {
+    const r = ang * Math.PI / 180, L = v0 * v0 * Math.sin(2 * r) / 10, H = (v0 * Math.sin(r)) ** 2 / 20;
+    const k = Math.min(500 / L, 215 / H), x0 = 50, y0 = 268, ax = x0 + L / 2 * k, ay = y0 - H * k, len = 110;
+    let s = `<rect x="0" y="${y0}" width="600" height="30" class="f-card2"/>` + ln(0, y0, 600, y0, 'ink', 2);
+    s += `<path d="M ${x0} ${y0} Q ${ax} ${y0 - 2 * H * k} ${x0 + L * k} ${y0}" class="f-none s-ink2" stroke-width="2.5" stroke-dasharray="7 7"/>`;
+    s += ar(x0, y0, x0 + len * Math.cos(r), y0 - len * Math.sin(r), 'acc', 4) + tx(x0 + len * Math.cos(r) + 12, y0 - len * Math.sin(r) + 4, 'v₀', 'acc', 17, 'start', 700);
+    s += `<circle cx="${ax}" cy="${ay}" r="8" class="f-ink"/>` + ar(ax, ay, ax + len * Math.cos(r), ay, 'acc', 4) + tx(ax + len * Math.cos(r) + 8, ay + 6, 'vx', 'acc', 17, 'start', 700);
+    s += ar(ax, ay, ax, ay + 70, 'pen', 3) + tx(ax - 10, ay + 62, 'g', 'pen', 17, 'end', 700) + tx(ax, ay - 16, 'vy = 0', 'ink', 14);
+    s += `<circle cx="${x0}" cy="${y0}" r="6" class="f-ink"/>` + tx(x0 + 52, y0 - 10, `${ang}°`, 'ink2', 13, 'start');
+    return svg(600, 298, s, 'Траектория броска под углом: в верхней точке скорость горизонтальна, а ускорение g направлено вниз');
+  },
+  scene({ axis, dir, label }) {
+    const hor = axis === 'right' || axis === 'left';
+    let g = '';
+    if (hor) {
+      const d = dir === 'right' ? 1 : -1, front = 300 + d * 35;
+      g += `<rect x="20" y="146" width="560" height="14" rx="3" class="f-card2"/>`;
+      g += `<g transform="translate(${front},146) scale(${d},1)">${carShape()}</g>`;
+      g += ar(300 - d * 40, 84, 300 + d * 70, 84, 'acc', 5) + tx(300 + d * 86, 90, 'v', 'acc', 20, d > 0 ? 'start' : 'end', 700);
+      g += tx(300, 40, label, 'ink', 22, 'middle', 600);
+      const a1 = axis === 'right' ? 60 : 540, a2 = axis === 'right' ? 540 : 60;
+      g += ar(a1, 196, a2, 196, 'ink', 2.5) + tx(a2 + (axis === 'right' ? -4 : 4), 184, 'x', 'ink', 18, axis === 'right' ? 'end' : 'start', 700);
+      return svg(600, 215, g, `Ось x направлена ${axis === 'right' ? 'вправо' : 'влево'}, машина ${label}`);
+    }
+    const up = axis === 'up', vu = dir === 'up';
+    g += ar(120, up ? 232 : 28, 120, up ? 28 : 232, 'ink', 2.5) + tx(136, up ? 40 : 226, 'y', 'ink', 18, 'start', 700);
+    g += `<circle cx="300" cy="130" r="20" class="f-acc"/>`;
+    g += ar(300, vu ? 106 : 154, 300, vu ? 36 : 224, 'acc', 5) + tx(316, vu ? 54 : 214, 'v', 'acc', 20, 'start', 700);
+    label.split('\n').forEach((s, i) => { g += tx(352, 122 + i * 28, s, 'ink', 21, 'start', 600); });
+    return svg(600, 260, g, `Ось y направлена ${up ? 'вверх' : 'вниз'}, ${label.replace('\n', ' ')}`);
+  },
+};
+
+// конструкторы заданий; в вариантах ответа правильный всегда первый, на экране порядок перемешивается
+const N = (q, ans, unit, o = {}) => ({ type: 'num', q, ans, unit, ...o });
+const C = (q, opts, o = {}) => ({ type: 'choice', q, opts, ...o });
+const M = (q, pairs, o = {}) => ({ type: 'match', q, pairs, ...o });
+const S = (scene, v, a, o = {}) => ({ type: 'signs', q: 'Выбери знаки проекций скорости и ускорения на ось.', vis: V.scene(scene), v, a, ...o });
+const BR = (q, v0, d, o = {}) => ({ type: 'brake', q, v0, d, ...o });
+const LA = (q, v0, L, o = {}) => ({ type: 'launch', q, v0, L, ...o });
+
+// ===== уровни: часть 1, школа =====
+const LEVELS = [
+{ id: 'l1', title: 'Км/ч в м/с', chip: '÷ 3,6', big: 'км/ч ÷ 3,6 = м/с',
+  intro: ['{1 км = 1000 м}, {1 ч = 3600 с}.', 'Значит {1 км/ч = 1000/3600 м/с}, то есть в 3,6 раза меньше.', 'Из км/ч в м/с делим на 3,6. Обратно умножаем.', 'Проверка: в м/с число всегда меньше, чем в км/ч.'],
+  tasks: [
+    N('Переведи {72 км/ч} в м/с.', 20, 'м/с', { hint: 'Раздели на 3,6.', sol: '{72 / 3,6 = 20 м/с}.' }),
+    N('Переведи {36 км/ч} в м/с.', 10, 'м/с', { hint: 'Раздели на 3,6.', sol: '{36 / 3,6 = 10 м/с}. Запомни эту пару: 36 км/ч = 10 м/с.' }),
+    N('Переведи {90 км/ч} в м/с.', 25, 'м/с', { hint: 'Раздели на 3,6.', sol: '{90 / 3,6 = 25 м/с}.' }),
+    N('Обратно: {15 м/с} это сколько км/ч?', 54, 'км/ч', { hint: 'Из м/с в км/ч умножаем на 3,6.', sol: '{15 · 3,6 = 54 км/ч}.' }),
+    C('Что больше: {20 м/с} или {70 км/ч}?', ['20 м/с', '70 км/ч', 'Одинаково'], { hint: 'Переведи 20 м/с в км/ч.', sol: '{20 · 3,6 = 72 км/ч}, а это больше 70.' }),
+    N('Гепард бежит {108 км/ч}. Сколько метров он пробегает за одну секунду?', 30, 'м', { hint: 'Скорость в м/с и есть метры за секунду.', sol: '{108 / 3,6 = 30 м/с}: 30 метров каждую секунду.' }),
+    C('Одногруппник получил {72 км/ч = 259,2 м/с}. Что не так?', ['Умножил вместо того, чтобы делить', 'Всё верно', 'Нужно было делить на 36', 'Нужно было делить на 1000'], { hint: 'В м/с число должно получиться меньше.', sol: '259,2 больше 72, а в м/с число всегда меньше. Он умножил на 3,6. Правильно {72 / 3,6 = 20 м/с}.' }),
+  ] },
+
+{ id: 'l2', title: 'Язык формул', chip: 'v₀, t², a·t', big: 'v₀ · a·t · t²',
+  intro: ['Буква это величина. Вместо неё подставляешь число из условия.', 'Точка значит «умножить»: {a·t = a × t}.', 'Квадрат: {t² = t·t}, например {3² = 9}.', 'Ноль внизу значит «в начале»: {v₀} это скорость на старте.', 'Половина чисел спрятана в словах: «с места» уже значит {v₀ = 0}.'],
+  tasks: [
+    M('Соедини слова из условия с тем, что они значат.', [['«тронулся с места»', 'v₀ = 0'], ['«остановился»', 'v = 0'], ['«тормозит»', 'a против скорости'], ['«свободно падает»', 'a = g'], ['«за 2 минуты»', 't = 120 с']], { hint: '«С места» и «остановился» говорят о скорости в начале и в конце.' }),
+    N('Посчитай {a·t} при {a = 3 м/с²} и {t = 5 с}.', 15, 'м/с', { sol: '{3 · 5 = 15 м/с}: на столько вырастет скорость за 5 секунд.' }),
+    N('Посчитай {t²} при {t = 4 с}.', 16, 'с²', { hint: 'Квадрат это число, умноженное само на себя.', sol: '{4² = 4 · 4 = 16}. Не 8: квадрат это не умножение на 2.' }),
+    C('Что значит {v₀}?', ['Скорость в начале движения', 'Скорость, которая всегда равна нулю', 'Средняя скорость', 'Скорость в конце'], { sol: 'Ноль внизу значит «в момент {t = 0}», то есть на старте. {v₀ = 0} только если тело стартует с места.' }),
+    N('Посчитай {a·t²/2} при {a = 2 м/с²} и {t = 3 с}.', 9, 'м', { hint: 'Сначала квадрат, потом умножение и деление.', sol: '{t² = 9}, {2 · 9 = 18}, {18 / 2 = 9 м}.' }),
+    C('«Велосипедист ехал {5 м/с} и начал тормозить». Что из этого следует?', ['{v₀ = 5 м/с}, ускорение против скорости', '{v = 5 м/с}, ускорение ноль', '{v₀ = 0}, {a = 5 м/с²}', '{v₀ = 5 м/с}, ускорение по скорости'], { sol: '5 м/с было до торможения, значит это начальная скорость {v₀}. «Тормозить» значит ускорение направлено против скорости.' }),
+  ] },
+
+{ id: 'l3', title: 'Равномерное движение', chip: 's = v·t', big: 's = v·t',
+  intro: ['Скорость не меняется: за каждую секунду тело проходит одно и то же расстояние.', 'Путь {s = v·t}. Из неё же {v = s/t} и {t = s/v}.', 'Единицы должны совпадать: метры, секунды и м/с.'],
+  tasks: [
+    C('Машина едет {5 м/с}. Где она будет через {3 с}?', ['15 м', '10 м', '20 м', '8 м'], { vis: V.road(), sol: 'Каждую секунду ещё 5 м: {5 · 3 = 15 м}.' }),
+    N('Велосипедист едет {5 м/с}. Сколько он проедет за {1 минуту}?', 300, 'м', { hint: 'Сначала переведи минуту в секунды.', sol: '{1 мин = 60 с}, {s = 5 · 60 = 300 м}.' }),
+    N('Машина едет {72 км/ч}. Сколько метров она проедет за {10 с}?', 200, 'м', { hint: 'Сначала км/ч в м/с: раздели на 3,6.', sol: '{72 / 3,6 = 20 м/с}, {s = 20 · 10 = 200 м}.' }),
+    N('Пешеход прошёл {150 м} за {30 с}. Какая у него скорость?', 5, 'м/с', { hint: '{v = s / t}.', sol: '{v = 150 / 30 = 5 м/с}.' }),
+    N('За сколько секунд поезд со скоростью {20 м/с} проедет {1 км}?', 50, 'с', { hint: '{1 км = 1000 м}, {t = s / v}.', sol: '{t = 1000 / 20 = 50 с}.' }),
+    C('Едешь {60 км/ч}. Сколько проедешь за полчаса?', ['30 км', '120 км', '60 км', '2 км'], { sol: '{s = 60 км/ч · 0,5 ч = 30 км}. Когда всё в км и часах, в СИ переводить не обязательно: главное, чтобы единицы совпадали.' }),
+  ] },
+
+{ id: 'l4', title: 'Разгон и торможение', chip: 'v = v₀ + at', big: 'v = v₀ + a·t',
+  intro: ['Ускорение {a} показывает, на сколько м/с меняется скорость за одну секунду.', 'За {t} секунд скорость изменится на {a·t}. Было {v₀}, стало {v = v₀ + a·t}.', 'Если ось направлена по движению, при торможении {a} с минусом.', '«Остановился» значит {v = 0}.'],
+  tasks: [
+    C('{a = 3 м/с²}. Что это значит?', ['Каждую секунду скорость растёт на 3 м/с', 'Тело проходит 3 м за секунду', 'Скорость всё время 3 м/с', 'За 3 секунды скорость удвоится'], { sol: 'м/с² читается как «м/с за секунду»: скорость меняется на 3 м/с каждую секунду.' }),
+    N('Машина трогается с места с {a = 2 м/с²}. Какая скорость через {5 с}?', 10, 'м/с', { hint: '«С места» значит {v₀ = 0}.', sol: '{v = 0 + 2 · 5 = 10 м/с}.' }),
+    N('Автобус ехал {10 м/с} и {8 с} разгонялся с {a = 0,5 м/с²}. Какой стала скорость?', 14, 'м/с', { sol: '{v = 10 + 0,5 · 8 = 10 + 4 = 14 м/с}.' }),
+    N('Машина ехала {20 м/с} и тормозила {3 с} с ускорением {4 м/с²}. Какая скорость в конце?', 8, 'м/с', { hint: 'Торможение при оси по движению: {a = −4 м/с²}.', sol: '{v = 20 + (−4) · 3 = 20 − 12 = 8 м/с}.' }),
+    N('Машина едет {20 м/с} и тормозит с ускорением {5 м/с²}. Через сколько секунд она остановится?', 4, 'с', { hint: 'Остановилась значит {v = 0}. Реши {0 = 20 − 5·t}.', sol: '{0 = 20 − 5t}, {t = 20 / 5 = 4 с}.' }),
+    N('Самолёт разгоняется с места до {60 м/с} за {30 с}. Чему равно ускорение?', 2, 'м/с²', { hint: '{a = (v − v₀) / t}.', sol: '{a = (60 − 0) / 30 = 2 м/с²}.' }),
+  ] },
+
+{ id: 'l5', title: 'Путь как площадь', chip: 's = v₀t + at²/2', big: 's = v₀·t + a·t²/2',
+  intro: ['Путь это площадь под графиком скорости {v(t)}.', 'Старт с места: под графиком треугольник, {s = a·t²/2}.', 'Если {v₀} не ноль, добавляется прямоугольник {v₀·t}.', 'Вместе: {s = v₀·t + a·t²/2}.'],
+  tasks: [
+    C('Что показывает закрашенная площадь под графиком скорости?', ['Пройденный путь', 'Ускорение', 'Время движения', 'Конечную скорость'], { vis: V.graph({ v0: 0, v1: 10, t: 5 }), sol: 'Площадь это «скорость × время», то есть путь. Здесь {5 · 10 / 2 = 25 м}.' }),
+    N('Машина разгоняется с места с {a = 2 м/с²}. Какой путь за {5 с}?', 25, 'м', { vis: V.graph({ v0: 0, v1: 10, t: 5 }), hint: 'Площадь треугольника: основание × высота / 2.', sol: '{s = a·t²/2 = 2 · 25 / 2 = 25 м}. Это площадь треугольника {5 · 10 / 2}.' }),
+    N('Машина ехала {10 м/с} и {5 с} разгонялась с {a = 2 м/с²}. Какой путь?', 75, 'м', { vis: V.graph({ v0: 10, v1: 20, t: 5 }), hint: 'Прямоугольник {v₀·t} плюс треугольник {a·t²/2}.', sol: '{v₀·t = 50 м}, {a·t²/2 = 25 м}, вместе {75 м}.' }),
+    N('Скорость выросла с {4} до {10 м/с} за {6 с}. Какой путь? Посчитай площадь под графиком.', 42, 'м', { vis: V.graph({ v0: 4, v1: 10, t: 6 }), hint: 'Прямоугольник {4 · 6} плюс треугольник {6 · 6 / 2}.', sol: '{4 · 6 = 24 м}, {(10 − 4) · 6 / 2 = 18 м}, всего {42 м}.' }),
+    N('Санки скатываются с горки с места с {a = 4 м/с²}. Какой путь за {3 с}?', 18, 'м', { sol: '{s = 4 · 3² / 2 = 4 · 9 / 2 = 18 м}.' }),
+    C('Время разгона с места выросло в 2 раза. Путь вырос в…', ['4 раза', '2 раза', '8 раз', 'не изменился'], { hint: 'В формуле {s = a·t²/2} время в квадрате.', sol: '{(2t)² = 4t²}, поэтому путь в 4 раза больше.' }),
+  ] },
+
+{ id: 'l6', title: 'Тормозной путь', chip: 'v² − v₀² = 2as', big: 'v² − v₀² = 2·a·s',
+  intro: ['Если время не дано и не нужно, бери {v² − v₀² = 2·a·s}.', 'При остановке {v = 0}. Тормозной путь {s = v₀² / (2a)}.', 'Чтобы встать через {s} метров, нужно торможение {a = v₀² / (2s)}.', 'Здесь мини-игра: подбери торможение, чтобы машина встала ровно у стоп-линии.'],
+  tasks: [
+    N('Машина едет {20 м/с} и тормозит с ускорением {5 м/с²}. Какой тормозной путь?', 40, 'м', { hint: '{v = 0}, {a = −5}: {0 − 20² = 2·(−5)·s}.', sol: '{0 − 400 = −10·s}, {s = 40 м}.' }),
+    BR('Машина едет {20 м/с}, до стоп-линии {40 м}. Подбери торможение, чтобы встать ровно у линии.', 20, 40, { sol: '{a = v₀² / (2s) = 400 / 80 = 5 м/с²}.' }),
+    BR('Скорость {72 км/ч}, до линии {50 м}. Какое нужно торможение?', 20, 50, { v0label: '72 км/ч', hint: 'Сначала {72 км/ч = 20 м/с}, потом {a = v₀² / (2s)}.', sol: '{72 км/ч = 20 м/с}, {a = 400 / 100 = 4 м/с²}.' }),
+    N('Машина с места разгоняется до {20 м/с} с ускорением {4 м/с²}. Какой путь она проехала?', 50, 'м', { hint: '{v₀ = 0}: {20² − 0 = 2 · 4 · s}.', sol: '{400 = 8·s}, {s = 50 м}.' }),
+    BR('Поезд идёт {30 м/с}, до семафора {90 м}. Подбери торможение.', 30, 90, { sol: '{a = 900 / 180 = 5 м/с²}.' }),
+    C('Скорость выросла в 2 раза. Как изменится тормозной путь при том же торможении?', ['Вырастет в 4 раза', 'Вырастет в 2 раза', 'Не изменится', 'Вырастет в √2 раз'], { hint: 'В формуле {s = v₀²/(2a)} скорость в квадрате.', sol: 'Скорость в квадрате: на 120 км/ч тормозной путь вчетверо длиннее, чем на 60.' }),
+  ] },
+
+{ id: 'l7', title: 'Знаки и оси', chip: '+ или −', big: 'по оси +, против оси −',
+  intro: ['Сначала смотри на ось. Вектор смотрит по оси: плюс. Против оси: минус.', 'Скорость смотрит туда, куда движется тело.', 'Разгон: ускорение туда же, куда скорость. Торможение: против скорости.', 'Знак {a} зависит от оси, а не от слов «разгон» и «торможение».'],
+  tasks: [
+    S({ axis: 'right', dir: 'right', label: 'едет вправо и разгоняется' }, '+', '+', { sol: 'Едет по оси: {v > 0}. Разгоняется: ускорение туда же, по оси: {a > 0}.' }),
+    S({ axis: 'right', dir: 'right', label: 'едет вправо и тормозит' }, '+', '−', { sol: 'Едет по оси: {v > 0}. Тормозит: ускорение против скорости, против оси: {a < 0}.' }),
+    S({ axis: 'right', dir: 'left', label: 'едет влево и разгоняется' }, '−', '−', { sol: 'Едет против оси: {v < 0}. Разгоняется: ускорение туда же, куда скорость, тоже против оси: {a < 0}.' }),
+    S({ axis: 'right', dir: 'left', label: 'едет влево и тормозит' }, '−', '+', { hint: 'Торможение значит ускорение против скорости. А скорость здесь смотрит влево.', sol: 'Едет против оси: {v < 0}. Тормозит: ускорение против скорости, то есть вправо, по оси: {a > 0}. Торможение не всегда минус!' }),
+    S({ axis: 'up', dir: 'up', label: 'мяч летит вверх\nпосле броска' }, '+', '−', { sol: 'Летит вверх по оси: {v > 0}. Ускорение {g} всегда вниз, против оси: {a = −g}.', hint: 'Ускорение здесь {g}, а {g} всегда смотрит вниз. Сравни направления v и g с осью.' }),
+    S({ axis: 'down', dir: 'down', label: 'камень падает\nвниз' }, '+', '+', { sol: 'Ось вниз, камень летит вниз: {v > 0}. {g} тоже вниз: {a = +g}. Поэтому для падения ось удобно направить вниз.', hint: 'Ускорение здесь {g}, а {g} всегда смотрит вниз. Сравни направления v и g с осью.' }),
+    S({ axis: 'up', dir: 'down', label: 'мяч падает\nобратно' }, '−', '−', { sol: 'Ось вверх, мяч летит вниз: {v < 0}. {g} вниз, против оси: {a = −g}. Ускорение то же, что и при подъёме.', hint: 'Ускорение здесь {g}, а {g} всегда смотрит вниз. Сравни направления v и g с осью.' }),
+  ] },
+
+{ id: 'l8', title: 'Свободное падение', chip: 'a = g', big: 'v = g·t,  h = g·t²/2',
+  intro: ['Без воздуха все тела падают с одним ускорением {g ≈ 9,8 м/с²}.', 'Отпустили без толчка: {v = g·t}, {h = g·t²/2}.', 'Брошено вверх: на подъёме скорость падает на {g} каждую секунду, в верхней точке {v = 0}.', 'В этом уровне {g = 10 м/с²}.'],
+  tasks: [
+    C('Без воздуха что упадёт раньше с одной высоты: кирпич или яблоко?', ['Упадут одновременно', 'Кирпич', 'Яблоко'], { sol: 'Ускорение {g} одинаковое для всех тел. Масса в формулы падения не входит.' }),
+    N('Камень отпустили. Какая у него скорость через {2 с}?', 20, 'м/с', { sol: '{v = g·t = 10 · 2 = 20 м/с}.' }),
+    N('Камень падал {3 с}. С какой высоты?', 45, 'м', { hint: '{h = g·t²/2}.', sol: '{h = 10 · 9 / 2 = 45 м}.' }),
+    N('Сколько секунд падает тело с высоты {80 м}?', 4, 'с', { hint: '{h = g·t²/2}, значит {t² = 2h/g}.', sol: '{t² = 2 · 80 / 10 = 16}, {t = 4 с}.' }),
+    N('Мяч бросили вверх со скоростью {20 м/с}. Через сколько секунд он будет в верхней точке?', 2, 'с', { hint: 'В верхней точке {v = 0}: {0 = 20 − 10·t}.', sol: '{0 = 20 − 10t}, {t = 2 с}.' }),
+    N('Тот же мяч ({20 м/с} вверх). На какую высоту он поднимется?', 20, 'м', { hint: '{v² − v₀² = 2·a·h}, где {a = −10}.', sol: '{0 − 400 = 2 · (−10) · h}, {h = 20 м}.' }),
+    C('Шарик сфотографировали через равные промежутки времени. Почему расстояния между положениями растут?', ['Скорость растёт каждую секунду', 'Шарик становится тяжелее', 'Воздух толкает его вниз', 'Так кажется из-за перспективы'], { vis: V.fall(), sol: 'Скорость растёт на {g} каждую секунду, поэтому за каждый следующий промежуток шарик пролетает больше: {1 : 3 : 5 : 7 : 9}.' }),
+  ] },
+
+// ===== уровни: часть 2, вуз =====
+{ id: 'l9', title: 'Векторы', chip: '√(ax² + ay²)', big: '|a| = √(ax² + ay²)',
+  intro: ['Вектор это стрелка: длина и направление.', 'Проекции {ax}, {ay} показывают, на сколько стрелка тянется вдоль осей. Против оси проекция с минусом.', 'Длина по Пифагору: {|a| = √(ax² + ay²)}. В трёхмерном случае добавляется {az²}.', 'Скалярное произведение: {a·b = ax·bx + ay·by = |a|·|b|·cos α}.'],
+  tasks: [
+    N('Чему равна проекция {ax} вектора на рисунке? Одна клетка это 1.', 3, '', { vis: V.vec({ x: 3, y: 4 }), sol: 'Стрелка тянется на 3 клетки вправо, по оси x: {ax = 3}.' }),
+    N('А какая у этого вектора длина {|a|}?', 5, '', { vis: V.vec({ x: 3, y: 4 }), hint: '{ax = 3}, {ay = 4}. Дальше Пифагор.', sol: '{√(3² + 4²) = √25 = 5}.' }),
+    N('Чему равна проекция {ax} этого вектора?', -6, '', { vis: V.vec({ x: -6, y: 8 }), hint: 'Стрелка смотрит влево, против оси x. Кнопка ± ставит минус.', sol: '6 клеток влево, против оси x: {ax = −6}.' }),
+    N('Какая длина у этого вектора?', 10, '', { vis: V.vec({ x: -6, y: 8 }), sol: '{√((−6)² + 8²) = √(36 + 64) = 10}. Минус при возведении в квадрат исчезает.' }),
+    N('{r = 3·i + 4·j + 12·k}. Чему равна длина {|r|}?', 13, '', { hint: 'Три проекции: {√(x² + y² + z²)}.', sol: '{√(9 + 16 + 144) = √169 = 13}.' }),
+    N('{a = (1; 2)}, {b = (3; 1)}. Чему равно скалярное произведение {a·b}?', 5, '', { hint: '{ax·bx + ay·by}.', sol: '{1 · 3 + 2 · 1 = 5}.' }),
+    C('{a = (2; 3)}, {b = (3; −2)}. Какой угол между ними?', ['90°', '45°', '0°', '180°'], { hint: 'Посчитай {a·b}.', sol: '{a·b = 2 · 3 + 3 · (−2) = 0}. Скалярное произведение равно нулю только у перпендикулярных векторов: {cos 90° = 0}.' }),
+    N('Единичный вектор {e = a/|a|} для {a = (3; 4)}. Чему равна проекция {eₓ}?', 0.6, '', { tol: 0.01, hint: '{|a| = 5}. Каждую проекцию дели на 5.', sol: '{eₓ = 3 / 5 = 0,6}. Длина {e} равна 1, направление то же, что у {a}.' }),
+  ] },
+
+{ id: 'l10', title: 'Производные', chip: '(tⁿ)′ = n·tⁿ⁻¹', big: '(C·tⁿ)′ = n·C·tⁿ⁻¹',
+  intro: ['Производная показывает, как быстро меняется величина. Скорость это производная координаты.', '{dx/dt}, {x′} и {ẋ} значат одно и то же.', 'Правило: степень вперёд множителем, а сама степень на 1 меньше: {(t³)′ = 3t²}.', 'Число не меняется: {(7)′ = 0}. Сумму берут по кусочкам.'],
+  tasks: [
+    C('{(t³)′ = ?}', ['3t²', 't²', '3t³', '3t'], { sol: 'Тройка вперёд, степень {3 − 1 = 2}: {3t²}.' }),
+    C('{(5t²)′ = ?}', ['10t', '5t', '10t²', '2t'], { sol: '{5 · 2 · t¹ = 10t}.' }),
+    C('{(7)′ = ?}', ['0', '7', '1', '7t'], { sol: 'Число со временем не меняется, скорость его изменения ноль.' }),
+    C('{(4t³ − 2t + 9)′ = ?}', ['12t² − 2', '12t² − 2t + 9', '4t² − 2', '12t³ − 2'], { hint: 'Бери производную каждого слагаемого отдельно.', sol: '{(4t³)′ = 12t²}, {(−2t)′ = −2}, {(9)′ = 0}.' }),
+    C('Что значит {ẍ} (две точки над x)?', ['Вторая производная, то есть ускорение', 'x в квадрате', 'Скорость', 'x, умноженный на 2'], { sol: 'Одна точка: первая производная (скорость). Две точки: производную взяли дважды (ускорение).' }),
+    N('{x = 4t²} (м). Какая скорость при {t = 3 с}?', 24, 'м/с', { hint: '{v = x′ = 8t}.', sol: '{v = 8t}, {v(3) = 24 м/с}.' }),
+    C('Проверь школьную формулу: {(a·t²/2)′ = ?}', ['a·t', 'a·t²', 'a/2', 'a·t/2'], { sol: '{a/2 · 2t = a·t}. Из формулы пути получилась формула скорости.' }),
+  ] },
+
+{ id: 'l11', title: 'Уравнение движения', chip: 'v = x′, a = v′', big: 'x(t) → v = x′ → a = v′',
+  intro: ['Дано {x(t)}. Скорость {v = x′}, ускорение {a = v′ = x″}.', 'Нужен момент {t}: подставь число в готовую формулу.', 'Если {t} неизвестно, приравняй то, о чём спрашивают, и реши уравнение.'],
+  tasks: [
+    C('{x = 2 + 3t + t³} (м). Какая формула скорости?', ['v = 3 + 3t²', 'v = 2 + 3t²', 'v = 3t²', 'v = 3 + t²'], { sol: '{(2)′ = 0}, {(3t)′ = 3}, {(t³)′ = 3t²}.' }),
+    N('Та же точка. Какая скорость при {t = 2 с}?', 15, 'м/с', { hint: '{v = 3 + 3t²}.', sol: '{v = 3 + 3 · 4 = 15 м/с}.' }),
+    N('Какое ускорение при {t = 2 с}?', 12, 'м/с²', { hint: '{a = v′ = (3 + 3t²)′}.', sol: '{a = 6t = 12 м/с²}.' }),
+    N('Где точка при {t = 2 с}?', 16, 'м', { hint: 'Подставь {t = 2} в {x(t)}.', sol: '{x = 2 + 6 + 8 = 16 м}.' }),
+    N('Задача как 1.16 из Практики 2. {x₁ = 4t + 8t² − 16t³}, {x₂ = 2t − 4t² + t³} (м). В какой момент ускорения точек равны?', 0.2353, 'с', { tol: 0.006, show: '0,235', hint: '{a₁ = 16 − 96t}, {a₂ = −8 + 6t}. Приравняй.', sol: '{16 − 96t = −8 + 6t}, {24 = 102t}, {t ≈ 0,235 с}.' }),
+    N('Какая скорость у первой точки в этот момент?', 5.107, 'м/с', { tol: 0.08, show: '5,1', hint: '{v₁ = 4 + 16t − 48t²}, {t ≈ 0,235 с}.', sol: '{v₁ = 4 + 16 · 0,235 − 48 · 0,0554 ≈ 5,1 м/с}.' }),
+    C('{x = 5 + 2t} (м). Чему равно ускорение?', ['0', '2 м/с²', '5 м/с²', '7 м/с²'], { sol: '{v = 2} не меняется, значит {a = 0}: это равномерное движение.' }),
+  ] },
+
+{ id: 'l12', title: 'Путь через интеграл', chip: 's = ∫v dt', big: 's = ∫ v dt',
+  intro: ['Интеграл это действие, обратное производной: из скорости получаем путь.', 'Правило: {∫tⁿ dt = tⁿ⁺¹/(n+1)}: степень на 1 больше и делим на неё.', 'Путь за время от 0 до {t}: подставь {t} и вычти то, что получается при нуле.', 'Проверка: производная ответа должна дать исходную скорость.'],
+  tasks: [
+    C('{∫t² dt = ?}', ['t³/3', '2t', 't³', '3t²'], { sol: 'Степень +1 и делим на неё: {t³/3}. Проверка: {(t³/3)′ = t²}.' }),
+    C('{∫(4t + 3t²) dt = ?}', ['2t² + t³', '4 + 6t', '4t² + 3t³', '2t + t³'], { sol: '{∫4t dt = 2t²}, {∫3t² dt = t³}. Проверка: {(2t² + t³)′ = 4t + 3t²}.' }),
+    N('{v = 4t + 3t²} (м/с). Какой путь за первые {2 с}?', 16, 'м', { hint: '{s = 2t² + t³}, подставь {t = 2}.', sol: '{2 · 4 + 8 = 16 м}.' }),
+    N('{v = 3t²} (м/с). Какой путь за первые {2 с}?', 8, 'м', { hint: '{∫3t² dt = t³}.', sol: '{t³} при {t = 2}: {8 м}.' }),
+    N('{v = 4 + 2t} (м/с). Какой путь за первые {3 с}?', 21, 'м', { hint: '{∫(4 + 2t) dt = 4t + t²}.', sol: '{4 · 3 + 3² = 12 + 9 = 21 м}.' }),
+    N('{v = 10 − 2t} (м/с), тело разворачивается. Какой ПУТЬ оно пройдёт за первые {6 с}?', 26, 'м', { hint: '{v = 0} при {t = 5 с}. Посчитай путь до 5 с и после отдельно и сложи.', sol: '{x(t) = 10t − t²}. До 5 с: {25 м} вперёд. С 5 до 6 с: {x(6) − x(5) = 24 − 25 = −1}, то есть 1 м назад. Путь {25 + 1 = 26 м}, а перемещение {24 м}.' }),
+  ] },
+
+{ id: 'l13', title: 'Ускорение на повороте', chip: 'an = v²/R', big: 'a = √(aτ² + an²)',
+  intro: ['На кривой ускорение делится на две части.', '{aτ}, касательное: вдоль скорости, меняет её величину. {aτ = dv/dt}.', '{an}, нормальное: к центру поворота, меняет направление скорости. {an = v²/R}.', 'Они перпендикулярны, поэтому {a = √(aτ² + an²)}.'],
+  tasks: [
+    C('Машина едет по кругу с постоянной по величине скоростью. Какое у неё ускорение?', ['Только an', 'Только aτ', 'И aτ, и an', 'Никакого'], { vis: V.curve(), sol: 'Величина скорости не меняется: {aτ = 0}. Но направление меняется, значит {an = v²/R} есть.' }),
+    C('Машина разгоняется по прямой дороге. Какое ускорение?', ['Только aτ', 'Только an', 'И aτ, и an', 'Никакого'], { sol: 'Прямая не поворачивает: {an = 0}. Скорость растёт: {aτ} есть.' }),
+    N('{R = 20 м}, {v = 10 м/с}. Чему равно {an}?', 5, 'м/с²', { hint: '{an = v²/R}.', sol: '{an = v²/R = 100 / 20 = 5 м/с²}.' }),
+    N('Та же машина ещё и разгоняется: {aτ = 2 м/с²}, {an = 5 м/с²}. Чему равно полное ускорение?', 5.385, 'м/с²', { tol: 0.07, show: '5,4', hint: '{a = √(aτ² + an²)}.', sol: '{a = √(4 + 25) = √29 ≈ 5,4 м/с²}.' }),
+    N('Задача 1 из Практики 3. {R = 4 м}, {an = 1 + 6t + 9t²} (м/с²). Чему равно {an} при {t = 1 с}?', 16, 'м/с²', { sol: '{1 + 6 + 9 = 16 м/с²}.' }),
+    C('Из {an = v²/R}: {v² = 4·(1 + 6t + 9t²) = 4·(1 + 3t)²}. Чему равна {v(t)}?', ['v = 2 + 6t', 'v = 4 + 12t', 'v = 1 + 3t', 'v = 2 + 3t²'], { sol: '{v = √4 · (1 + 3t) = 2 + 6t} м/с.' }),
+    N('Тогда {aτ = v′ = 6 м/с²}, а {an(1) = 16 м/с²}. Какое полное ускорение при {t = 1 с}?', 17.09, 'м/с²', { tol: 0.12, show: '17,1', hint: '{a = √(aτ² + an²)}.', sol: '{a = √(36 + 256) = √292 ≈ 17,1 м/с²}. Как у тебя в тетради.' }),
+  ] },
+
+{ id: 'l14', title: 'Вращение', chip: 'ω, ε, φ', big: 'ω = 2π·ν,  v = ω·R',
+  intro: ['Вращение описывают теми же формулами, только другими буквами.', 'Угол {φ} (рад) вместо пути, {ω = φ′} вместо скорости, {ε = ω′} вместо ускорения.', '{1 оборот = 2π рад}. Частота {ν} в об/с, {ω = 2π·ν}.', 'Связь с точкой на ободе: {v = ω·R}, {aτ = ε·R}, {an = ω²·R}.'],
+  tasks: [
+    M('Соедини величины прямолинейного движения с их парами во вращении.', [['путь s', 'угол φ'], ['скорость v', 'угловая скорость ω'], ['ускорение a', 'угловое ускорение ε'], ['v = v₀ + a·t', 'ω = ω₀ + ε·t'], ['s = v₀t + at²/2', 'φ = ω₀t + εt²/2']], { hint: 'Угловые величины пишут греческими буквами: φ, ω, ε.' }),
+    N('Колесо делает {900 об/мин}. Чему равна угловая скорость {ω}?', 94.25, 'рад/с', { tol: 0.4, show: '94,2', hint: 'Сначала об/мин в об/с (÷ 60), потом {ω = 2π·ν}.', sol: '{ν = 900 / 60 = 15 об/с}, {ω = 2π · 15 ≈ 94,2 рад/с}.' }),
+    N('Сколько радиан в {75} оборотах?', 471.2, 'рад', { tol: 1.5, show: '471', hint: 'Один оборот это {2π ≈ 6,28} рад.', sol: '{φ = 2π · 75 ≈ 471 рад}.' }),
+    N('Колесо с {ω₀ ≈ 94,2 рад/с} равнозамедленно остановилось, сделав {75} оборотов. Сколько секунд оно тормозило?', 10, 'с', { tol: 0.15, hint: 'Средняя угловая скорость {ω₀/2}, поэтому {φ = ω₀·t/2}.', sol: '{t = 2φ / ω₀ = 2 · 471 / 94,2 = 10 с}. Это задача 2 из Практики 3.' }),
+    N('Чему равно угловое ускорение {ε} этого колеса по модулю?', 9.425, 'рад/с²', { tol: 0.12, show: '9,42', hint: '{ε = ω₀ / t}.', sol: '{ε = 94,2 / 10 ≈ 9,42 рад/с²}.' }),
+    N('Колесо радиусом {0,5 м} крутится с {ω = 10 рад/с}. Какая скорость у точки на ободе?', 5, 'м/с', { vis: V.wheel(), hint: '{v = ω·R}.', sol: '{v = 10 · 0,5 = 5 м/с}.' }),
+    N('А какое у неё нормальное ускорение {an}?', 50, 'м/с²', { hint: '{an = ω²·R}.', sol: '{an = 100 · 0,5 = 50 м/с²}. Или {v²/R = 25 / 0,5 = 50}.' }),
+  ] },
+
+{ id: 'l15', title: 'Бросок под углом', chip: 'L = v₀² sin2α / g', big: 'L = v₀²·sin 2α / g',
+  intro: ['Бросок это два движения сразу: по x равномерно, по y как подброшенный вверх мяч.', '{vx = v₀·cos α} не меняется. {vy = v₀·sin α − g·t}.', 'Дальность, если старт и падение на одной высоте: {L = v₀²·sin 2α / g}.', 'Мини-игра: подбери угол, чтобы попасть в мишень. Здесь {g = 10 м/с²}.'],
+  tasks: [
+    LA('Скорость броска {20 м/с}, мишень в {40 м}. Под каким углом бросить?', 20, 40, { sol: '{sin 2α = g·L / v₀² = 400 / 400 = 1}, {2α = 90°}, {α = 45°}. Это угол максимальной дальности.' }),
+    LA('Мишень ближе, в {20 м}. Скорость та же, {20 м/с}.', 20, 20, { sol: '{sin 2α = 200 / 400 = 0,5}: {2α = 30°} или {150°}. Подходят {α = 15°} и {α = 75°}.' }),
+    N('{v₀ = 20 м/с}, {α = 30°}. Сколько секунд тело в полёте?', 2, 'с', { hint: '{vy₀ = v₀·sin 30° = 10 м/с}. Подъём длится {vy₀/g}, весь полёт вдвое дольше.', sol: 'Подъём {10 / 10 = 1 с}, весь полёт {2 с}.' }),
+    N('Та же ситуация. Какая максимальная высота?', 5, 'м', { hint: '{h = vy₀² / (2g)}.', sol: '{h = 10² / 20 = 5 м}.' }),
+    LA('Мишень в {34,6 м}, скорость {20 м/с}.', 20, 34.64, { sol: '{sin 2α = 346 / 400 ≈ 0,87}: {2α = 60°} или {120°}, то есть {α = 30°} или {60°}.' }),
+    C('{v₀ = 20 м/с}, {α = 60°}. Какая скорость в верхней точке?', ['10 м/с', '0', '20 м/с', '17,3 м/с'], { vis: V.proj({ v0: 20, ang: 60 }), hint: 'В верхней точке {vy = 0}. А {vx}?', sol: '{vy = 0}, остаётся {vx = v₀·cos 60° = 20 · 0,5 = 10 м/с}. Скорость в верхней точке не ноль!' }),
+    N('Задача 3 из Практики 3. {v₀ = 10 м/с}, {α = 45°}, {g = 9,8 м/с²}. Чему равен радиус кривизны в верхней точке?', 5.102, 'м', { tol: 0.07, show: '5,1', hint: 'В верхней точке {v = vx}, а {an = g}. Значит {R = vx² / g}.', sol: '{vx = 10 · cos 45° ≈ 7,07 м/с}, {vx² = 50}, {R = 50 / 9,8 ≈ 5,1 м}.' }),
+  ] },
+
+// ===== финал =====
+{ id: 'boss', title: 'Финальная контрольная', chip: 'все темы', big: 'всё вместе',
+  intro: ['11 заданий из всех тем.', 'Подсказки работают, разбор после ошибки тоже.', 'Без ошибок получишь «5».'],
+  tasks: [
+    N('Переведи {54 км/ч} в м/с.', 15, 'м/с', { sol: '{54 / 3,6 = 15 м/с}.' }),
+    N('Тело трогается с места с {a = 3 м/с²}. Какая скорость через {4 с}?', 12, 'м/с', { sol: '{v = 3 · 4 = 12 м/с}.' }),
+    N('Какой путь оно пройдёт за эти {4 с}?', 24, 'м', { hint: '{s = a·t²/2}.', sol: '{s = 3 · 16 / 2 = 24 м}.' }),
+    S({ axis: 'left', dir: 'right', label: 'едет вправо и разгоняется' }, '−', '−', { hint: 'Посмотри, куда направлена ось.', sol: 'Ось смотрит влево, машина едет вправо: {v < 0}. Разгоняется: ускорение туда же, куда скорость: {a < 0}.' }),
+    BR('Машина едет {25 м/с}, до стоп-линии {62,5 м}. Подбери торможение.', 25, 62.5, { sol: '{a = 625 / 125 = 5 м/с²}.' }),
+    N('Камень падает {5 с} ({g = 10 м/с²}). С какой высоты?', 125, 'м', { sol: '{h = 10 · 25 / 2 = 125 м}.' }),
+    N('Какая длина у вектора {(5; 12)}?', 13, '', { sol: '{√(25 + 144) = √169 = 13}.' }),
+    C('{(6t² − 5t)′ = ?}', ['12t − 5', '12t', '6t − 5', '12t² − 5'], { sol: '{(6t²)′ = 12t}, {(−5t)′ = −5}.' }),
+    N('{x = t³ − 2t} (м). Какое ускорение при {t = 2 с}?', 12, 'м/с²', { hint: '{v = 3t² − 2}, {a = 6t}.', sol: '{a = 6t = 12 м/с²}.' }),
+    N('Поворот {R = 50 м}, скорость {20 м/с}. Чему равно {an}?', 8, 'м/с²', { sol: '{an = 400 / 50 = 8 м/с²}.' }),
+    N('Колесо {R = 0,25 м} крутится с {ω = 4 рад/с}. Какая скорость у точки на ободе?', 1, 'м/с', { sol: '{v = ω·R = 4 · 0,25 = 1 м/с}.' }),
+  ] },
+];
+
+// ===== состояние =====
+let P = loadLocal() || emptyProg();
+// «Рамки»: прогресс, перенесённый из версии игры в Claude. Слияние берёт лучшее по каждому уровню;
+// если прогресс на устройстве сбрасывали позже — сброс главнее.
+fetch('seed.json', { cache: 'no-cache' }).then(r => (r.ok ? r.json() : null)).then(seed => {
+  if (!seed || seed.v !== 1) return;
+  const merged = mergeProg(P, seed);
+  if (JSON.stringify(merged) === JSON.stringify(P)) return;
+  P = merged; saveLocal();
+  if (view === 'map' || (tab === 'drill' && DR.view !== 'task')) render(); else updateTop();
+}).catch(() => {});
+let view = 'map';      // map | intro | task | result
+let run = null;        // текущий проход уровня
+let ts = null;         // состояние текущего задания
+let busy = false;      // идёт анимация мини-игры
+let lastResult = null;
+let sheet = null;      // settings | confirm
+let peek = null;       // какое уже решённое задание листаем (null — текущее)
+let tab = 'levels';    // levels | drill
+let lvSaved = null;    // задание уровня, пока открыта нарешка
+const main = $('#main'), overlay = $('#overlay');
+const LAST = LEVELS.length - 1;
+const MAXSTARS = LEVELS.length * 3;
+
+const LI = id => LEVELS.findIndex(L => L.id === id);
+const lvStars = i => (P.levels[LEVELS[i].id] || {}).stars || 0;
+const lvDone = i => lvStars(i) > 0;
+const unlocked = i => i === 0 || lvDone(i - 1);
+const totalStars = () => LEVELS.reduce((s, L, i) => s + lvStars(i), 0);
+const doneCount = () => LEVELS.filter((L, i) => lvDone(i)).length;
+const tid = (L, i) => `${L.id}.${i + 1}`;
+const num = i => i === LAST ? 'Ф' : String(i + 1);
+const curTask = () => tab === 'drill' ? DR.task : LEVELS[run.li].tasks[run.ti];
+const curLevel = () => LEVELS[tab === 'drill' ? DR.tli : run.li];
+const inTask = () => tab === 'drill' ? DR.view === 'task' : view === 'task' && peek === null;
+const isGame = t => t.type === 'brake' || t.type === 'launch';
+const toTop = () => window.scrollTo(0, 0);
+function target() { for (let i = 0; i < LEVELS.length; i++) if (!lvDone(i)) return unlocked(i) ? i : -1; return -1; }
+const starsHTML = (n, big) => `<span class="stars${big ? ' big' : ''}" role="img" aria-label="${n} из 3 звёзд">${[0, 1, 2].map(i => `<svg class="star${i < n ? ' on' : ''}" viewBox="0 0 24 24" aria-hidden="true">${STAR}</svg>`).join('')}</span>`;
+const LOCK = '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" class="f-ink2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" class="f-none s-ink2" stroke-width="2"/></svg>';
+
+function angles(t) { const s = Math.min(1, 10 * t.L / (t.v0 * t.v0)); const a1 = Math.asin(s) * 90 / Math.PI; return [a1, 90 - a1]; }
+function answerText(t) {
+  if (t.type === 'num') return `${t.show || fmt(t.ans)} ${t.unit || ''}`.trim();
+  if (t.type === 'choice') return t.opts[0];
+  if (t.type === 'signs') return `v: ${t.v}, a: ${t.a}`;
+  if (t.type === 'brake') return `a = ${fmt(t.v0 * t.v0 / (2 * t.d), 1)} м/с²`;
+  if (t.type === 'launch') { const [a1, a2] = angles(t).map(Math.round); return a1 === a2 ? `α = ${a1}°` : `α = ${a1}° или ${a2}°`; }
+  return '';
+}
+function hintOf(t, L) {
+  if (t.hint) return t.hint;
+  if (t.type === 'brake') return 'Нужное торможение {a = v₀² / (2s)}.';
+  if (t.type === 'launch') return 'Дальность {L = v₀²·sin 2α / g}, значит {sin 2α = g·L / v₀²}.';
+  if (t.type === 'signs') return 'Скорость смотрит туда, куда едет тело. При торможении ускорение против скорости. Потом сравни с осью.';
+  return `Формула уровня: {${L.big}}.`;
+}
+
+// ===== карта =====
+function renderMap() {
+  const done = doneCount(), stars = totalStars(), tgt = target();
+  const ci = P.current ? LI(P.current.id) : -1;
+  const cur = ci >= 0 && unlocked(ci) ? P.current : null;
+  let h1, p, btn;
+  if (cur) { const L = LEVELS[ci]; h1 = `${ci === LAST ? 'Финал' : 'Уровень ' + (ci + 1)}: ${L.title}`; p = `Ты остановился на задании ${cur.ti + 1} из ${L.tasks.length}. Всё сохранено, продолжай с того же места.`; btn = 'Продолжить'; }
+  else if (tgt >= 0 && done === 0) { h1 = 'Пройди кинематику по шагам'; p = '15 коротких уровней и финальная контрольная: от перевода км/ч до броска под углом. Каждый уровень на 2–3 минуты, после каждой ошибки разбор.'; btn = 'Начать с уровня 1'; }
+  else if (tgt >= 0) { const L = LEVELS[tgt]; h1 = `Дальше: ${L.title}`; p = tgt === LAST ? 'Все уровни пройдены. Осталась финальная контрольная по всем темам.' : `Уровень ${tgt + 1} из 15 · ${L.tasks.length} заданий.`; btn = tgt === LAST ? 'К контрольной' : 'Играть'; }
+  else { h1 = stars === MAXSTARS ? 'Кинематика сдана на «5»' : 'Всё пройдено'; p = stars === MAXSTARS ? `Все ${MAXSTARS} звёзд собраны.` : `Можно добрать звёзды: осталось ${MAXSTARS - stars}. Уровни с одной звездой отмечены «повторить».`; btn = null; }
+  const pct = Math.round(done / LEVELS.length * 100);
+  const chapters = [['Часть 1', 'Школа', 0, 7], ['Часть 2', 'Вуз', 8, 14], ['Финал', 'Контрольная', 15, 15]];
+  main.innerHTML = `<section class="hero kscene">${sceneHTML(stars, done)}<p class="eyebrow">Кинематика · ${LEVELS.length} уровней</p><h1>${esc(h1)}</h1><p>${p}</p>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${LEVELS.length}" aria-valuenow="${done}" aria-label="Пройдено уровней"><i style="width:${pct}%"></i></div>
+    <div class="meta"><span>пройдено ${done} из ${LEVELS.length}</span><span>звёзд ${stars} из ${MAXSTARS}</span></div>
+    ${btn ? `<div class="actions"><button class="btn primary" data-act="continue">${btn}</button></div>` : ''}</section>
+    ${weakHTML()}
+    ${chapters.map(([e, tt, a, b]) => `<section class="chapter"><p class="eyebrow">${e}</p><h2>${tt}</h2><ol class="track">${LEVELS.slice(a, b + 1).map((L, k) => rowHTML(a + k)).join('')}</ol></section>`).join('')}`;
+}
+// Сцена: большая мягкая цифра звёзд и мяч, летящий по параболе (медленнее у вершины — как в жизни)
+function sceneHTML(stars, done) {
+  return `<div class="kstage" aria-hidden="true"><svg class="traj" viewBox="0 0 400 150" preserveAspectRatio="xMidYMax meet">
+      <line x1="0" y1="146" x2="400" y2="146" class="traj-g"/><path id="kpath" d="M24 146 Q200 -40 376 146" class="traj-p"/>
+      <circle r="6" class="traj-b"><animateMotion dur="3.4s" repeatCount="indefinite" calcMode="spline" keyPoints="0;0.5;1" keyTimes="0;0.5;1" keySplines="0.2 0.6 0.5 1;0.5 0 0.8 0.4"><mpath href="#kpath"/></animateMotion></circle>
+    </svg><svg class="knum" viewBox="0 0 600 300"><text x="300" y="235" text-anchor="middle">${stars}</text></svg></div>
+    <p class="kcap">звёзд из ${MAXSTARS} · уровней ${done} из ${LEVELS.length}</p>`;
+}
+function rowHTML(i) {
+  const L = LEVELS[i], st = lvStars(i), lock = !unlocked(i), inprog = !!(P.current && P.current.id === L.id);
+  const now = !lock && (inprog || (!P.current && i === target()));
+  const tag = lock ? '' : inprog ? '<span class="tag acc">в процессе</span>' : st === 1 ? '<span class="tag pen">повторить</span>' : '';
+  const label = `${i === LAST ? 'Финал' : 'Уровень ' + (i + 1)}: ${L.title}${lock ? ', закрыт' : st ? `, ${st} из 3 звёзд` : ''}`;
+  return `<li class="st${st ? ' done' : ''}${now ? ' now' : ''}${lock ? ' locked' : ''}"><div class="axis"><span class="node" aria-hidden="true">${num(i)}</span></div>
+    <button class="lv" data-act="open" data-li="${i}"${lock ? ' disabled' : ''} aria-label="${esc(label)}">
+      <span class="lv-top"><span class="lv-t">${L.title}</span>${lock ? LOCK : starsHTML(st)}</span>
+      <span class="lv-bot"><span class="fm">${L.chip}</span>${tag}</span></button></li>`;
+}
+function weakHTML() {
+  const per = {};
+  for (const [k, v] of Object.entries(P.miss || {})) { const id = k.split('.')[0]; per[id] = (per[id] || 0) + v; }
+  const list = Object.entries(per).filter(([id, v]) => v >= 2 && LI(id) >= 0 && unlocked(LI(id))).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  if (!list.length) return '';
+  return `<section class="weak"><h3>Повторить</h3><p>Здесь больше всего ошибок за всё время. Пройди эти уровни ещё раз, чтобы закрепить.</p><div class="wl">${list.map(([id, v]) => `<button class="chipbtn" data-act="open" data-li="${LI(id)}">${LEVELS[LI(id)].title}<b>${v}</b></button>`).join('')}</div></section>`;
+}
+
+// ===== уровень =====
+function headHTML(L, ruler) {
+  const i = run.li;
+  return `<div class="lvhead"><div class="crumbs"><button class="btn ghost sm" data-act="map">← Карта</button><span class="eyebrow">${i === LAST ? 'Финал' : `Уровень ${i + 1} из 15`}</span>${run.mistakes ? `<span class="mist">ошибок: ${run.mistakes}</span>` : ''}</div><h1>${L.title}</h1>${ruler ? rulerHTML(L) : ''}</div>`;
+}
+// Полоска заданий: решённые можно открыть и посмотреть, будущие закрыты
+function rulerHTML(L) {
+  const n = L.tasks.length;
+  return `<div class="ruler" role="group" aria-label="Задания уровня: решено ${Math.min(run.ti, n)} из ${n}">${L.tasks.map((t, k) => {
+    if (k < run.ti) { const miss = run.miss[tid(L, k)]; return `<button class="rs${miss ? ' miss' : ''}${peek === k ? ' view' : ''}" data-act="peek" data-k="${k}" aria-label="Посмотреть задание ${k + 1}${miss ? ', была ошибка' : ''}"></button>`; }
+    return `<i class="${k === run.ti ? 'cur' : ''}"></i>`;
+  }).join('')}</div>`;
+}
+// Просмотр уже решённого задания: условие, ответ и разбор, без повторной проверки
+function renderPeek() {
+  const L = LEVELS[run.li], k = peek, t = L.tasks[k], n = L.tasks.length, fin = run.ti >= n, miss = run.miss[tid(L, k)];
+  const ans = answerText(t);
+  const pairs = t.type === 'match' ? `<ul class="pairs">${t.pairs.map(([a, b]) => `<li>${rich(a)} → <b>${rich(b)}</b></li>`).join('')}</ul>` : '';
+  const prev = k > 0 ? `<button class="btn ghost" data-act="peek" data-k="${k - 1}">← Назад</button>` : '';
+  const next = k + 1 < Math.min(run.ti, n) ? `<button class="btn ghost" data-act="peek" data-k="${k + 1}">Вперёд →</button>` : '';
+  const ret = fin ? `<button class="btn primary" data-act="toresult">К результату</button>` : `<button class="btn primary" data-act="unpeek">К заданию ${run.ti + 1}</button>`;
+  main.innerHTML = headHTML(L, true) + `<section class="card task peek"><div class="peek-top"><p class="eyebrow">Задание ${k + 1} из ${n} · уже решено</p><span class="tag ${miss ? 'pen' : 'ok'}">${miss ? 'была ошибка' : 'без ошибок'}</span></div>
+    <p class="q">${rich(t.q)}</p>${t.vis ? `<div class="vis">${t.vis}</div>` : ''}${pairs}
+    <div class="fb ok">${ans ? `<div>Ответ: <b>${rich(ans)}</b></div>` : ''}${t.sol ? `<div class="sol">${rich(t.sol)}</div>` : ''}</div>
+    <div class="actions"><span class="swipe-hint">можно листать свайпом</span>${prev}${next}${ret}</div></section>`;
+}
+function renderIntro() {
+  const L = LEVELS[run.li], resume = run.ti > 0;
+  main.innerHTML = headHTML(L, resume) + `<section class="card intro"><p class="eyebrow">Что нужно знать</p><div class="big">${esc(L.big)}</div><ul>${L.intro.map(s => `<li>${rich(s)}</li>`).join('')}</ul>
+    <div class="actions">${resume ? `<button class="btn ghost" data-act="restart">Начать заново</button><button class="btn primary" data-act="start">Продолжить с задания ${run.ti + 1}</button>` : `<button class="btn primary" data-act="start">Поехали · ${L.tasks.length} заданий</button>`}</div></section>`;
+}
+function renderTask() {
+  if (peek !== null) return renderPeek();
+  const L = LEVELS[run.li], t = L.tasks[run.ti];
+  const body = { num: numHTML, choice: choiceHTML, match: matchHTML, signs: signsHTML, brake: brakeHTML, launch: launchHTML }[t.type](t);
+  main.innerHTML = headHTML(L, true) + `<section class="card task"><p class="eyebrow">Задание ${run.ti + 1} из ${L.tasks.length}</p><p class="q">${rich(t.q)}</p>${t.vis ? `<div class="vis">${t.vis}</div>` : ''}${body}${fbHTML(t, L)}<div class="actions">${actionsHTML(t, L)}</div></section>`;
+  ts.bad = null;
+  if (t.type === 'num' && ts.state === 'ask' && window.matchMedia && matchMedia('(pointer: fine)').matches) { const i = $('#ans'); if (i) i.focus({ preventScroll: true }); }
+}
+function numHTML(t) {
+  const dis = ts.state !== 'ask';
+  return `<form class="numrow${ts.state === 'right' ? ' right' : ''}" data-form="num" autocomplete="off" novalidate>
+    <button type="button" class="btn ghost pm" data-act="pm" aria-label="Поставить или убрать минус"${dis ? ' disabled' : ''}>±</button>
+    <label class="sr" for="ans">Ответ</label><input id="ans" name="ans" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" placeholder="ответ" value="${esc(ts.val)}"${dis ? ' disabled' : ''}>
+    <span class="unit">${t.unit || ''}</span></form>`;
+}
+function choiceHTML(t) {
+  const two = t.opts.length === 4 && t.opts.every(o => o.replace(/[{}]/g, '').length <= 24);
+  return `<div class="opts${two ? ' two' : ''}">${ts.order.map(k => {
+    const done = ts.state !== 'ask', no = ts.wrong.includes(k), yes = done && k === 0, mono = !/[а-яё]/i.test(t.opts[k]);
+    return `<button class="opt${mono ? ' mono' : ''}${yes ? ' yes' : ''}${no ? ' no' : ''}" data-act="opt" data-k="${k}"${done || no ? ' disabled' : ''}>${rich(t.opts[k])}</button>`;
+  }).join('')}</div>`;
+}
+function matchHTML(t) {
+  const col = (side, order) => order.map(k => {
+    const ok = ts.matched.includes(k), sel = !!(ts.sel && ts.sel.side === side && ts.sel.k === k), bad = !!(ts.bad && ts.bad.side === side && ts.bad.k === k);
+    return `<button class="mi${ok ? ' ok' : ''}${sel ? ' sel' : ''}${bad ? ' bad' : ''}" data-act="m" data-side="${side}" data-k="${k}"${ok || ts.state !== 'ask' ? ' disabled' : ''} aria-pressed="${sel}">${rich(t.pairs[k][side === 'L' ? 0 : 1])}</button>`;
+  }).join('');
+  return `<div class="match"><div class="col">${col('L', ts.left)}</div><div class="col">${col('R', ts.right)}</div></div>`;
+}
+function signsHTML(t) {
+  const seg = k => ['+', '−'].map(s => `<button type="button" data-act="sign" data-k="${k}" data-v="${s}" aria-pressed="${ts.signs[k] === s}"${ts.state !== 'ask' ? ' disabled' : ''} aria-label="знак ${k}: ${s === '+' ? 'плюс' : 'минус'}">${s}</button>`).join('');
+  return `<div class="signs"><div class="sg"><b>знак v</b><span class="seg">${seg('v')}</span></div><div class="sg"><b>знак a</b><span class="seg">${seg('a')}</span></div></div>`;
+}
+function fbHTML(t, L) {
+  if (ts.state === 'right') { const sol = t.sol || (t.type === 'match' ? 'Все пары на месте.' : ''); return `<div class="fb ok" role="status"><span class="okh">${ts.praise}</span>${sol ? `<div class="sol">${rich(sol)}</div>` : ''}</div>`; }
+  if (ts.state === 'reveal') return `<div class="fb no" role="status"><span class="pen-t">Разберём</span><div>Правильный ответ: <b>${rich(answerText(t))}</b></div>${t.sol ? `<div class="sol">${rich(t.sol)}</div>` : ''}${isGame(t) ? '<div class="sol">Ползунок уже стоит на правильном значении: запусти ещё раз и посмотри.</div>' : ''}</div>`;
+  if (!ts.note) return '';
+  if (ts.noteKind === 'no') return `<div class="fb no" role="status"><span class="pen-t">${ts.noteTitle}</span><div>${rich(ts.note)}</div></div>`;
+  return `<div class="fb ${ts.noteKind}" role="status"><div>${rich(ts.note)}</div></div>`;
+}
+function actionsHTML(t, L) {
+  const last = run.ti === L.tasks.length - 1;
+  const back = run.ti > 0 ? `<button class="btn ghost back" data-act="peek" data-k="${run.ti - 1}" aria-label="Посмотреть предыдущее решённое задание">← Назад</button>` : '';
+  if (ts.state !== 'ask') return back + `<button class="btn primary" data-act="next">${ts.state === 'reveal' ? 'Понятно, дальше' : last ? 'Завершить уровень' : 'Дальше'}</button>`;
+  let a = back + (ts.hinted ? '' : `<button class="btn ghost" data-act="hint">Подсказка</button>`);
+  if (t.type === 'num' || t.type === 'signs') a += `<button class="btn primary" data-act="check">Проверить</button>`;
+  return a;
+}
+
+// ===== ход игры =====
+function openLevel(li, fresh = false) {
+  if (li < 0 || li >= LEVELS.length || !unlocked(li)) return;
+  const L = LEVELS[li], cur = !fresh && P.current && P.current.id === L.id ? P.current : null;
+  run = { li, ti: cur ? Math.min(cur.ti, L.tasks.length - 1) : 0, mistakes: cur ? cur.mistakes || 0 : 0, miss: cur ? { ...(cur.miss || {}) } : {} };
+  ts = null; busy = false; peek = null; view = 'intro'; render(); toTop();
+}
+function makeTs(t) {
+  const idx = n => Array.from({ length: n }, (_, k) => k);
+  const left = t.pairs ? shuffle(idx(t.pairs.length)) : [];
+  let right = t.pairs ? shuffle(idx(t.pairs.length)) : [];
+  if (t.pairs && right.join() === left.join()) right = right.slice(1).concat(right[0]);
+  return { state: 'ask', tries: 0, note: null, noteKind: null, noteTitle: '', hinted: false, praise: '', val: '', wrong: [], order: t.opts ? shuffle(idx(t.opts.length)) : [], sel: null, matched: [], bad: null, left, right, signs: { v: null, a: null }, g: null };
+}
+function startTask() {
+  const L = LEVELS[run.li], t = L.tasks[run.ti];
+  ts = makeTs(t); peek = null;
+  P.current = { id: L.id, ti: run.ti, mistakes: run.mistakes, miss: { ...run.miss } }; save();
+  busy = false; view = 'task'; render(); toTop();
+}
+function win() { if (tab === 'drill') drillRecord(ts.tries === 0); ts.state = 'right'; ts.note = null; ts.praise = pick(['Верно!', 'Точно!', 'Есть!', 'Отлично!', 'Да, так.']); render(); }
+function fail(msg, title) {
+  const drill = tab === 'drill', L = curLevel(), t = curTask();
+  if (!drill) { const id = tid(L, run.ti); run.mistakes++; run.miss[id] = (run.miss[id] || 0) + 1; }
+  ts.tries++;
+  if (t.type !== 'match' && ts.tries >= 2) {
+    ts.state = 'reveal'; ts.note = null;
+    if (t.type === 'signs') ts.signs = { v: t.v, a: t.a };
+    if (t.type === 'brake') ts.g = { ...(ts.g || {}), a: Math.round(t.v0 * t.v0 / (2 * t.d) * 2) / 2 };
+    if (t.type === 'launch') ts.g = { ...(ts.g || {}), ang: Math.round(angles(t)[0]) };
+    if (drill) drillRecord(false);
+  } else {
+    const withHint = t.type !== 'match' || ts.tries >= 2;
+    ts.note = msg + (withHint ? `<br><b>Подсказка.</b> ${hintOf(t, L)}` : '');
+    if (withHint) ts.hinted = true;
+    ts.noteKind = 'no'; ts.noteTitle = title || pick(['Мимо!', 'Не то!', 'Ой!']);
+  }
+  if (!drill) { P.current = { id: L.id, ti: run.ti, mistakes: run.mistakes, miss: { ...run.miss } }; save(); }
+  render();
+}
+function checkCurrent() {
+  if (!inTask() || !ts || ts.state !== 'ask') return;
+  const t = curTask();
+  if (t.type === 'num') {
+    const inp = $('#ans'), raw = inp ? inp.value : '', x = parseNum(raw);
+    ts.val = raw;
+    if (isNaN(x)) { ts.note = 'Введи число. Дробную часть можно писать через запятую: {12,5}.'; ts.noteKind = 'warn'; render(); return; }
+    const tol = t.tol ?? Math.max(Math.abs(t.ans) * 0.01, 1e-6);
+    if (Math.abs(x - t.ans) <= tol) return win();
+    const close = Math.abs(x - t.ans) <= Math.abs(t.ans) * 0.12;
+    return fail(close ? 'Близко, но не то. Проверь округление и арифметику.' : 'Не сходится.', close ? 'Почти!' : null);
+  }
+  if (t.type === 'signs') {
+    const s = ts.signs;
+    if (!s.v || !s.a) { ts.note = 'Выбери знак и для v, и для a.'; ts.noteKind = 'warn'; render(); return; }
+    if (s.v === t.v && s.a === t.a) return win();
+    fail(s.v !== t.v && s.a !== t.a ? 'Оба знака не те.' : s.v !== t.v ? 'Знак v не тот.' : 'Знак a не тот.');
+  }
+}
+function pickMatch(side, k) {
+  if (!ts || ts.state !== 'ask' || ts.matched.includes(k)) return;
+  if (!ts.sel || ts.sel.side === side) { ts.sel = ts.sel && ts.sel.side === side && ts.sel.k === k ? null : { side, k }; return render(); }
+  const other = ts.sel.k; ts.sel = null;
+  if (other === k) { ts.matched.push(k); ts.note = null; if (ts.matched.length === curTask().pairs.length) win(); else render(); }
+  else { ts.bad = { side, k }; fail('Это не пара.'); }
+}
+function nextTask() { const L = LEVELS[run.li]; run.ti++; if (run.ti >= L.tasks.length) finish(); else startTask(); }
+function finish() {
+  const L = LEVELS[run.li], m = run.mistakes, stars = m === 0 ? 3 : m <= 2 ? 2 : 1, prev = P.levels[L.id] || {};
+  P.levels[L.id] = { stars: Math.max(prev.stars || 0, stars), best: Math.min(prev.best ?? 99, m), plays: (prev.plays || 0) + 1, at: Date.now() };
+  for (const [k, v] of Object.entries(run.miss)) P.miss[k] = (P.miss[k] || 0) + v;
+  P.current = null; save();
+  lastResult = { li: run.li, stars, m, weak: Object.keys(run.miss).map(k => +k.split('.')[1]).sort((a, b) => a - b) };
+  view = 'result'; render(); toTop();
+  sparkle($('.mark'), 20 + stars * 25);
+}
+function renderResult() {
+  const r = lastResult, L = LEVELS[r.li], mark = { 3: '5', 2: '4', 1: '3' }[r.stars], boss = r.li === LAST;
+  const txt = (r.m === 0 ? 'Ни одной ошибки.' : `Ошибок: ${r.m}.`) + (r.weak.length ? ` Ошибки были в заданиях ${r.weak.join(', ')}.` : '') + (r.stars < 3 ? ' Пройди ещё раз без ошибок, чтобы получить три звезды.' : '');
+  const next = boss ? '' : `<button class="btn primary" data-act="nextlvl">${r.li + 1 === LAST ? 'К финальной контрольной' : 'Следующий уровень'}</button>`;
+  main.innerHTML = `<section class="card res"><p class="eyebrow">${boss ? L.title : `Уровень ${r.li + 1} · ${L.title}`}</p><div class="mark" role="img" aria-label="Оценка ${mark}">${mark}</div>${starsHTML(r.stars, true)}
+    ${boss ? `<h2>${r.stars === 3 ? 'Кинематика сдана на «5»' : 'Контрольная пройдена'}</h2>` : ''}<p class="rtext">${txt}</p>
+    <div class="actions center">${next}<button class="btn ghost" data-act="review">Разбор заданий</button><button class="btn ghost" data-act="again">Ещё раз</button><button class="btn ghost" data-act="map">На карту</button></div></section>`;
+}
+
+// ===== сохранение: окно и сброс =====
+function renderSheet() {
+  if (!sheet) { overlay.innerHTML = ''; return; }
+  const s = SAVE[SYNC.state];
+  overlay.innerHTML = `<div class="sheet" data-act="close-bg"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+    <div class="sh-top"><h2 id="sh-t">Сохранение</h2><button class="btn ghost sm" data-act="close">Закрыть</button></div>
+    <p><b>${s[1]}.</b> ${s[2]}</p>
+    <p class="meta"><span>пройдено ${doneCount()} из ${LEVELS.length}</span><span>звёзд ${totalStars()} из ${MAXSTARS}</span></p>
+    <hr>
+    ${sheet === 'confirm' ? `<div class="danger"><p><b>Точно сбросить?</b> Сотрутся все звёзды, статистика ошибок и счётчики нарешки, игра начнётся с первого уровня. Вернуть будет нельзя.</p><div class="actions"><button class="btn ghost" data-act="reset-no">Отмена</button><button class="btn warn" data-act="reset-yes">Да, сбросить</button></div></div>` : `<div><button class="btn ghost" data-act="reset">Сбросить прогресс</button></div>`}
+  </div></div>`;
+}
+function openSheet(kind) { sheet = kind; renderSheet(); const b = overlay.querySelector(kind === 'confirm' ? '[data-act="reset-no"]' : '[data-act="close"]'); if (b) b.focus(); }
+function closeSheet() { sheet = null; renderSheet(); const g = document.querySelector('[data-act="settings"]'); if (g) g.focus(); }
+function doReset() {
+  const now = Date.now();
+  P = emptyProg(); P.resetAt = now; P.updatedAt = now;
+  const ok = saveLocal();
+  if (SYNC.ref) { clearTimeout(pushTimer); pushTimer = null; setSave('saving'); pushCloud(); } else setSave(ok ? 'local' : 'none');
+  sheet = null; renderSheet(); view = 'map'; run = null; ts = null; lastResult = null; busy = false; peek = null; lvSaved = null; DR.ts = null; DR.view = 'home'; render(); toTop();
+  toast('Прогресс сброшен. Начинаем с первого уровня.');
+}
+// Салют из искр после уровня: искры разлетаются и падают с ускорением g
+function sparkle(el, n) {
+  if (!el || REDUCED || document.documentElement.dataset.motion === 'none') return;
+  const r = el.getBoundingClientRect(), c = document.createElement('canvas'), dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+  c.className = 'spark'; c.width = W * dpr; c.height = H * dpr; document.body.appendChild(c);
+  const g = c.getContext('2d'); g.scale(dpr, dpr);
+  const cs = getComputedStyle(document.documentElement), cols = ['--hi', '--accent', '--ok'].map(v => cs.getPropertyValue(v).trim() || '#fff');
+  const ps = Array.from({ length: n }, () => { const a = Math.random() * 6.283, v = 2 + Math.random() * 5; return { x: r.left + r.width / 2, y: r.top + r.height / 2, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.5, s: 1.5 + Math.random() * 2.5, c: pick(cols) }; });
+  const t0 = performance.now();
+  const f = now => {
+    const t = (now - t0) / 1500; g.clearRect(0, 0, W, H);
+    if (t >= 1) { c.remove(); return; }
+    for (const q of ps) { q.x += q.vx; q.y += q.vy; q.vy += 0.13; q.vx *= 0.985; g.globalAlpha = 1 - t * t; g.fillStyle = q.c; g.beginPath(); g.arc(q.x, q.y, q.s, 0, 6.283); g.fill(); }
+    requestAnimationFrame(f);
+  };
+  requestAnimationFrame(f);
+}
+// Пылинки в лучах света на фоне
+function startDust() {
+  const c = $('#kdust');
+  if (!c || REDUCED || document.documentElement.dataset.motion === 'none') return;
+  const parts = Array.from({ length: 34 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.5, s: 0.008 + Math.random() * 0.02, a: 0.15 + Math.random() * 0.45, ph: Math.random() * 6.28 }));
+  let last = 0, color = '#fff';
+  const tick = now => {
+    if (document.hidden) { last = 0; requestAnimationFrame(tick); return; }
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0; last = now;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); color = getComputedStyle(c).color; }
+    const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.fillStyle = color;
+    for (const q of parts) {
+      q.y -= q.s * dt; q.x += Math.sin(now / 3000 + q.ph) * 0.004 * dt;
+      if (q.y < -0.02) { q.y = 1.02; q.x = Math.random(); }
+      g.globalAlpha = q.a * (0.6 + 0.4 * Math.sin(now / 1200 + q.ph)) * Math.max(0, 1 - q.y * 0.9);
+      g.beginPath(); g.arc(q.x * w, q.y * h, q.r, 0, 6.283); g.fill();
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function toast(msg) { const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.textContent = msg; document.body.appendChild(d); setTimeout(() => d.remove(), 2800); }
+
+// ===== отрисовка и события =====
+function updateTop() {
+  const el = $('#stotal');
+  el.innerHTML = `<svg class="star on" viewBox="0 0 24 24" aria-hidden="true">${STAR}</svg>${totalStars()}/${MAXSTARS}`;
+  el.setAttribute('aria-label', `Звёзд: ${totalStars()} из ${MAXSTARS}`);
+  setSave(SYNC.state);
+}
+// Новый экран всплывает из дымки; перерисовка того же экрана (ответ, подсказка) — без анимации
+let screenKey = '';
+function enterIfNew() {
+  const k = tab === 'drill' ? `d:${DR.view}:${DR.tli}` : `${view}:${run ? `${run.li}:${run.ti}` : ''}:${peek}`;
+  if (k === screenKey) return;
+  screenKey = k; main.classList.remove('enter'); void main.offsetWidth; main.classList.add('enter');
+}
+function render() {
+  queueMicrotask(enterIfNew);
+  document.querySelectorAll('[data-act="tab"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+  if (tab === 'drill') { renderDrill(); updateTop(); return; }
+  if (view === 'intro' && run) renderIntro();
+  else if (view === 'task' && run && (peek !== null || (ts && run.ti < LEVELS[run.li].tasks.length))) renderTask();
+  else if (view === 'result' && lastResult) renderResult();
+  else { view = 'map'; renderMap(); }
+  updateTop();
+}
+const ACT = {
+  open: el => openLevel(+el.dataset.li),
+  continue: () => { const ci = P.current ? LI(P.current.id) : -1; openLevel(ci >= 0 && unlocked(ci) ? ci : target()); },
+  map: () => { view = 'map'; run = null; ts = null; busy = false; peek = null; render(); toTop(); },
+  start: () => startTask(),
+  restart: () => { run.ti = 0; run.mistakes = 0; run.miss = {}; startTask(); },
+  hint: () => { if (!ts || ts.state !== 'ask') return; ts.note = '<b>Подсказка.</b> ' + hintOf(curTask(), curLevel()); ts.noteKind = 'hint'; ts.hinted = true; render(); },
+  check: () => checkCurrent(),
+  opt: el => { if (!ts || ts.state !== 'ask') return; const k = +el.dataset.k; if (k === 0) win(); else { ts.wrong.push(k); fail('Не этот вариант.'); } },
+  m: el => pickMatch(el.dataset.side, +el.dataset.k),
+  sign: el => { if (!ts || ts.state !== 'ask') return; ts.signs[el.dataset.k] = el.dataset.v; if (ts.noteKind === 'warn') ts.note = null; render(); },
+  pm: () => { const i = $('#ans'); if (!i || i.disabled) return; const v = i.value.trim(); i.value = /^[-−]/.test(v) ? v.slice(1) : '−' + v; ts.val = i.value; },
+  go: () => { if (busy || !ts) return; const t = curTask(); if (t.type === 'brake') goBrake(t); else if (t.type === 'launch') goLaunch(t); },
+  next: () => { if (!busy) (tab === 'drill' ? drillNew() : nextTask()); },
+  peek: el => { if (busy || !run) return; peek = +el.dataset.k; render(); toTop(); },
+  unpeek: () => { peek = null; render(); toTop(); },
+  review: () => { if (!run) return; peek = 0; view = 'task'; render(); toTop(); },
+  toresult: () => { peek = null; view = 'result'; render(); toTop(); },
+  tab: el => setTab(el.dataset.tab),
+  dhome: () => { DR.view = 'home'; DR.mix = null; render(); toTop(); },
+  dtopic: el => { DR.li = +el.dataset.li; DR.view = 'topic'; DR.mix = null; render(); toTop(); },
+  dgen: el => { DR.gi = +el.dataset.gi; DR.mix = null; DR.streak = 0; drillNew(); },
+  dmix: () => { DR.mix = 'topic'; DR.gi = -1; DR.streak = 0; drillNew(); },
+  dmixall: () => { DR.mix = 'all'; DR.streak = 0; drillNew(); },
+  again: () => openLevel(lastResult.li, true),
+  nextlvl: () => openLevel(lastResult.li + 1),
+  settings: () => openSheet('settings'),
+  close: () => closeSheet(),
+  'close-bg': (el, e) => { if (e.target === el) closeSheet(); },
+  reset: () => openSheet('confirm'),
+  'reset-no': () => openSheet('settings'),
+  'reset-yes': () => doReset(),
+};
+document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el || el.disabled) return; const f = ACT[el.dataset.act]; if (f) f(el, e); });
+document.addEventListener('submit', e => { if (e.target.matches('[data-form="num"]')) { e.preventDefault(); checkCurrent(); } });
+document.addEventListener('input', e => { if (!ts) return; if (e.target.id === 'ans') ts.val = e.target.value; if (e.target.id === 'sl') slide(+e.target.value); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sheet) closeSheet();
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !sheet && !(e.target.closest && e.target.closest('input,textarea,select'))) flip(e.key === 'ArrowLeft' ? -1 : 1);
+});
+// Листание: −1 назад к решённым, +1 вперёд, но не дальше текущего задания
+function flip(dir) {
+  if (tab !== 'levels' || view !== 'task' || busy || !run) return;
+  const n = LEVELS[run.li].tasks.length, done = Math.min(run.ti, n);
+  if (dir < 0) {
+    if (peek === null) { if (run.ti > 0 && run.ti < n) peek = run.ti - 1; else return; }
+    else if (peek > 0) peek--; else return;
+  } else {
+    if (peek === null) return;
+    if (peek + 1 < done) peek++; else if (run.ti < n) peek = null; else return;
+  }
+  render();
+}
+let swipe = null;
+main.addEventListener('touchstart', e => {
+  swipe = null;
+  if (e.touches.length !== 1 || e.target.closest('input,.match,.seg,.vis')) return;
+  swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+main.addEventListener('touchend', e => {
+  if (!swipe) return;
+  const p = e.changedTouches[0], dx = p.clientX - swipe.x, dy = p.clientY - swipe.y;
+  swipe = null;
+  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+  flip(dx > 0 ? -1 : 1);
+}, { passive: true });
+
+// ===== нарешка: генераторы похожих задач (уровни 1–8) =====
+// Каждый генератор отвечает одному или нескольким заданиям уровня и при каждом вызове выдаёт задачу с новыми числами.
+const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const rstep = (a, b, s) => +(a + s * rint(0, Math.round((b - a) / s))).toFixed(6);
+const SUPD = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const sup = n => n === 1 ? '' : String(n).split('').map(d => SUPD[+d]).join('');
+const plural = (n, one, few, many) => { const a = Math.abs(n) % 10, b = Math.abs(n) % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
+const raz = n => plural(n, 'раз', 'раза', 'раз');
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const uniq4 = list => { const out = []; for (const o of list) if (o != null && !out.includes(o)) out.push(o); return out.slice(0, 4); };
+const par = x => x < 0 ? `(${fmt(x)})` : fmt(x);
+// многочлен: terms = [[коэффициент, степень], …] в том порядке, в каком писать
+function poly(terms, v = 't') {
+  let s = '';
+  for (const [c, p] of terms) {
+    if (!c) continue;
+    const a = Math.abs(c), body = p === 0 ? fmt(a) : (a === 1 ? '' : fmt(a)) + v + sup(p);
+    s += s ? (c < 0 ? ' − ' : ' + ') + body : (c < 0 ? '−' : '') + body;
+  }
+  return s || '0';
+}
+const deriv = terms => terms.filter(([c, p]) => c && p > 0).map(([c, p]) => [c * p, p - 1]);
+const evalP = (terms, t) => terms.reduce((s, [c, p]) => s + c * t ** p, 0);
+const termsSol = T => T.filter(([c]) => c).map(([c, p]) => `{(${poly([[c, p]])})′ = ${poly(deriv([[c, p]]))}}`).join(', ') + '.';
+
+// Знаки проекций: ось, куда движется тело, разгон или торможение
+function signTask(axis, move, mode) {
+  const hor = axis === 'right' || axis === 'left', W = { right: 'вправо', left: 'влево', up: 'вверх', down: 'вниз' };
+  const adir = hor ? (mode === 'acc' ? move : move === 'right' ? 'left' : 'right') : 'down';
+  const v = move === axis ? '+' : '−', a = adir === axis ? '+' : '−';
+  const label = hor ? `едет ${W[move]} и ${mode === 'acc' ? 'разгоняется' : 'тормозит'}` : move === 'up' ? 'мяч летит вверх\nпосле броска' : pick(['камень падает\nвниз', 'мяч падает\nобратно']);
+  const sv = `{v ${v === '+' ? '> 0' : '< 0'}}`;
+  const sol = hor
+    ? `Ось смотрит ${W[axis]}, машина едет ${W[move]}: ${sv}. ${mode === 'acc' ? 'Разгоняется: ускорение туда же, куда скорость' : 'Тормозит: ускорение против скорости'}, то есть ${W[adir]}: {a ${a === '+' ? '> 0' : '< 0'}}.`
+    : `Ось смотрит ${W[axis]}, тело летит ${W[move]}: ${sv}. Ускорение это {g}, оно всегда смотрит вниз: {a = ${a === '+' ? '+g' : '−g'}}. ${v === a ? 'Знаки одинаковые: тело разгоняется.' : 'Знаки разные: тело тормозит.'}`;
+  const hint = hor ? 'Скорость смотрит туда, куда едет машина. Разгон: ускорение туда же. Торможение: против скорости. Потом сравни с осью.' : 'Ускорение здесь {g}, а {g} всегда смотрит вниз. Сравни направления v и g с осью.';
+  return S({ axis, dir: move, label }, v, a, { sol, hint });
+}
+
+const GEN = {
+  l1: [
+    { tasks: [1, 2, 3], name: 'Км/ч в м/с', make() {
+      const v = pick([2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 30, 35, 40]), k = +(v * 3.6).toFixed(2);
+      return N(`Переведи {${fmt(k)} км/ч} в м/с.`, v, 'м/с', { hint: 'Раздели на 3,6.', sol: `{${fmt(k)} / 3,6 = ${fmt(v)} м/с}.` });
+    } },
+    { tasks: [4], name: 'М/с в км/ч', make() {
+      const v = rint(3, 40), k = +(v * 3.6).toFixed(2);
+      return N(`Обратно: {${v} м/с} это сколько км/ч?`, k, 'км/ч', { tol: 0.05, hint: 'Из м/с в км/ч умножаем на 3,6.', sol: `{${v} · 3,6 = ${fmt(k)} км/ч}.` });
+    } },
+    { tasks: [5], name: 'Что быстрее', make() {
+      const v = pick([10, 15, 20, 25, 30]), kv = v * 3.6, k = kv + pick([-9, -6, -3, 3, 6, 9]), msBig = kv > k;
+      const a = `{${v} м/с}`, b = `{${fmt(k)} км/ч}`;
+      return C(`Что больше: {${v} м/с} или {${fmt(k)} км/ч}?`, [msBig ? a : b, msBig ? b : a, 'Одинаково'], { hint: `Переведи {${v} м/с} в км/ч.`, sol: `{${v} · 3,6 = ${fmt(kv)} км/ч}, это ${msBig ? 'больше' : 'меньше'}, чем ${fmt(k)}.` });
+    } },
+    { tasks: [6], name: 'Метров за секунду', make() {
+      const v = pick([5, 10, 15, 20, 25, 30, 35, 40]), k = v * 3.6;
+      const who = v <= 10 ? pick(['Велосипедист едет', 'Самокат едет']) : v <= 25 ? pick(['Машина едет', 'Мотоцикл едет']) : pick(['Поезд едет', 'Машина едет по трассе']);
+      return N(`${who} со скоростью {${fmt(k)} км/ч}. Сколько метров получается за одну секунду?`, v, 'м', { hint: 'Скорость в м/с и есть метры за секунду.', sol: `{${fmt(k)} / 3,6 = ${v} м/с}: ${v} метров каждую секунду.` });
+    } },
+    { tasks: [7], name: 'Найди ошибку', make() {
+      const v = pick([5, 10, 15, 20, 25]), k = v * 3.6, kind = pick(['mul', 'mul', 'd36', 'ok']);
+      const got = kind === 'mul' ? k * 3.6 : kind === 'd36' ? k / 36 : v;
+      const O = { mul: 'Умножил на 3,6 вместо того, чтобы делить', d36: 'Разделил на 36, а не на 3,6', ok: 'Всё верно', d1000: 'Разделил на 1000, а не на 3,6' };
+      const order = [kind, ...['mul', 'd36', 'ok', 'd1000'].filter(x => x !== kind)];
+      const sol = kind === 'ok' ? `{${fmt(k)} / 3,6 = ${v} м/с}, всё сходится.`
+        : kind === 'mul' ? `${fmt(got, 2)} больше ${fmt(k)}, а в м/с число всегда меньше. Он умножил. Правильно {${fmt(k)} / 3,6 = ${v} м/с}.`
+        : `Получилось в 10 раз меньше нужного: делил на 36. Правильно {${fmt(k)} / 3,6 = ${v} м/с}.`;
+      return C(`Одногруппник получил {${fmt(k)} км/ч = ${fmt(got, 2)} м/с}. Что скажешь?`, order.map(x => O[x]), { hint: 'Посчитай сам: раздели на 3,6. В м/с число всегда меньше.', sol });
+    } },
+  ],
+
+  l2: [
+    { tasks: [1], name: 'Слова из условия', make() {
+      const m = pick([2, 3, 4, 5]);
+      const pool = [[pick(['«тронулся с места»', '«начал движение из покоя»']), '{v₀ = 0}'], [pick(['«остановился»', '«затормозил до остановки»']), '{v = 0}'],
+        [pick(['«тормозит»', '«замедляется»']), 'a против скорости'], [pick(['«разгоняется»', '«набирает скорость»']), 'a по скорости'],
+        ['«свободно падает»', '{a = g}'], [pick(['«едет равномерно»', '«скорость не меняется»']), '{a = 0}'], [`«за ${m} ${plural(m, 'минуту', 'минуты', 'минут')}»`, `{t = ${60 * m} с}`]];
+      return M('Соедини слова из условия с тем, что они значат.', shuffle(pool).slice(0, 5), { hint: '«С места» и «остановился» говорят о скорости в начале и в конце.' });
+    } },
+    { tasks: [2], name: 'Посчитай a·t', make() {
+      const a = rstep(0.5, 6, 0.5), t = rint(2, 12);
+      return N(`Посчитай {a·t} при {a = ${fmt(a)} м/с²} и {t = ${t} с}.`, a * t, 'м/с', { sol: `{${fmt(a)} · ${t} = ${fmt(a * t)} м/с}: на столько вырастет скорость за ${t} с.` });
+    } },
+    { tasks: [3], name: 'Посчитай t²', make() {
+      const t = rint(2, 15);
+      return N(`Посчитай {t²} при {t = ${t} с}.`, t * t, 'с²', { hint: 'Квадрат: число умножить само на себя.', sol: `{${t}² = ${t} · ${t} = ${t * t}}. Не ${2 * t}: квадрат это не умножение на 2.` });
+    } },
+    { tasks: [4], name: 'Что значит запись', make() {
+      const [q, opts, sol] = pick([
+        ['Что значит {v₀}?', ['Скорость в начале движения', 'Скорость, которая всегда равна нулю', 'Средняя скорость', 'Скорость в конце'], 'Ноль внизу значит «в момент {t = 0}», то есть на старте. {v₀ = 0} только если тело стартует с места.'],
+        ['Что значит {a·t}?', ['a умножить на t', 'a плюс t', 'a в степени t', 'a разделить на t'], 'Точка между буквами значит умножение.'],
+        ['Что значит {t²}?', ['t умножить на t', 't умножить на 2', 't плюс 2', 't разделить на 2'], 'Квадрат: число умножают само на себя.'],
+        ['Что значит {s / t}?', ['s разделить на t', 's умножить на t', 's минус t', 's в степени t'], 'Косая черта значит деление.'],
+        ['Что значит {v} без нолика внизу?', ['Скорость в конце или в нужный момент', 'Скорость на старте', 'Всегда ноль', 'Ускорение'], 'Без индекса это скорость в тот момент, о котором спрашивают, чаще всего в конце.'],
+      ]);
+      return C(q, opts, { sol });
+    } },
+    { tasks: [5], name: 'Посчитай a·t²/2', make() {
+      const a = pick([1, 2, 3, 4, 5, 6, 8, 10]), t = rint(2, 8), s = a * t * t / 2;
+      return N(`Посчитай {a·t²/2} при {a = ${a} м/с²} и {t = ${t} с}.`, s, 'м', { hint: 'Сначала квадрат, потом умножение и деление.', sol: `{t² = ${t * t}}, {${a} · ${t * t} = ${a * t * t}}, {${a * t * t} / 2 = ${fmt(s)} м}.` });
+    } },
+    { tasks: [6], name: 'Что следует из условия', make() {
+      const who = pick(['Велосипедист', 'Автобус', 'Мотоциклист', 'Поезд', 'Лыжник']), v = rint(3, 25), kind = pick(['br', 'acc', 'uni']), V0 = `{v₀ = ${v} м/с}`;
+      if (kind === 'br') return C(`«${who} ехал {${v} м/с} и начал тормозить». Что из этого следует?`, [`${V0}, ускорение против скорости`, `{v = ${v} м/с}, ускорение ноль`, `{v₀ = 0}, {a = ${v} м/с²}`, `${V0}, ускорение по скорости`], { sol: `${v} м/с было до торможения, значит это {v₀}. «Тормозить» значит ускорение против скорости.` });
+      if (kind === 'acc') return C(`«${who} ехал {${v} м/с} и начал разгоняться». Что из этого следует?`, [`${V0}, ускорение по скорости`, `${V0}, ускорение против скорости`, `{v₀ = 0}, {a = ${v} м/с²}`, `{v = ${v} м/с}, ускорение ноль`], { sol: `${v} м/с было до разгона, значит это {v₀}. Разгон: ускорение туда же, куда скорость.` });
+      return C(`«${who} ехал равномерно со скоростью {${v} м/с}». Что из этого следует?`, [`скорость всё время {${v} м/с}, {a = 0}`, `{v₀ = 0}, {a = ${v} м/с²}`, 'ускорение против скорости', 'в конце {v = 0}'], { sol: '«Равномерно» значит скорость не меняется, поэтому ускорения нет.' });
+    } },
+  ],
+
+  l3: [
+    { tasks: [1], name: 'Где будет через t', make() {
+      const v = rint(2, 12), t = rint(2, 9);
+      return N(`Машина едет равномерно {${v} м/с} от отметки 0 м. Где она будет через {${t} с}?`, v * t, 'м', { hint: '{s = v·t}.', sol: `Каждую секунду ещё ${v} м: {${v} · ${t} = ${v * t} м}.` });
+    } },
+    { tasks: [2], name: 'Путь за минуты', make() {
+      const v = rint(2, 9), m = rint(1, 5), t = 60 * m;
+      return N(`Велосипедист едет {${v} м/с}. Сколько метров он проедет за {${m} мин}?`, v * t, 'м', { hint: 'Сначала минуты в секунды: умножь на 60.', sol: `{${m} мин = ${t} с}, {s = ${v} · ${t} = ${v * t} м}.` });
+    } },
+    { tasks: [3], name: 'Скорость в км/ч', make() {
+      const v = pick([10, 15, 20, 25, 30]), k = v * 3.6, t = rint(3, 20);
+      return N(`Машина едет {${fmt(k)} км/ч}. Сколько метров она проедет за {${t} с}?`, v * t, 'м', { hint: 'Сначала км/ч в м/с: раздели на 3,6.', sol: `{${fmt(k)} / 3,6 = ${v} м/с}, {s = ${v} · ${t} = ${v * t} м}.` });
+    } },
+    { tasks: [4], name: 'Найди скорость', make() {
+      const v = rint(2, 15), t = rstep(10, 60, 5), who = v <= 3 ? 'Пешеход прошёл' : v <= 8 ? 'Бегун пробежал' : 'Велосипедист проехал';
+      return N(`${who} {${v * t} м} за {${t} с}. Какая у него скорость?`, v, 'м/с', { hint: '{v = s / t}.', sol: `{v = ${v * t} / ${t} = ${v} м/с}.` });
+    } },
+    { tasks: [5], name: 'Найди время', make() {
+      let v, s, t;
+      do { v = pick([10, 15, 20, 25, 40, 50]); s = pick([500, 1000, 1500, 2000, 3000]); t = s / v; } while (t % 1);
+      return N(`За сколько секунд поезд со скоростью {${v} м/с} проедет {${fmt(s / 1000)} км}?`, t, 'с', { hint: '{1 км = 1000 м}, {t = s / v}.', sol: `{${fmt(s / 1000)} км = ${s} м}, {t = ${s} / ${v} = ${t} с}.` });
+    } },
+    { tasks: [6], name: 'Км и часы', make() {
+      const v = pick([40, 60, 80, 90, 100, 120]), [ph, h] = pick([['полчаса', 0.5], ['полтора часа', 1.5], ['2 часа', 2], ['15 минут', 0.25], ['45 минут', 0.75], ['3 часа', 3]]), s = v * h;
+      return N(`Едешь {${v} км/ч}. Сколько километров проедешь за ${ph}?`, s, 'км', { hint: 'Всё в км и часах: в метры и секунды переводить не нужно. Минуты переведи в часы.', sol: `${cap(ph)} это {${fmt(h)} ч}, {s = ${v} · ${fmt(h)} = ${fmt(s)} км}.` });
+    } },
+  ],
+
+  l4: [
+    { tasks: [1], name: 'Что значит a', make() {
+      const a = rint(2, 9);
+      if (Math.random() < 0.7) return C(`{a = ${a} м/с²}. Что это значит?`, [`Каждую секунду скорость растёт на ${a} м/с`, `Тело проходит ${a} м за секунду`, `Скорость всё время ${a} м/с`, `За ${a} ${plural(a, 'секунду', 'секунды', 'секунд')} скорость удвоится`], { sol: `м/с² читается как «м/с за секунду»: скорость меняется на ${a} м/с каждую секунду.` });
+      return C(`Машина тормозит, ось по движению: {a = −${a} м/с²}. Что это значит?`, [`Каждую секунду скорость уменьшается на ${a} м/с`, `Машина едет назад со скоростью ${a} м/с`, `Через ${a} ${plural(a, 'секунду', 'секунды', 'секунд')} машина точно остановится`, `Каждую секунду скорость растёт на ${a} м/с`], { sol: `Минус значит, что ускорение против движения: каждую секунду скорость меньше на ${a} м/с.` });
+    } },
+    { tasks: [2], name: 'Скорость при разгоне с места', make() {
+      const a = rstep(1, 5, 0.5), t = rint(2, 12);
+      return N(`Машина трогается с места с {a = ${fmt(a)} м/с²}. Какая скорость через {${t} с}?`, a * t, 'м/с', { hint: '«С места» значит {v₀ = 0}.', sol: `{v = 0 + ${fmt(a)} · ${t} = ${fmt(a * t)} м/с}.` });
+    } },
+    { tasks: [3], name: 'Уже ехал и разогнался', make() {
+      const v0 = rint(4, 20), a = pick([0.5, 1, 1.5, 2, 2.5, 3]), t = rint(2, 10), v = v0 + a * t;
+      return N(`Автобус ехал {${v0} м/с} и {${t} с} разгонялся с {a = ${fmt(a)} м/с²}. Какой стала скорость?`, v, 'м/с', { sol: `{v = ${v0} + ${fmt(a)} · ${t} = ${v0} + ${fmt(a * t)} = ${fmt(v)} м/с}.` });
+    } },
+    { tasks: [4], name: 'Скорость после торможения', make() {
+      const a = rint(2, 6), v0 = rint(14, 32), t = rint(1, Math.max(1, Math.floor((v0 - 1) / a))), v = v0 - a * t;
+      return N(`Машина ехала {${v0} м/с} и тормозила {${t} с} с ускорением {${a} м/с²}. Какая скорость в конце?`, v, 'м/с', { hint: `Торможение при оси по движению: {a = −${a} м/с²}.`, sol: `{v = ${v0} + (−${a}) · ${t} = ${v0} − ${a * t} = ${v} м/с}.` });
+    } },
+    { tasks: [5], name: 'Когда остановится', make() {
+      const a = rint(2, 8), t = rint(2, 9), v0 = a * t;
+      return N(`Машина едет {${v0} м/с} и тормозит с ускорением {${a} м/с²}. Через сколько секунд она остановится?`, t, 'с', { hint: `Остановилась значит {v = 0}. Реши {0 = ${v0} − ${a}·t}.`, sol: `{0 = ${v0} − ${a}t}, {t = ${v0} / ${a} = ${t} с}.` });
+    } },
+    { tasks: [6], name: 'Найди ускорение', make() {
+      const a = pick([0.5, 1, 1.5, 2, 2.5, 3, 4, 5]), t = rint(4, 20), v0 = pick([0, 0, 5, 10]), v = v0 + a * t, who = pick(['Самолёт', 'Поезд', 'Мотоцикл', 'Автобус']);
+      return N(`${who} разгоняется ${v0 ? `с {${v0} м/с}` : 'с места'} до {${fmt(v)} м/с} за {${t} с}. Чему равно ускорение?`, a, 'м/с²', { hint: '{a = (v − v₀) / t}.', sol: `{a = (${fmt(v)} − ${v0}) / ${t} = ${fmt(a)} м/с²}.` });
+    } },
+  ],
+
+  l5: [
+    { tasks: [1], name: 'Что показывает график', make() {
+      const a = pick([1, 2, 3]), t = rint(3, 8), v0 = pick([0, 0, 2, 4]), v1 = v0 + a * t, vis = V.graph({ v0, v1, t }), kind = pick(['area', 'slope', 'num']);
+      if (kind === 'area') return C('Что показывает закрашенная площадь под графиком скорости?', ['Пройденный путь', 'Ускорение', 'Время движения', 'Конечную скорость'], { vis, sol: 'Площадь это «скорость × время», то есть путь.' });
+      if (kind === 'slope') return C('Что показывает наклон линии на графике скорости?', ['Ускорение', 'Пройденный путь', 'Время движения', 'Начальную скорость'], { vis, sol: 'Чем круче линия, тем быстрее растёт скорость. Это и есть ускорение.' });
+      const s = (v0 + v1) / 2 * t;
+      return C('Чему равна закрашенная площадь, то есть путь?', uniq4([`${fmt(s)} м`, `${fmt(v1 * t)} м`, `${fmt(s / 2)} м`, `${fmt(v1 + t)} м`, `${fmt(s + t)} м`]), { vis, hint: v0 ? 'Прямоугольник снизу плюс треугольник сверху.' : 'Площадь треугольника: основание × высота / 2.', sol: v0 ? `{${v0} · ${t} + (${v1} − ${v0}) · ${t} / 2 = ${fmt(s)} м}.` : `{${t} · ${v1} / 2 = ${fmt(s)} м}.` });
+    } },
+    { tasks: [2], name: 'Путь с места', make() {
+      const a = pick([1, 2, 3, 4, 6]), t = rint(2, 8), v1 = a * t, s = a * t * t / 2;
+      return N(`Машина разгоняется с места с {a = ${a} м/с²}. Какой путь за {${t} с}?`, s, 'м', { vis: V.graph({ v0: 0, v1, t }), hint: 'Площадь треугольника: основание × высота / 2.', sol: `{s = a·t²/2 = ${a} · ${t * t} / 2 = ${fmt(s)} м}. Это площадь треугольника {${t} · ${v1} / 2}.` });
+    } },
+    { tasks: [3], name: 'Ехал и разгонялся', make() {
+      const v0 = rint(2, 15), a = pick([1, 2, 3]), t = rint(2, 8), r = v0 * t, tr = a * t * t / 2;
+      return N(`Машина ехала {${v0} м/с} и {${t} с} разгонялась с {a = ${a} м/с²}. Какой путь?`, r + tr, 'м', { vis: V.graph({ v0, v1: v0 + a * t, t }), hint: 'Прямоугольник {v₀·t} плюс треугольник {a·t²/2}.', sol: `{v₀·t = ${r} м}, {a·t²/2 = ${fmt(tr)} м}, вместе {${fmt(r + tr)} м}.` });
+    } },
+    { tasks: [4], name: 'Скорость выросла с … до …', make() {
+      const v0 = rint(2, 10), dv = rint(2, 12), t = rint(2, 10), v1 = v0 + dv, s = (v0 + v1) / 2 * t;
+      return N(`Скорость выросла с {${v0}} до {${v1} м/с} за {${t} с}. Какой путь? Посчитай площадь под графиком.`, s, 'м', { vis: V.graph({ v0, v1, t }), hint: `Прямоугольник {${v0} · ${t}} плюс треугольник {${dv} · ${t} / 2}.`, sol: `{${v0} · ${t} = ${v0 * t} м}, {${dv} · ${t} / 2 = ${fmt(dv * t / 2)} м}, всего {${fmt(s)} м}.` });
+    } },
+    { tasks: [5], name: 'Разгон с места без графика', make() {
+      const a = pick([1, 2, 3, 4, 5]), t = rint(2, 6), s = a * t * t / 2;
+      const who = pick(['Санки скатываются с горки', 'Мяч скатывается по склону', 'Велосипедист трогается', 'Тележка катится с горки']);
+      return N(`${who}, старт с места, {a = ${a} м/с²}. Какой путь за {${t} с}?`, s, 'м', { hint: '{s = a·t²/2}.', sol: `{s = ${a} · ${t}² / 2 = ${a} · ${t * t} / 2 = ${fmt(s)} м}.` });
+    } },
+    { tasks: [6], name: 'Во сколько раз путь', make() {
+      const k = pick([2, 3, 4]);
+      if (Math.random() < 0.75) return C(`Время разгона с места выросло в ${k} ${raz(k)}. Путь вырос в…`, [`${k * k} ${raz(k * k)}`, `${k} ${raz(k)}`, `${k ** 3} ${raz(k ** 3)}`, 'не изменился'], { hint: 'В формуле {s = a·t²/2} время в квадрате.', sol: `{(${k}t)² = ${k * k}t²}, поэтому путь в ${k * k} ${raz(k * k)} больше.` });
+      return C(`Время разгона с места уменьшилось в ${k} ${raz(k)}. Путь…`, [`уменьшился в ${k * k} ${raz(k * k)}`, `уменьшился в ${k} ${raz(k)}`, `вырос в ${k * k} ${raz(k * k)}`, 'не изменился'], { hint: 'В формуле {s = a·t²/2} время в квадрате.', sol: `Время в квадрате: путь меньше в {${k}² = ${k * k}} ${raz(k * k)}.` });
+    } },
+  ],
+
+  l6: [
+    { tasks: [1], name: 'Тормозной путь', make() {
+      const v0 = pick([10, 12, 14, 15, 16, 18, 20, 24, 25, 30]), a = pick([2, 2.5, 4, 5, 8]), s = v0 * v0 / (2 * a);
+      return N(`Машина едет {${v0} м/с} и тормозит с ускорением {${fmt(a)} м/с²}. Какой тормозной путь?`, s, 'м', { tol: Math.max(0.05, s * 0.01), show: fmt(s, 1), hint: `{v = 0}, {a = −${fmt(a)}}: {0 − ${v0}² = 2·(−${fmt(a)})·s}.`, sol: `{s = v₀² / (2a) = ${v0 * v0} / ${fmt(2 * a)} ${Number.isInteger(s * 10) ? '=' : '≈'} ${fmt(s, 1)} м}.` });
+    } },
+    { tasks: [2, 5], name: 'Мини-игра: встань у линии', make() {
+      const v0 = pick([12, 14, 15, 16, 18, 20, 24, 25, 30]), a = rstep(2, 8, 0.5), d = +(v0 * v0 / (2 * a)).toFixed(1), who = pick(['Машина едет', 'Поезд идёт', 'Автобус едет']);
+      return BR(`${who} {${v0} м/с}, до стоп-линии {${fmt(d, 1)} м}. Подбери торможение, чтобы встать ровно у линии.`, v0, d, { sol: `{a = v₀² / (2s) = ${v0 * v0} / ${fmt(2 * d, 1)} ≈ ${fmt(a, 1)} м/с²}.` });
+    } },
+    { tasks: [3], name: 'Мини-игра: скорость в км/ч', make() {
+      const v0 = pick([10, 15, 20, 25, 30]), a = rstep(2, 8, 0.5), d = +(v0 * v0 / (2 * a)).toFixed(1), k = v0 * 3.6;
+      return BR(`Скорость {${fmt(k)} км/ч}, до линии {${fmt(d, 1)} м}. Какое нужно торможение?`, v0, d, { v0label: `${fmt(k)} км/ч`, hint: `Сначала {${fmt(k)} км/ч = ${v0} м/с}, потом {a = v₀² / (2s)}.`, sol: `{${fmt(k)} км/ч = ${v0} м/с}, {a = ${v0 * v0} / ${fmt(2 * d, 1)} ≈ ${fmt(a, 1)} м/с²}.` });
+    } },
+    { tasks: [4], name: 'Разгон до скорости', make() {
+      const v = pick([10, 12, 15, 16, 20, 24, 30]), a = pick([2, 3, 4, 5, 6]), s = v * v / (2 * a);
+      return N(`Машина с места разгоняется до {${v} м/с} с ускорением {${a} м/с²}. Какой путь она проехала?`, s, 'м', { tol: Math.max(0.05, s * 0.01), show: fmt(s, 1), hint: `{v₀ = 0}: {${v}² − 0 = 2 · ${a} · s}.`, sol: `{${v * v} = ${2 * a}·s}, {s = ${v * v} / ${2 * a} ${Number.isInteger(s * 10) ? '=' : '≈'} ${fmt(s, 1)} м}.` });
+    } },
+    { tasks: [6], name: 'Во сколько раз тормозной путь', make() {
+      const k = pick([2, 3]);
+      if (Math.random() < 0.6) return C(`Скорость выросла в ${k} ${raz(k)}. Как изменится тормозной путь при том же торможении?`, [`Вырастет в ${k * k} ${raz(k * k)}`, `Вырастет в ${k} ${raz(k)}`, 'Не изменится', `Вырастет в ${k ** 3} ${raz(k ** 3)}`], { hint: 'В формуле {s = v₀²/(2a)} скорость в квадрате.', sol: `Скорость в квадрате: {${k}² = ${k * k}}, путь в ${k * k} ${raz(k * k)} длиннее.` });
+      return C(`Торможение стало в ${k} ${raz(k)} сильнее, скорость та же. Тормозной путь…`, [`уменьшится в ${k} ${raz(k)}`, `уменьшится в ${k * k} ${raz(k * k)}`, `вырастет в ${k} ${raz(k)}`, 'не изменится'], { hint: 'В формуле {s = v₀²/(2a)} ускорение в знаменателе, без квадрата.', sol: `{a} в знаменателе: стало больше в ${k} ${raz(k)}, значит путь меньше в ${k} ${raz(k)}.` });
+    } },
+  ],
+
+  l7: [
+    { tasks: [1, 2, 3, 4], name: 'Машина, ось вправо', make: () => signTask('right', pick(['right', 'left']), pick(['acc', 'brake'])) },
+    { tasks: [5, 6, 7], name: 'Мяч и камень по вертикали', make: () => signTask(pick(['up', 'down']), pick(['up', 'down'])) },
+    { tasks: [], name: 'Сложнее: ось смотрит влево', make: () => signTask('left', pick(['right', 'left']), pick(['acc', 'brake'])) },
+  ],
+
+  l8: [
+    { tasks: [1], name: 'Что упадёт раньше', make() {
+      const [x, y] = pick([['кирпич', 'яблоко'], ['гиря', 'мячик'], ['камень', 'монета'], ['шар для боулинга', 'теннисный мяч']]);
+      if (Math.random() < 0.6) return C(`Без воздуха что упадёт раньше с одной высоты: ${x} или ${y}?`, ['Упадут одновременно', cap(x), cap(y)], { sol: 'Ускорение {g} одинаковое для всех тел. Масса в формулы падения не входит.' });
+      return C('Какое ускорение у падающего тела, если нет воздуха?', ['{g ≈ 10 м/с²}, одинаковое для всех тел', 'У тяжёлых тел больше', 'У лёгких тел больше', 'Растёт со временем'], { sol: 'Без воздуха все тела падают с одним ускорением {g ≈ 9,8 м/с²}.' });
+    } },
+    { tasks: [2], name: 'Скорость при падении', make() {
+      const t = rint(1, 9);
+      return N(`Камень отпустили. Какая у него скорость через {${t} с}? ({g = 10 м/с²})`, 10 * t, 'м/с', { hint: '{v = g·t}.', sol: `{v = g·t = 10 · ${t} = ${10 * t} м/с}.` });
+    } },
+    { tasks: [3], name: 'Высота по времени', make() {
+      const t = rint(1, 8);
+      return N(`Камень падал {${t} с}. С какой высоты? ({g = 10 м/с²})`, 5 * t * t, 'м', { hint: '{h = g·t²/2}.', sol: `{h = 10 · ${t * t} / 2 = ${5 * t * t} м}.` });
+    } },
+    { tasks: [4], name: 'Время по высоте', make() {
+      const t = rint(1, 9), h = 5 * t * t;
+      return N(`Сколько секунд падает тело с высоты {${h} м}? ({g = 10 м/с²})`, t, 'с', { hint: '{h = g·t²/2}, значит {t² = 2h/g}.', sol: `{t² = 2 · ${h} / 10 = ${t * t}}, {t = ${t} с}.` });
+    } },
+    { tasks: [5], name: 'Время подъёма', make() {
+      const v0 = pick([5, 10, 15, 20, 25, 30, 35, 40, 45]);
+      return N(`Мяч бросили вверх со скоростью {${v0} м/с}. Через сколько секунд он будет в верхней точке? ({g = 10 м/с²})`, v0 / 10, 'с', { hint: `В верхней точке {v = 0}: {0 = ${v0} − 10·t}.`, sol: `{0 = ${v0} − 10t}, {t = ${fmt(v0 / 10)} с}.` });
+    } },
+    { tasks: [6], name: 'Высота подъёма', make() {
+      const v0 = pick([10, 15, 20, 25, 30, 40]), h = v0 * v0 / 20;
+      return N(`Мяч бросили вверх со скоростью {${v0} м/с}. На какую высоту он поднимется? ({g = 10 м/с²})`, h, 'м', { hint: '{v² − v₀² = 2·a·h}, где {v = 0}, {a = −10}.', sol: `{0 − ${v0 * v0} = 2 · (−10) · h}, {h = ${fmt(h)} м}.` });
+    } },
+    { tasks: [7], name: 'Шарик на фото', make() {
+      const vis = V.fall(), k = pick([1, 2, 3]);
+      if (k === 1) return C('Шарик сфотографировали через равные промежутки времени. Почему расстояния между положениями растут?', ['Скорость растёт каждую секунду', 'Шарик становится тяжелее', 'Воздух толкает его вниз', 'Так кажется из-за перспективы'], { vis, sol: 'Скорость растёт на {g} каждую секунду, поэтому за каждый следующий промежуток шарик пролетает больше: {1 : 3 : 5 : 7 : 9}.' });
+      const n = k, r = 2 * n - 1, w = n === 2 ? 'вторую' : 'третью';
+      return C(`Падение с места. Во сколько раз путь за ${w} секунду больше, чем за первую?`, [`в ${r} ${raz(r)}`, `в ${n} ${raz(n)}`, `в ${n * n} ${raz(n * n)}`, 'одинаковый'], { vis, hint: 'Посмотри на числа справа от шариков.', sol: `Пути за каждую секунду относятся как {1 : 3 : 5 : 7}. За ${w} секунду в ${r} ${raz(r)} больше.` });
+    } },
+  ],
+};
+
+// ===== нарешка: генераторы похожих задач (уровни 9–15) =====
+const SIN = { 30: 0.5, 45: Math.SQRT1_2, 60: Math.sqrt(3) / 2, 90: 1 }, COS = { 30: Math.sqrt(3) / 2, 45: Math.SQRT1_2, 60: 0.5, 90: 0 };
+const vecStr = (x, y) => `(${fmt(x)}; ${fmt(y)})`;
+// Две точки с одинаковым ускорением в момент t (как задача 1.16)
+function eqAcc() {
+  for (;;) {
+    const C1 = rint(-3, 3), C2 = rint(-3, 3);
+    if (C1 === C2) continue;
+    const t = pick([0.25, 0.5, 1, 1.5, 2]), B1 = rint(-5, 5), B2 = B1 + 3 * (C1 - C2) * t;
+    if (!Number.isInteger(B2) || Math.abs(B2) > 9) continue;
+    return { A1: rint(1, 6), B1, C1, A2: rint(1, 6), B2, C2, t };
+  }
+}
+// Нормальное ускорение вида (k + m·t)², радиус r²: как задача 1 из Практики 3
+function anSetup() {
+  const r = pick([2, 3]), k = rint(1, 3), m = rint(1, 3), t = rint(1, 2);
+  return { r, R: r * r, k, m, t, an: tt => (k + m * tt) ** 2, p: poly([[k * k, 0], [2 * k * m, 1], [m * m, 2]]) };
+}
+// Колесо равнозамедленно останавливается: частота, обороты, время
+function wheelStop() {
+  for (;;) {
+    const n = pick([300, 600, 900, 1200, 1500]), Nr = rint(10, 150), t = 120 * Nr / n;
+    if (Math.abs(t * 2 - Math.round(t * 2)) < 1e-9 && t >= 2 && t <= 40) { const w0 = 2 * Math.PI * n / 60; return { n, Nr, t, w0, eps: w0 / t }; }
+  }
+}
+
+Object.assign(GEN, {
+  l9: [
+    { tasks: [1, 3], name: 'Проекция по рисунку', make() {
+      let x; do { x = rint(-8, 8); } while (!x);
+      const y = rint(1, 8), askX = Math.random() < 0.7, n = Math.abs(askX ? x : y);
+      return N(`Чему равна проекция {${askX ? 'ax' : 'ay'}} вектора на рисунке? Одна клетка это 1.`, askX ? x : y, '', { vis: V.vec({ x, y }), hint: askX && x < 0 ? 'Стрелка смотрит влево, против оси x. Кнопка ± ставит минус.' : 'Посчитай клетки вдоль оси.', sol: askX ? `${n} ${plural(n, 'клетка', 'клетки', 'клеток')} ${x < 0 ? 'влево, против оси x' : 'вправо, по оси x'}: {ax = ${fmt(x)}}.` : `${n} ${plural(n, 'клетка', 'клетки', 'клеток')} вверх, по оси y: {ay = ${y}}.` });
+    } },
+    { tasks: [2, 4], name: 'Длина по рисунку', make() {
+      const [x0, y] = pick([[3, 4], [4, 3], [6, 8], [8, 6], [1, 2], [2, 1], [2, 3], [5, 5], [4, 4], [6, 2]]), x = x0 * pick([1, -1]), L = Math.hypot(x, y), exact = Number.isInteger(L);
+      return N('Какая длина у этого вектора?', L, '', { vis: V.vec({ x, y }), tol: exact ? undefined : 0.02, show: exact ? undefined : fmt(L, 2), hint: 'Проекции это катеты, длина по Пифагору.', sol: `{√(${par(x)}² + ${y}²) = √${x * x + y * y}${exact ? ` = ${L}` : ` ≈ ${fmt(L, 2)}`}}.${x < 0 ? ' Минус при возведении в квадрат исчезает.' : ''}` });
+    } },
+    { tasks: [5], name: 'Длина в трёхмерном случае', make() {
+      const [a, b, c, L] = pick([[1, 2, 2, 3], [2, 3, 6, 7], [1, 4, 8, 9], [4, 4, 7, 9], [2, 6, 9, 11], [6, 6, 7, 11], [3, 4, 12, 13], [2, 10, 11, 15], [1, 12, 12, 17], [8, 9, 12, 17]]);
+      const s = shuffle([a, b, c]).map(v => v * pick([1, -1]));
+      const term = (v, e, first) => (first ? (v < 0 ? '−' : '') : (v < 0 ? ' − ' : ' + ')) + (Math.abs(v) === 1 ? '' : Math.abs(v) + '·') + e;
+      return N(`{r = ${term(s[0], 'i', true)}${term(s[1], 'j')}${term(s[2], 'k')}}. Чему равна длина {|r|}?`, L, '', { hint: 'Три проекции: {√(x² + y² + z²)}.', sol: `{√(${s.map(v => v * v).join(' + ')}) = √${L * L} = ${L}}.` });
+    } },
+    { tasks: [6], name: 'Скалярное произведение', make() {
+      let a, b; do { a = [rint(-5, 5), rint(-5, 5)]; b = [rint(-5, 5), rint(-5, 5)]; } while ((!a[0] && !a[1]) || (!b[0] && !b[1]));
+      const p = a[0] * b[0] + a[1] * b[1];
+      return N(`{a = ${vecStr(...a)}}, {b = ${vecStr(...b)}}. Чему равно скалярное произведение {a·b}?`, p, '', { hint: '{ax·bx + ay·by}.', sol: `{${par(a[0])} · ${par(b[0])} + ${par(a[1])} · ${par(b[1])} = ${fmt(p)}}.` });
+    } },
+    { tasks: [7], name: 'Угол между векторами', make() {
+      let a; do { a = [rint(-4, 4), rint(-4, 4)]; } while (!a[0] || !a[1]);
+      const kind = pick(['90', '90', '0', '180']), k = rint(1, 3), s = pick([1, -1]);
+      const b = kind === '90' ? [-a[1] * k * s, a[0] * k * s] : kind === '0' ? [a[0] * k, a[1] * k] : [-a[0] * k, -a[1] * k];
+      const p = a[0] * b[0] + a[1] * b[1];
+      const sol = kind === '90' ? `{a·b = ${par(a[0])} · ${par(b[0])} + ${par(a[1])} · ${par(b[1])} = 0}. Скалярное произведение ноль только у перпендикулярных векторов: {cos 90° = 0}.`
+        : `{b = ${kind === '0' ? k : '−' + k}·a}: векторы смотрят ${kind === '0' ? 'в одну сторону, угол {0°}' : 'в противоположные стороны, угол {180°}'}. Проверка: {a·b = ${fmt(p)}}, ${kind === '0' ? 'больше' : 'меньше'} нуля.`;
+      return C(`{a = ${vecStr(...a)}}, {b = ${vecStr(...b)}}. Какой угол между ними?`, [kind + '°', ...['90°', '0°', '180°', '45°'].filter(x => x !== kind + '°')], { hint: 'Посчитай {a·b}. И посмотри, не получается ли один вектор из другого умножением на число.', sol });
+    } },
+    { tasks: [8], name: 'Единичный вектор', make() {
+      const [x0, y0, L] = pick([[3, 4, 5], [4, 3, 5], [6, 8, 10], [8, 6, 10], [5, 12, 13], [12, 5, 13], [8, 15, 17]]), x = x0 * pick([1, -1]), y = y0 * pick([1, -1]), askX = Math.random() < 0.5, ans = (askX ? x : y) / L;
+      return N(`Единичный вектор {e = a/|a|} для {a = ${vecStr(x, y)}}. Чему равна проекция {${askX ? 'ex' : 'ey'}}?`, ans, '', { tol: 0.01, show: fmt(ans, 2), hint: `{|a| = ${L}}. Каждую проекцию дели на ${L}.`, sol: `{|a| = √(${x * x} + ${y * y}) = ${L}}, {${askX ? 'ex' : 'ey'} = ${fmt(askX ? x : y)} / ${L} ≈ ${fmt(ans, 2)}}.` });
+    } },
+  ],
+
+  l10: [
+    { tasks: [1], name: '(tⁿ)′', make() {
+      const n = rint(2, 7), ok = poly([[n, n - 1]]);
+      return C(`{(t${sup(n)})′ = ?}`, uniq4([ok, poly([[1, n - 1]]), poly([[n, n]]), poly([[n - 1, n]]), poly([[n, 1]])]), { sol: `${n} вперёд, степень {${n} − 1 = ${n - 1}}: {${ok}}.` });
+    } },
+    { tasks: [2], name: '(C·tⁿ)′', make() {
+      const c = rint(2, 9), n = rint(2, 4), ok = poly([[c * n, n - 1]]);
+      return C(`{(${poly([[c, n]])})′ = ?}`, uniq4([ok, poly([[c, n - 1]]), poly([[c * n, n]]), poly([[n, n - 1]]), poly([[c + n, n - 1]])]), { sol: `{${c} · ${n} = ${c * n}}, степень {${n} − 1 = ${n - 1}}: {${ok}}.` });
+    } },
+    { tasks: [3], name: 'Производная числа', make() {
+      const c = rint(2, 99);
+      if (Math.random() < 0.6) return C(`{(${c})′ = ?}`, ['0', String(c), '1', `${c}t`], { sol: 'Число со временем не меняется, скорость его изменения ноль.' });
+      return C(`{(${c}t)′ = ?}`, [String(c), '0', `${c}t`, '1'], { sol: `{t} в первой степени: остаётся число {${c}}.` });
+    } },
+    { tasks: [4], name: 'Производная суммы', make() {
+      const T = [[rint(1, 6) * pick([1, -1]), 3], [rint(0, 5) * pick([1, -1]), 2], [rint(1, 9) * pick([1, -1]), 1], [rint(1, 12) * pick([1, -1]), 0]];
+      const d = deriv(T), live = T.filter(([c, p]) => c && p > 0);
+      return C(`{(${poly(T)})′ = ?}`, uniq4([poly(d), poly(d.concat([[T[3][0], 0]])), poly(live.map(([c, p]) => [c, p - 1])), poly(live.map(([c, p]) => [c * p, p]))]), { hint: 'Бери производную каждого слагаемого отдельно.', sol: termsSol(T) });
+    } },
+    { tasks: [5], name: 'Точки и штрихи', make() {
+      const [q, o] = pick([
+        ['Что значит {ẍ} (две точки над x)?', ['Вторая производная, то есть ускорение', 'x в квадрате', 'Скорость', 'x, умноженный на 2']],
+        ['Что значит {ẋ} (одна точка над x)?', ['Первая производная, то есть скорость', 'Ускорение', 'x в квадрате', 'Координата в начале']],
+        ['Что значит {dx/dt}?', ['Скорость: производная x по времени', 'x делить на d и на t', 'Путь за время t', 'Ускорение']],
+        ['Что значит {x″} (два штриха)?', ['Ускорение: производную взяли дважды', 'x в квадрате', 'Скорость', 'Координата в конце']],
+      ]);
+      return C(q, o, { sol: 'Одна точка или один штрих: одна производная (скорость). Две: производную взяли дважды (ускорение).' });
+    } },
+    { tasks: [6], name: 'Скорость из x(t)', make() {
+      const A = rint(1, 6), B = rint(0, 8), t = rint(1, 5), v = poly([[2 * A, 1], [B, 0]]);
+      return N(`{x = ${poly([[A, 2], [B, 1]])}} (м). Какая скорость при {t = ${t} с}?`, 2 * A * t + B, 'м/с', { hint: `{v = x′ = ${v}}.`, sol: `{v = ${v}}, {v(${t}) = ${2 * A * t + B} м/с}.` });
+    } },
+    { tasks: [7], name: 'Проверь формулу', make() {
+      const [q, o, sol] = pick([
+        ['{(a·t²/2)′ = ?}', ['a·t', 'a·t²', 'a/2', 'a·t/2'], '{a/2 · 2t = a·t}. Из формулы пути получилась формула скорости.'],
+        ['{(v₀·t + a·t²/2)′ = ?}', ['v₀ + a·t', 'v₀ + a·t²', 'v₀·t + a·t', 'a·t'], '{(v₀·t)′ = v₀}, {(a·t²/2)′ = a·t}. Получилась формула скорости.'],
+        ['{(v₀ + a·t)′ = ?}', ['a', 'v₀', 'v₀ + a', 'a·t'], '{(v₀)′ = 0}, {(a·t)′ = a}. Из скорости получилось ускорение.'],
+        ['{(g·t²/2)′ = ?}', ['g·t', 'g·t²', 'g/2', 'g'], '{g/2 · 2t = g·t}: скорость падающего тела.'],
+      ]);
+      return C(q, o, { sol });
+    } },
+  ],
+
+  l11: [
+    { tasks: [1], name: 'Формула скорости', make() {
+      const T = [[rint(1, 9), 0], [rint(1, 6), 1], [rint(0, 4), 2], [rint(1, 3), 3]], d = deriv(T), live = T.filter(([c, p]) => c && p > 0);
+      return C(`{x = ${poly(T)}} (м). Какая формула скорости?`, uniq4(['v = ' + poly(d), 'v = ' + poly([[T[0][0], 0], ...d.filter(([, p]) => p > 0)]), 'v = ' + poly(live.map(([c, p]) => [c, p - 1])), 'v = ' + poly(d.filter(([, p]) => p > 0))]), { sol: termsSol(T) });
+    } },
+    { tasks: [2, 3, 4], name: 'v, a и x в момент t', make() {
+      const T = [[rint(0, 9), 0], [rint(1, 5), 1], [rint(0, 3), 2], [rint(1, 2), 3]], t = rint(1, 3), what = pick(['v', 'a', 'x']), v = deriv(T), a = deriv(v);
+      const val = what === 'x' ? evalP(T, t) : what === 'v' ? evalP(v, t) : evalP(a, t);
+      const q = { x: `Где точка при {t = ${t} с}?`, v: `Какая скорость при {t = ${t} с}?`, a: `Какое ускорение при {t = ${t} с}?` }[what];
+      const unit = { x: 'м', v: 'м/с', a: 'м/с²' }[what];
+      const hint = { x: 'Подставь t в саму x(t).', v: `{v = x′ = ${poly(v)}}.`, a: `{v = ${poly(v)}}, {a = v′ = ${poly(a)}}.` }[what];
+      const sol = { x: `{x(${t}) = ${fmt(val)} м}.`, v: `{v = ${poly(v)}}, {v(${t}) = ${fmt(val)} м/с}.`, a: `{a = ${poly(a)}}, {a(${t}) = ${fmt(val)} м/с²}.` }[what];
+      return N(`{x = ${poly(T)}} (м). ${q}`, val, unit, { hint, sol });
+    } },
+    { tasks: [5], name: 'Когда ускорения равны', make() {
+      const E = eqAcc(), x1 = poly([[E.A1, 1], [E.B1, 2], [E.C1, 3]]), x2 = poly([[E.A2, 1], [E.B2, 2], [E.C2, 3]]);
+      const a1 = poly([[2 * E.B1, 0], [6 * E.C1, 1]]), a2 = poly([[2 * E.B2, 0], [6 * E.C2, 1]]);
+      return N(`{x₁ = ${x1}}, {x₂ = ${x2}} (м). В какой момент ускорения точек равны?`, E.t, 'с', { tol: 0.01, hint: `{a₁ = ${a1}}, {a₂ = ${a2}}. Приравняй.`, sol: `{a₁ = ${a1}}, {a₂ = ${a2}}. {${a1} = ${a2}}, отсюда {t = ${fmt(E.t)} с}.` });
+    } },
+    { tasks: [6], name: 'Скорость в момент равенства', make() {
+      const E = eqAcc(), x1 = poly([[E.A1, 1], [E.B1, 2], [E.C1, 3]]), x2 = poly([[E.A2, 1], [E.B2, 2], [E.C2, 3]]);
+      const v1 = poly([[E.A1, 0], [2 * E.B1, 1], [3 * E.C1, 2]]), val = E.A1 + 2 * E.B1 * E.t + 3 * E.C1 * E.t * E.t;
+      return N(`{x₁ = ${x1}}, {x₂ = ${x2}} (м). Их ускорения равны при {t = ${fmt(E.t)} с}. Какая скорость у первой точки в этот момент?`, val, 'м/с', { tol: Math.max(0.02, Math.abs(val) * 0.01), show: fmt(val, 2), hint: `{v₁ = x₁′ = ${v1}}, подставь {t = ${fmt(E.t)}}.`, sol: `{v₁ = ${v1}}, {v₁(${fmt(E.t)}) = ${fmt(val, 2)} м/с}.` });
+    } },
+    { tasks: [7], name: 'Ускорение по виду x(t)', make() {
+      const A = rint(1, 9), B = rint(1, 6) * pick([1, -1]);
+      if (Math.random() < 0.5) return C(`{x = ${poly([[A, 0], [B, 1]])}} (м). Чему равно ускорение?`, uniq4(['0', `${fmt(B)} м/с²`, `${A} м/с²`, `${fmt(A + B)} м/с²`, '1 м/с²']), { sol: `{v = ${fmt(B)}} не меняется, значит {a = 0}: это равномерное движение.` });
+      const c = rint(1, 5);
+      return C(`{x = ${poly([[A, 0], [B, 1], [c, 2]])}} (м). Чему равно ускорение?`, uniq4([`${2 * c} м/с²`, `${c} м/с²`, '0', `${2 * c}t м/с²`]), { sol: `{v = ${poly([[B, 0], [2 * c, 1]])}}, {a = v′ = ${2 * c} м/с²}: ускорение постоянное.` });
+    } },
+  ],
+
+  l12: [
+    { tasks: [1], name: '∫tⁿ dt', make() {
+      const n = rint(1, 5), f = n === 1 ? 't' : 't' + sup(n), ok = `t${sup(n + 1)}/${n + 1}`;
+      return C(`{∫${f} dt = ?}`, uniq4([ok, poly([[n, n - 1]]), `t${sup(n + 1)}`, `${n + 1}t${sup(n)}`]), { sol: `Степень +1 и делим на неё: {${ok}}. Проверка: {(${ok})′ = ${f}}.` });
+    } },
+    { tasks: [2], name: 'Интеграл суммы', make() {
+      const A = 2 * rint(1, 4), B = 3 * rint(1, 3), f = poly([[A, 1], [B, 2]]), ok = poly([[A / 2, 2], [B / 3, 3]]);
+      return C(`{∫(${f}) dt = ?}`, uniq4([ok, poly([[A, 0], [2 * B, 1]]), poly([[A, 2], [B, 3]]), poly([[A / 2, 1], [B / 3, 2]])]), { sol: `{∫${poly([[A, 1]])} dt = ${poly([[A / 2, 2]])}}, {∫${poly([[B, 2]])} dt = ${poly([[B / 3, 3]])}}. Проверка: производная ответа даёт {${f}}.` });
+    } },
+    { tasks: [3, 4, 5], name: 'Путь за первые секунды', make() {
+      let A, B, c; do { A = rint(0, 6); B = 2 * rint(0, 3); c = 3 * rint(0, 2); } while (!B && !c);
+      const t = rint(1, 4), S_ = [[A, 1], [B / 2, 2], [c / 3, 3]], s = evalP(S_, t), v = [[A, 0], [B, 1], [c, 2]];
+      return N(`{v = ${poly(v)}} (м/с). Какой путь за первые {${t} с}?`, s, 'м', { hint: `{s = ${poly(S_)}}, подставь {t = ${t}}.`, sol: `{s = ∫v dt = ${poly(S_)}}, при {t = ${t}}: {${fmt(s)} м}.` });
+    } },
+    { tasks: [6], name: 'Тело развернулось', make() {
+      const k = pick([1, 2, 3, 4]), T = rint(2, 6), d = rint(1, 3), V0 = k * T, t1 = T + d, x = t => V0 * t - k * t * t / 2;
+      const fwd = x(T), back = fwd - x(t1), path = fwd + back;
+      return N(`{v = ${poly([[V0, 0], [-k, 1]])}} (м/с), тело разворачивается. Какой ПУТЬ оно пройдёт за первые {${t1} с}?`, path, 'м', { hint: `{v = 0} при {t = ${T} с}. Посчитай путь до ${T} с и после отдельно и сложи.`, sol: `{x(t) = ${poly([[V0, 1], [-k / 2, 2]])}}. До ${T} с: {${fmt(fwd)} м} вперёд. С ${T} до ${t1} с: {x(${t1}) − x(${T}) = ${fmt(x(t1))} − ${fmt(fwd)} = −${fmt(back)}}, то есть ${fmt(back)} м назад. Путь {${fmt(fwd)} + ${fmt(back)} = ${fmt(path)} м}, перемещение {${fmt(x(t1))} м}.` });
+    } },
+  ],
+
+  l13: [
+    { tasks: [1, 2], name: 'Какое ускорение', make() {
+      const [q, ok, sol, turn] = pick([
+        ['Машина едет по кругу с постоянной по величине скоростью.', 'Только an', 'Величина скорости не меняется: {aτ = 0}. Направление меняется: {an = v²/R} есть.', 1],
+        ['Машина разгоняется по прямой дороге.', 'Только aτ', 'Прямая не поворачивает: {an = 0}. Скорость растёт: {aτ} есть.', 0],
+        ['Машина тормозит на прямой дороге.', 'Только aτ', 'Прямая: {an = 0}. Величина скорости меняется: {aτ} есть.', 0],
+        ['Машина тормозит на повороте.', 'И aτ, и an', 'Скорость уменьшается: {aτ} есть. Поворот: {an} есть.', 1],
+        ['Машина разгоняется на повороте.', 'И aτ, и an', 'Скорость растёт: {aτ} есть. Поворот: {an} есть.', 1],
+        ['Машина едет по прямой с постоянной скоростью.', 'Никакого', 'Ни величина, ни направление скорости не меняются: ускорения нет.', 0],
+      ]);
+      return C(`${q} Какое у неё ускорение?`, [ok, ...['Только an', 'Только aτ', 'И aτ, и an', 'Никакого'].filter(x => x !== ok)], { vis: turn ? V.curve() : undefined, sol });
+    } },
+    { tasks: [3], name: 'an = v²/R', make() {
+      const v = pick([5, 6, 8, 10, 12, 15, 20, 25, 30]), R = pick([10, 20, 25, 40, 50, 80, 100]), an = v * v / R;
+      return N(`{R = ${R} м}, {v = ${v} м/с}. Чему равно {an}?`, an, 'м/с²', { tol: Math.max(0.01, an * 0.01), show: fmt(an, 2), hint: '{an = v²/R}.', sol: `{an = ${v * v} / ${R} = ${fmt(an, 2)} м/с²}.` });
+    } },
+    { tasks: [4], name: 'Полное ускорение', make() {
+      const [x, y] = pick([[3, 4], [4, 3], [6, 8], [5, 12], [2, 5], [1, 2], [2, 3], [1.5, 2]]), a = Math.hypot(x, y);
+      return N(`{aτ = ${fmt(x)} м/с²}, {an = ${fmt(y)} м/с²}. Чему равно полное ускорение?`, a, 'м/с²', { tol: Math.max(0.03, a * 0.01), show: fmt(a, 2), hint: '{a = √(aτ² + an²)}.', sol: `{a = √(${fmt(x * x)} + ${fmt(y * y)}) = √${fmt(x * x + y * y)} ≈ ${fmt(a, 2)} м/с²}.` });
+    } },
+    { tasks: [5], name: 'an(t) в момент t', make() {
+      const Z = anSetup(), val = Z.an(Z.t);
+      return N(`{R = ${Z.R} м}, {an = ${Z.p}} (м/с²). Чему равно {an} при {t = ${Z.t} с}?`, val, 'м/с²', { hint: `Подставь {t = ${Z.t}}.`, sol: `{an(${Z.t}) = ${fmt(val)} м/с²}.` });
+    } },
+    { tasks: [6], name: 'Найди v(t) из an', make() {
+      const Z = anSetup(), inner = poly([[Z.k, 0], [Z.m, 1]]);
+      return C(`Из {an = v²/R}: {v² = ${Z.R}·(${Z.p}) = ${Z.R}·(${inner})²}. Чему равна {v(t)}?`, uniq4([`v = ${poly([[Z.r * Z.k, 0], [Z.r * Z.m, 1]])}`, `v = ${inner}`, `v = ${poly([[Z.R * Z.k, 0], [Z.R * Z.m, 1]])}`, `v = ${poly([[Z.r * Z.k, 0], [Z.r * Z.m, 2]])}`]), { hint: `Корень из ${Z.R} это ${Z.r}.`, sol: `{v = √${Z.R} · (${inner}) = ${poly([[Z.r * Z.k, 0], [Z.r * Z.m, 1]])}} м/с.` });
+    } },
+    { tasks: [7], name: 'Полное ускорение в момент t', make() {
+      const Z = anSetup(), at = Z.r * Z.m, an = Z.an(Z.t), a = Math.hypot(at, an);
+      return N(`{R = ${Z.R} м}, {an = ${Z.p}} (м/с²), значит {v = ${poly([[Z.r * Z.k, 0], [Z.r * Z.m, 1]])}} м/с. Какое полное ускорение при {t = ${Z.t} с}?`, a, 'м/с²', { tol: Math.max(0.05, a * 0.01), show: fmt(a, 1), hint: '{aτ = v′}, {an} подставь, потом {a = √(aτ² + an²)}.', sol: `{aτ = v′ = ${at} м/с²}, {an(${Z.t}) = ${an} м/с²}, {a = √(${at * at} + ${an * an}) ≈ ${fmt(a, 1)} м/с²}.` });
+    } },
+  ],
+
+  l14: [
+    { tasks: [1], name: 'Пары: движение и вращение', make() {
+      const pool = [['путь s', 'угол φ'], ['скорость v', 'угловая скорость ω'], ['ускорение a', 'угловое ускорение ε'], ['v = v₀ + a·t', 'ω = ω₀ + ε·t'], ['s = v₀t + at²/2', 'φ = ω₀t + εt²/2'], ['v = x′', 'ω = φ′'], ['a = v′', 'ε = ω′']];
+      return M('Соедини величины прямолинейного движения с их парами во вращении.', shuffle(pool).slice(0, 5), { hint: 'Угловые величины пишут греческими буквами: φ, ω, ε.' });
+    } },
+    { tasks: [2], name: 'ω по об/мин', make() {
+      const n = pick([60, 120, 180, 240, 300, 450, 600, 900, 1200, 1500, 3000]), nu = n / 60, w = 2 * Math.PI * nu;
+      return N(`Колесо делает {${n} об/мин}. Чему равна угловая скорость {ω}?`, w, 'рад/с', { tol: w * 0.005 + 0.05, show: fmt(w, 1), hint: 'Сначала об/мин в об/с (÷ 60), потом {ω = 2π·ν}.', sol: `{ν = ${n} / 60 = ${fmt(nu)} об/с}, {ω = 2π · ${fmt(nu)} ≈ ${fmt(w, 1)} рад/с}.` });
+    } },
+    { tasks: [3], name: 'Радианы в оборотах', make() {
+      const n = rint(2, 120), phi = 2 * Math.PI * n;
+      return N(`Сколько радиан в {${n}} ${plural(n, 'обороте', 'оборотах', 'оборотах')}?`, phi, 'рад', { tol: phi * 0.005 + 0.05, show: fmt(phi, 1), hint: 'Один оборот это {2π ≈ 6,28} рад.', sol: `{φ = 2π · ${n} ≈ ${fmt(phi, 1)} рад}.` });
+    } },
+    { tasks: [4], name: 'Время торможения колеса', make() {
+      const W = wheelStop();
+      return N(`Колесо вращалось с частотой {${W.n} об/мин} и равнозамедленно остановилось, сделав {${W.Nr}} ${plural(W.Nr, 'оборот', 'оборота', 'оборотов')}. Сколько секунд оно тормозило?`, W.t, 'с', { tol: W.t * 0.01 + 0.02, hint: 'Средняя угловая скорость {ω₀/2}, поэтому {φ = ω₀·t/2}, а {t = 2φ/ω₀}.', sol: `{ω₀ = 2π · ${W.n}/60 ≈ ${fmt(W.w0, 1)} рад/с}, {φ = 2π · ${W.Nr} ≈ ${fmt(2 * Math.PI * W.Nr, 1)} рад}, {t = 2φ / ω₀ = ${fmt(W.t)} с}.` });
+    } },
+    { tasks: [5], name: 'Угловое ускорение ε', make() {
+      const W = wheelStop();
+      return N(`Колесо с частотой {${W.n} об/мин} равнозамедленно остановилось за {${fmt(W.t)} с}. Чему равно угловое ускорение {ε} по модулю?`, W.eps, 'рад/с²', { tol: W.eps * 0.01 + 0.01, show: fmt(W.eps, 2), hint: 'Сначала {ω₀ = 2π·ν}, потом {ε = ω₀ / t}.', sol: `{ω₀ = 2π · ${W.n}/60 ≈ ${fmt(W.w0, 1)} рад/с}, {ε = ω₀ / t ≈ ${fmt(W.eps, 2)} рад/с²}.` });
+    } },
+    { tasks: [6], name: 'Скорость точки на ободе', make() {
+      const cm = Math.random() < 0.4, R = pick([0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 1, 1.2]), w = rint(2, 20), v = w * R;
+      return N(`Колесо радиусом {${cm ? fmt(R * 100) + ' см' : fmt(R) + ' м'}} крутится с {ω = ${w} рад/с}. Какая скорость у точки на ободе?`, v, 'м/с', { tol: Math.max(0.01, v * 0.01), hint: cm ? `Сначала см в метры: {${fmt(R * 100)} см = ${fmt(R)} м}. Потом {v = ω·R}.` : '{v = ω·R}.', sol: `{v = ${w} · ${fmt(R)} = ${fmt(v)} м/с}.` });
+    } },
+    { tasks: [7], name: 'an точки на ободе', make() {
+      const R = pick([0.1, 0.2, 0.25, 0.4, 0.5, 1, 2]), w = rint(2, 12), an = w * w * R;
+      return N(`Колесо радиусом {${fmt(R)} м} крутится с {ω = ${w} рад/с}. Какое нормальное ускорение {an} у точки на ободе?`, an, 'м/с²', { tol: Math.max(0.01, an * 0.01), hint: '{an = ω²·R}.', sol: `{an = ${w}² · ${fmt(R)} = ${w * w} · ${fmt(R)} = ${fmt(an)} м/с²}.` });
+    } },
+  ],
+
+  l15: [
+    { tasks: [1, 2, 5], name: 'Мини-игра: попади в мишень', make() {
+      const v0 = pick([15, 20, 25]), al = pick([15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75]), L = +(v0 * v0 * Math.sin(2 * al * Math.PI / 180) / 10).toFixed(1);
+      const s2 = Math.min(1, 10 * L / (v0 * v0)), a1 = Math.round(Math.asin(s2) * 90 / Math.PI), a2 = 90 - a1;
+      return LA(`Скорость броска {${v0} м/с}, мишень в {${fmt(L, 1)} м}. Под каким углом бросить?`, v0, L, { sol: `{sin 2α = g·L / v₀² = ${fmt(10 * L, 0)} / ${v0 * v0} ≈ ${fmt(s2, 2)}}. ${a1 === a2 ? `Подходит {α = ${a1}°}.` : `Подходят {α ≈ ${a1}°} и {α ≈ ${a2}°}.`}` });
+    } },
+    { tasks: [3], name: 'Время полёта', make() {
+      const v0 = pick([10, 12, 15, 20, 25, 30, 40]), al = pick([30, 30, 45, 60]), vy = v0 * SIN[al], T = 2 * vy / 10;
+      return N(`{v₀ = ${v0} м/с}, {α = ${al}°}. Сколько секунд тело в полёте? ({g = 10 м/с²})`, T, 'с', { tol: Math.max(0.03, T * 0.015), show: fmt(T, 2), hint: '{vy₀ = v₀·sin α}. Подъём длится {vy₀/g}, весь полёт вдвое дольше.', sol: `{vy₀ = ${v0} · sin ${al}° ≈ ${fmt(vy, 2)} м/с}, подъём {${fmt(vy / 10, 2)} с}, весь полёт {${fmt(T, 2)} с}.` });
+    } },
+    { tasks: [4], name: 'Максимальная высота', make() {
+      const v0 = pick([10, 12, 15, 20, 25, 30]), al = pick([30, 45, 60, 90]), vy = v0 * SIN[al], H = vy * vy / 20;
+      return N(`{v₀ = ${v0} м/с}, {α = ${al}°}. Какая максимальная высота? ({g = 10 м/с²})`, H, 'м', { tol: Math.max(0.05, H * 0.02), show: fmt(H, 2), hint: '{H = vy₀² / (2g)}, где {vy₀ = v₀·sin α}.', sol: `{vy₀ = ${al === 90 ? v0 : `${v0} · sin ${al}° ≈ ${fmt(vy, 2)}`} м/с}, {H = ${fmt(vy * vy, 1)} / 20 ≈ ${fmt(H, 2)} м}.` });
+    } },
+    { tasks: [6], name: 'Скорость в верхней точке', make() {
+      const v0 = pick([10, 20, 30, 40]), al = pick([30, 45, 60]), vx = v0 * COS[al], vy = v0 * SIN[al];
+      return C(`{v₀ = ${v0} м/с}, {α = ${al}°}. Какая скорость в верхней точке?`, uniq4([`${fmt(vx, 1)} м/с`, '0', `${v0} м/с`, `${fmt(vy, 1)} м/с`, `${fmt(v0 / 2 + 1, 1)} м/с`]), { vis: V.proj({ v0, ang: al }), hint: 'В верхней точке {vy = 0}. А {vx}?', sol: `{vy = 0}, остаётся {vx = v₀·cos ${al}° ≈ ${fmt(vx, 1)} м/с}. Скорость в верхней точке не ноль!` });
+    } },
+    { tasks: [7], name: 'Радиус кривизны в верхней точке', make() {
+      const v0 = pick([8, 10, 12, 14, 15, 16, 20]), al = pick([30, 45, 60]), vx = v0 * COS[al], R = vx * vx / 9.8;
+      return N(`{v₀ = ${v0} м/с}, {α = ${al}°}, {g = 9,8 м/с²}. Чему равен радиус кривизны траектории в верхней точке?`, R, 'м', { tol: Math.max(0.05, R * 0.015), show: fmt(R, 2), hint: 'В верхней точке {v = vx}, а {an = g}. Значит {R = vx² / g}.', sol: `{vx = ${v0} · cos ${al}° ≈ ${fmt(vx, 2)} м/с}, {vx² ≈ ${fmt(vx * vx, 1)}}, {R = ${fmt(vx * vx, 1)} / 9,8 ≈ ${fmt(R, 2)} м}.` });
+    } },
+  ],
+});
+
+// ===== нарешка: экраны и ход =====
+// li — тема в списке, tli — тема текущей задачи (при «микс по всем» они разные), gi — генератор, mix: null | 'topic' | 'all'
+const DR = { view: 'home', li: 0, tli: 0, gi: 0, mix: null, task: null, ts: null, streak: 0 };
+const DRILL_LEVELS = LEVELS.length - 1;   // финал в нарешке не нужен: его заменяет «микс по всем темам»
+const dKey = (li, gi) => `${LEVELS[li].id}.g${gi}`;
+const dStat = k => (P.drill || {})[k] || { n: 0, ok: 0 };
+function topicStat(li) {
+  const id = LEVELS[li].id; let n = 0, ok = 0;
+  for (const [k, v] of Object.entries(P.drill || {})) if (k.split('.')[0] === id) { n += v.n || 0; ok += v.ok || 0; }
+  return { n, ok };
+}
+function drillTotal() { let n = 0, ok = 0; for (const v of Object.values(P.drill || {})) { n += v.n || 0; ok += v.ok || 0; } return { n, ok }; }
+function genLabel(g) {
+  const t = g.tasks;
+  if (!t.length) return 'Дополнительно';
+  if (t.length === 1) return `Задание ${t[0]}`;
+  const run_ = t.every((x, i) => !i || x === t[i - 1] + 1);
+  return `Задания ${run_ ? `${t[0]}–${t[t.length - 1]}` : t.join(', ')}`;
+}
+const solvedTxt = s => s.n ? `решено ${s.n}` : '';
+
+function setTab(x) {
+  if (busy || x === tab) return;
+  if (x === 'drill') { lvSaved = ts; ts = DR.ts; } else { DR.ts = ts; ts = lvSaved; }
+  tab = x; render(); toTop();
+}
+function renderDrill() {
+  if (DR.view === 'task' && DR.task && ts) renderDrillTask();
+  else if (DR.view === 'topic') renderDrillTopic();
+  else { DR.view = 'home'; renderDrillHome(); }
+}
+function renderDrillHome() {
+  const tot = drillTotal();
+  const row = li => {
+    const L = LEVELS[li], st = topicStat(li), passed = lvDone(li);
+    return `<li class="st${st.n ? ' done' : ''}"><div class="axis"><span class="node" aria-hidden="true">${li + 1}</span></div>
+      <button class="lv" data-act="dtopic" data-li="${li}" aria-label="${esc(`Тема ${li + 1}: ${L.title}${st.n ? `, решено ${st.n}` : ''}`)}">
+        <span class="lv-top"><span class="lv-t">${L.title}</span><span class="dcount">${solvedTxt(st)}</span></span>
+        <span class="lv-bot"><span class="fm">${L.chip}</span>${passed ? '' : '<span class="tag">уровень ещё не пройден</span>'}</span></button></li>`;
+  };
+  main.innerHTML = `<section class="hero"><p class="eyebrow">Нарешка</p><h1>Похожие задачи без конца</h1>
+    <p>Выбери тему и задание из уровня: каждый раз новые числа, проверка и разбор. На звёзды не влияет, решай сколько хочешь.</p>
+    <div class="meta"><span>решено ${tot.n}</span><span>с первой попытки ${tot.ok}</span></div>
+    <div class="actions"><button class="btn primary" data-act="dmixall">Микс по всем темам</button></div></section>
+    ${[['Часть 1', 'Школа', 0, 7], ['Часть 2', 'Вуз', 8, DRILL_LEVELS - 1]].map(([e, tt, a, b]) => `<section class="chapter"><p class="eyebrow">${e}</p><h2>${tt}</h2><ol class="track">${LEVELS.slice(a, b + 1).map((L, k) => row(a + k)).join('')}</ol></section>`).join('')}`;
+}
+function renderDrillTopic() {
+  const li = DR.li, L = LEVELS[li], gens = GEN[L.id];
+  main.innerHTML = `<div class="lvhead"><div class="crumbs"><button class="btn ghost sm" data-act="dhome">← Темы</button><span class="eyebrow">Нарешка · уровень ${li + 1}</span><span class="dcount" style="margin-left:auto">${solvedTxt(topicStat(li))}</span></div><h1>${L.title}</h1></div>
+    <details class="card theory"><summary>Теория уровня</summary><div class="big">${esc(L.big)}</div><ul>${L.intro.map(s => `<li>${rich(s)}</li>`).join('')}</ul></details>
+    <div class="dmix"><button class="btn primary" data-act="dmix">Все задания темы вперемешку</button></div>
+    <ol class="glist">${gens.map((g, gi) => `<li><button class="lv" data-act="dgen" data-gi="${gi}"><span class="lv-top"><span class="lv-t">${esc(g.name)}</span><span class="dcount">${solvedTxt(dStat(dKey(li, gi)))}</span></span><span class="lv-bot"><span class="tag acc">${genLabel(g)}</span></span></button></li>`).join('')}</ol>`;
+}
+function drillPick() {
+  if (DR.mix === 'all') { const li = rint(0, DRILL_LEVELS - 1); return [li, rint(0, GEN[LEVELS[li].id].length - 1)]; }
+  if (DR.mix === 'topic') {
+    const n = GEN[LEVELS[DR.li].id].length; let gi;
+    do { gi = rint(0, n - 1); } while (n > 1 && gi === DR.gi);
+    return [DR.li, gi];
+  }
+  return [DR.li, DR.gi];
+}
+function drillNew() {
+  let task = null;
+  for (let k = 0; k < 6 && !task; k++) {
+    const [li, gi] = drillPick();
+    try { task = GEN[LEVELS[li].id][gi].make(); DR.tli = li; DR.gi = gi; } catch (e) { task = null; }
+  }
+  if (!task) { DR.view = 'topic'; render(); return; }
+  DR.task = task; ts = makeTs(task); DR.ts = ts; DR.view = 'task'; busy = false; render(); toTop();
+}
+function drillRecord(clean) {
+  const k = dKey(DR.tli, DR.gi), s = dStat(k);
+  P.drill = P.drill || {};
+  P.drill[k] = { n: (s.n || 0) + 1, ok: (s.ok || 0) + (clean ? 1 : 0) };
+  DR.streak = clean ? DR.streak + 1 : 0;
+  save();
+}
+function renderDrillTask() {
+  const L = LEVELS[DR.tli], g = GEN[L.id][DR.gi], t = DR.task;
+  const body = { num: numHTML, choice: choiceHTML, match: matchHTML, signs: signsHTML, brake: brakeHTML, launch: launchHTML }[t.type](t);
+  const back = DR.mix === 'all' ? '<button class="btn ghost sm" data-act="dhome">← Темы</button>' : `<button class="btn ghost sm" data-act="dtopic" data-li="${DR.li}">← К теме</button>`;
+  const done = ts.state !== 'ask';
+  let acts;
+  if (done) acts = `<button class="btn ghost" data-act="${DR.mix === 'all' ? 'dhome' : 'dtopic'}" data-li="${DR.li}">${DR.mix === 'all' ? 'К темам' : 'К заданиям темы'}</button><button class="btn primary" data-act="dnext">${DR.mix ? 'Следующая задача' : 'Ещё такую'}</button>`;
+  else acts = (ts.hinted ? '' : '<button class="btn ghost" data-act="hint">Подсказка</button>') + (t.type === 'num' || t.type === 'signs' ? '<button class="btn primary" data-act="check">Проверить</button>' : '');
+  main.innerHTML = `<div class="lvhead"><div class="crumbs">${back}<span class="eyebrow">Нарешка${DR.mix === 'all' ? ' · микс' : DR.mix ? ' · вперемешку' : ''}</span>${DR.streak > 1 ? `<span class="streak">серия ${DR.streak}</span>` : ''}</div>
+    <h1>${L.title}</h1><p class="gname">${genLabel(g)} · ${esc(g.name)}</p></div>
+    <section class="card task"><p class="q">${rich(t.q)}</p>${t.vis ? `<div class="vis">${t.vis}</div>` : ''}${body}${fbHTML(t, L)}<div class="actions">${acts}</div></section>`;
+  ts.bad = null;
+  if (t.type === 'num' && ts.state === 'ask' && window.matchMedia && matchMedia('(pointer: fine)').matches) { const i = $('#ans'); if (i) i.focus({ preventScroll: true }); }
+}
+ACT.dnext = () => { if (!busy) drillNew(); };
+
+// ===== мини-игры =====
+function lockGame(on) { const s = $('#sl'), b = document.querySelector('[data-act="go"]'); if (s) s.disabled = on; if (b) b.disabled = on; }
+function slide(v) {
+  const t = curTask(); if (!isGame(t)) return;
+  ts.g = { ...(ts.g || {}), [t.type === 'brake' ? 'a' : 'ang']: v };
+  const lab = $('#slv'); if (lab) lab.textContent = t.type === 'brake' ? `a = ${fmt(v, 1)} м/с²` : `α = ${v}°`;
+  if (t.type === 'launch') {
+    const b = $('#barrel'), { X } = launchGeom(t), r = v * Math.PI / 180;
+    if (b) { b.setAttribute('x2', (X(0) + 46 * Math.cos(r)).toFixed(1)); b.setAttribute('y2', (262 - 46 * Math.sin(r)).toFixed(1)); }
+  }
+}
+const gameRes = () => ts.state !== 'ask' && ts.g && ts.g.res ? ts.g.res : '';
+
+// «Останови у линии»: торможение a подбирается ползунком, машина едет по x = v₀t − at²/2
+function brakeGeom(t) { const M = t.d * 1.6; return { M, X: m => 100 + m * (470 / M) }; }
+function brakeHTML(t) {
+  const { M, X } = brakeGeom(t), a = ts.g && ts.g.a != null ? ts.g.a : 2, pos = ts.g && ts.g.pos != null ? ts.g.pos : 0;
+  let g = `<rect x="0" y="120" width="600" height="44" class="f-card2"/>`;
+  for (let x = 0; x < 600; x += 40) g += `<rect x="${x + 8}" y="140" width="22" height="4" rx="2" class="f-paper"/>`;
+  const step = M > 80 ? 20 : 10;
+  for (let m = 0; m <= M + 1e-9; m += step) g += ln(X(m).toFixed(1), 164, X(m).toFixed(1), 174, 'ink2', 2) + tx(X(m).toFixed(1), 194, m === 0 ? '0 м' : fmt(m), 'ink2', 16);
+  g += `<rect x="${(X(t.d) - 3).toFixed(1)}" y="112" width="6" height="60" class="f-pen"/>` + tx(X(t.d).toFixed(1), 102, `стоп · ${fmt(t.d, 1)} м`, 'pen', 17, 'middle', 700);
+  g += `<g id="car" transform="translate(${X(Math.min(pos, M)).toFixed(1)},151)">${carShape()}</g>`;
+  g += tx(24, 44, `v₀ = ${t.v0label || fmt(t.v0) + ' м/с'}`, 'acc', 21, 'start', 700);
+  return `<div class="game"><div class="vis">${svg(600, 200, g, `Дорога: машина на старте, стоп-линия через ${fmt(t.d, 1)} м`)}</div>
+    <div class="ctrl"><label for="sl">Торможение <span class="val" id="slv">a = ${fmt(a, 1)} м/с²</span></label>
+    <input type="range" id="sl" min="1" max="10" step="0.5" value="${a}">
+    <div class="gbtns"><button class="btn primary" data-act="go">Тормози!</button><span class="gres" role="status">${gameRes()}</span></div></div></div>`;
+}
+function goBrake(t) {
+  if (busy) return;
+  const a = +$('#sl').value, s = t.v0 * t.v0 / (2 * a), T = t.v0 / a, { M, X } = brakeGeom(t), car = $('#car'), token = ts;
+  busy = true; lockGame(true);
+  const dur = REDUCED ? 0 : Math.min(2600, Math.max(1200, T * 260)), t0 = performance.now();
+  const end = pos => {
+    busy = false;
+    if (ts !== token || !inTask()) return;
+    const diff = s - t.d, hit = Math.abs(diff) <= 1;
+    const res = hit ? `Встал через ${fmt(s, 1)} м, ровно у линии!` : diff > 0 ? `Проехал линию на ${fmt(diff, 1)} м: тормози сильнее.` : `Встал за ${fmt(-diff, 1)} м до линии: тормози слабее.`;
+    ts.g = { ...(ts.g || {}), a, res, pos };
+    if (ts.state !== 'ask') return render();
+    if (hit) win(); else fail(res);
+  };
+  const frame = now => {
+    const p = dur ? Math.min(1, (now - t0) / dur) : 1, tau = p * T, x = Math.min(t.v0 * tau - a * tau * tau / 2, M);
+    car.setAttribute('transform', `translate(${X(x).toFixed(1)},151)`);
+    if (p < 1 && x < M) requestAnimationFrame(frame); else end(Math.min(s, M));
+  };
+  car.setAttribute('transform', `translate(${X(0)},151)`);
+  requestAnimationFrame(frame);
+}
+
+// «Попади в мишень»: угол подбирается ползунком, точки следа ставятся через равные промежутки времени
+function launchGeom(t) { const M = t.v0 * t.v0 / 10 * 1.12, k = 530 / M; return { M, k, X: m => 40 + m * k, Y: h => 262 - h * k }; }
+function launchHTML(t) {
+  const { M, X } = launchGeom(t), tol = t.tol ?? 1, ang = ts.g && ts.g.ang != null ? ts.g.ang : 20, r = ang * Math.PI / 180;
+  let g = `<rect x="0" y="262" width="600" height="38" class="f-card2"/>` + ln(0, 262, 600, 262, 'ink', 2);
+  for (let m = 0; m <= M; m += 5) g += ln(X(m).toFixed(1), 262, X(m).toFixed(1), m % 10 ? 268 : 273, 'ink2', 1.5) + (m % 10 === 0 ? tx(X(m).toFixed(1), 293, m === 0 ? '0 м' : fmt(m), 'ink2', 15) : '');
+  g += `<rect x="${X(t.L - tol).toFixed(1)}" y="253" width="${(X(t.L + tol) - X(t.L - tol)).toFixed(1)}" height="9" class="f-hi"/>`;
+  g += ln(X(t.L).toFixed(1), 262, X(t.L).toFixed(1), 212, 'ink', 2.5) + `<path d="M ${X(t.L).toFixed(1)} 212 L ${(X(t.L) + 26).toFixed(1)} 220 L ${X(t.L).toFixed(1)} 228 Z" class="f-pen"/>` + tx(X(t.L).toFixed(1), 200, `${fmt(t.L, 1)} м`, 'pen', 17, 'middle', 700);
+  g += `<g id="dots">${(ts.g && ts.g.dots || []).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" class="f-acc" opacity=".55"/>`).join('')}</g>`;
+  g += `<line id="barrel" x1="${X(0)}" y1="262" x2="${(X(0) + 46 * Math.cos(r)).toFixed(1)}" y2="${(262 - 46 * Math.sin(r)).toFixed(1)}" class="s-ink" stroke-width="7" stroke-linecap="round"/><circle cx="${X(0)}" cy="262" r="10" class="f-ink"/>`;
+  const b = ts.g && ts.g.ball || [X(0), 262];
+  g += `<circle id="ball" cx="${b[0]}" cy="${b[1]}" r="8" class="f-pen"/>` + tx(580, 32, `v₀ = ${fmt(t.v0)} м/с`, 'acc', 21, 'end', 700);
+  return `<div class="game"><div class="vis">${svg(600, 300, g, `Поле: пушка слева, мишень через ${fmt(t.L, 1)} м`)}</div>
+    <div class="ctrl"><label for="sl">Угол броска <span class="val" id="slv">α = ${ang}°</span></label>
+    <input type="range" id="sl" min="5" max="85" step="1" value="${ang}">
+    <div class="gbtns"><button class="btn primary" data-act="go">Бросай!</button><span class="gres" role="status">${gameRes()}</span></div></div></div>`;
+}
+function goLaunch(t) {
+  if (busy) return;
+  const ang = +$('#sl').value, r = ang * Math.PI / 180, g0 = 10, T = 2 * t.v0 * Math.sin(r) / g0, xL = t.v0 * t.v0 * Math.sin(2 * r) / g0;
+  const { M, X, Y } = launchGeom(t), tol = t.tol ?? 1, ball = $('#ball'), dots = $('#dots'), token = ts;
+  const samp = [];
+  for (let k = 0; k <= 18; k++) {
+    const tau = k * T / 18, x = t.v0 * Math.cos(r) * tau, y = t.v0 * Math.sin(r) * tau - g0 * tau * tau / 2;
+    if (x > M + 2) break;
+    samp.push([+X(x).toFixed(1), +Y(Math.max(y, 0)).toFixed(1), tau]);
+  }
+  dots.innerHTML = ''; busy = true; lockGame(true);
+  const dur = REDUCED ? 0 : 1700, t0 = performance.now(); let shown = 0;
+  const end = (cx, cy) => {
+    busy = false;
+    if (ts !== token || !inTask()) return;
+    const diff = xL - t.L, hit = Math.abs(diff) <= tol;
+    const res = hit ? `Попал! Дальность ${fmt(xL, 1)} м.` : diff > 0 ? `Перелёт на ${fmt(diff, 1)} м: дальность ${fmt(xL, 1)} м.` : `Недолёт ${fmt(-diff, 1)} м: дальность ${fmt(xL, 1)} м.`;
+    ts.g = { ...(ts.g || {}), ang, res, dots: samp.map(s => [s[0], s[1]]), ball: [cx, cy] };
+    if (ts.state !== 'ask') return render();
+    if (hit) win(); else fail(res);
+  };
+  const frame = now => {
+    const p = dur ? Math.min(1, (now - t0) / dur) : 1, tau = p * T, x = t.v0 * Math.cos(r) * tau, y = t.v0 * Math.sin(r) * tau - g0 * tau * tau / 2;
+    const cx = +X(Math.min(x, M + 2)).toFixed(1), cy = +Y(Math.max(y, 0)).toFixed(1);
+    ball.setAttribute('cx', cx); ball.setAttribute('cy', cy);
+    while (shown < samp.length && samp[shown][2] <= tau + 1e-9) { dots.insertAdjacentHTML('beforeend', `<circle cx="${samp[shown][0]}" cy="${samp[shown][1]}" r="4" class="f-acc" opacity=".55"/>`); shown++; }
+    if (p < 1 && x <= M + 2) requestAnimationFrame(frame); else end(cx, cy);
+  };
+  requestAnimationFrame(frame);
+}
+
+// ===== запуск =====
+render();
+startDust();
+initSync();
+try { if (window.claude && window.claude.hot && typeof window.claude.hot.snapshot === 'function') window.claude.hot.snapshot(() => (tab === 'levels' && peek === null ? { view, run, ts: view === 'task' ? ts : null, lastResult } : { view: 'map' })); } catch (e) {}
+try {
+  const hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.ready === 'function') hot.ready(d => {
+    if (d && d.run && LEVELS[d.run.li] && d.run.ti < LEVELS[d.run.li].tasks.length && (d.view === 'task' || d.view === 'intro')) { run = d.run; ts = d.ts || null; busy = false; view = ts ? 'task' : 'intro'; lastResult = d.lastResult || null; render(); }
+  });
+} catch (e) {}
+</script>
+
+</body></html>
