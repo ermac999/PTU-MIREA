@@ -14,7 +14,7 @@ import { buildTodayPlan, catchUpWindow, streakInfo, subjectOf } from './planner.
 import { daysBetween, esc, humanDate, minutesNow, plural } from './util.js';
 import { blockActionHandlers, ensureTodayPlan, today } from './views/shared.js';
 import { calendarActions, renderCalendar } from './views/calendar.js';
-import { renderFun, renderHome, renderProjects } from './views/home.js';
+import { mountHome, renderFun, renderHome, renderProjects } from './views/home.js';
 import { eventActions } from './views/events.js';
 import { dayActions, renderDay } from './views/day.js';
 import { ensureTicker, paintTimer, renderBurning, renderToday, todayActions } from './views/today.js';
@@ -26,7 +26,7 @@ import {
 } from './views/settings.js';
 
 const ROUTES = {
-  home: { tab: 'home', title: 'Главная', render: renderHome },
+  home: { tab: 'home', title: 'Главная', render: renderHome, mount: mountHome },
   fun: { tab: 'home', title: 'Развлечения', render: renderFun },
   projects: { tab: 'home', title: 'Проекты', render: renderProjects },
   calendar: { tab: 'calendar', title: 'Календарь', render: renderCalendar },
