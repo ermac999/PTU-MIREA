@@ -358,3 +358,18 @@ test('зал в воскресенье: учебное воскресенье �
   assert.ok(p2.blocks.filter((b) => b.type === 'study').length >= 1);
   assert.ok(p2.blocks.every((b) => b.start >= g2.end || b.end <= g2.start), 'учёба не пересекается с залом');
 });
+
+test('главная: артефакты разложены по разделам, ссылки на claude.ai, без дублей с перенесёнными играми', async () => {
+  const { ARTIFACTS, artifactsIn } = await import('../js/portal.js');
+  const ids = new Set();
+  for (const a of ARTIFACTS) {
+    assert.ok(!ids.has(a.id), a.id);
+    ids.add(a.id);
+    assert.ok(['chess', 'project'].includes(a.area), a.id);
+    assert.match(a.url, /^https:\/\/claude\.ai\/artifact\/[A-Za-z0-9]+$/);
+    assert.ok(!MODULES.some((m) => m.title === a.title), `${a.title} уже перенесён в предметы`);
+  }
+  assert.deepEqual(artifactsIn('chess').map((a) => a.title), ['Дебютная тетрадь']);
+  const sw = readFileSync(file('sw.js'), 'utf8');
+  for (const f of ['js/portal.js', 'js/views/home.js']) assert.ok(sw.includes(`'${f}'`), `${f} в кэше`);
+});

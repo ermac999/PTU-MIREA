@@ -275,10 +275,10 @@ input[type="time"].inp, input[type="date"].inp { -webkit-appearance: none; appea
   background: var(--band); color: var(--band-muted); box-shadow: 0 -1px 0 var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: var(--gutter); padding-right: var(--gutter-r);
 }
-.nav-in { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+.nav-in { max-width: 600px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .nav a {
   display: grid; justify-items: center; align-content: center; gap: 4px; min-height: var(--nav-h);
-  text-decoration: none; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; position: relative;
+  text-decoration: none; font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; position: relative;
 }
 .nav a[aria-current="page"] { color: var(--band-ink); }
 .nav a[aria-current="page"]::before { content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 2px; background: var(--band-ink); }
@@ -466,3 +466,14 @@ pre.code { margin: 0; padding: 12px; background: var(--bg); border: 1px solid va
 @media (min-width: 640px) {
   .app { padding-top: 32px; }
 }
+
+/* ---------- Главная ---------- */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  display: grid; align-content: start; gap: 6px; min-height: 132px; padding: 14px; text-align: left; min-width: 0;
+  border: 1px solid var(--ink); border-radius: var(--radius); background: var(--paper); color: var(--ink);
+}
+.tile:active { transform: scale(.98); }
+.tile-ic svg.i { width: 26px; height: 26px; }
+.tile-t { font-family: var(--font-display); font-size: 21px; line-height: 1.15; overflow-wrap: anywhere; }
+.tile-m { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }

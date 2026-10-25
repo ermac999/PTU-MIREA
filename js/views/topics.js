@@ -111,8 +111,8 @@ export function renderTopics() {
   const subjects = st.subjects.filter((s) => !s.noStudy).sort((a, b) => score(a) - score(b));
   return `
     <header class="head">
-      <span class="eyebrow">Предметы · теория · игры</span>
-      <h1 class="display">Темы</h1>
+      <span class="eyebrow">Теория · задачи · игры</span>
+      <h1 class="display">Предметы</h1>
     </header>
     <ul class="list">${subjects.map((s) => subjectRow(st, s)).join('')}</ul>
     <section>
@@ -136,7 +136,7 @@ export function renderSubject([id]) {
   const nCards = cardsAll().filter((c) => c.subject === id).length;
   return `
     <header class="head">
-      <button class="back" type="button" data-act="go" data-to="topics">${icon('back', 's')}Темы</button>
+      <button class="back" type="button" data-act="go" data-to="topics">${icon('back', 's')}Предметы</button>
       <span class="eyebrow">${s.name !== s.short ? `${esc(s.name)} · ` : ''}уровень ${Number(s.level) || 3} из 5</span>
       <h1 class="display m">${esc(s.short)}</h1>
     </header>

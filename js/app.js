@@ -14,6 +14,7 @@ import { buildTodayPlan, catchUpWindow, streakInfo, subjectOf } from './planner.
 import { daysBetween, esc, humanDate, minutesNow, plural } from './util.js';
 import { blockActionHandlers, ensureTodayPlan, today } from './views/shared.js';
 import { calendarActions, renderCalendar } from './views/calendar.js';
+import { renderFun, renderHome, renderProjects } from './views/home.js';
 import { eventActions } from './views/events.js';
 import { dayActions, renderDay } from './views/day.js';
 import { ensureTicker, paintTimer, renderBurning, renderToday, todayActions } from './views/today.js';
@@ -25,11 +26,14 @@ import {
 } from './views/settings.js';
 
 const ROUTES = {
+  home: { tab: 'home', title: 'Главная', render: renderHome },
+  fun: { tab: 'home', title: 'Развлечения', render: renderFun },
+  projects: { tab: 'home', title: 'Проекты', render: renderProjects },
   calendar: { tab: 'calendar', title: 'Календарь', render: renderCalendar },
   day: { tab: 'calendar', title: 'День', render: renderDay, scrollToNow: true },
   burning: { tab: 'calendar', title: 'Горит', render: renderBurning },
   today: { tab: 'today', title: 'Сегодня', render: renderToday },
-  topics: { tab: 'topics', title: 'Темы', render: renderTopics },
+  topics: { tab: 'topics', title: 'Предметы', render: renderTopics },
   subject: { tab: 'topics', title: 'Предмет', render: renderSubject },
   topic: { tab: 'topics', title: 'Тема', render: renderTopic },
   practice: { tab: 'topics', title: 'Отработка', render: renderPractice },
@@ -43,9 +47,10 @@ const ROUTES = {
 };
 
 const TABS = [
+  ['home', 'Главная', 'home'],
   ['calendar', 'Календарь', 'calendar'],
   ['today', 'Сегодня', 'today'],
-  ['topics', 'Темы', 'topics'],
+  ['topics', 'Предметы', 'topics'],
   ['settings', 'Настройки', 'settings'],
 ];
 
@@ -139,7 +144,7 @@ function render() {
       route.params = [];
     }
     const def = ROUTES[route.name];
-    view.innerHTML = (route.name === 'calendar' || route.name === 'today' ? introNote() : '') + def.render(route.params || []);
+    view.innerHTML = (['home', 'calendar', 'today'].includes(route.name) ? introNote() : '') + def.render(route.params || []);
     renderStrip();
     renderNav(def.tab);
     document.title = `${def.title} · ${CONFIG.appName}`;
@@ -235,7 +240,7 @@ function start() {
   }
   applyLook();
   document.documentElement.classList.add('motion');
-  initNav('calendar');
+  initNav('home');
   setRenderer(render);
   onChange(scheduleRender);
   render();
