@@ -232,6 +232,7 @@ test('КР по информатике в пятницу: событие в пл
 
 test('воскресенье 18.10: до обеда информатика (КР в пятницу), после обеда линал, вечер свободен', () => {
   const st = defaultState();
+  st.settings.gym = false; // тест про учёбу в учебное воскресенье — без зала
   const sim = simulate(st, TODAY, 7 * 60, 3);
   const sun = sim.plans['2026-10-18'];
   const study = sun.blocks.filter((b) => b.type === 'study');

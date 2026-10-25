@@ -607,10 +607,12 @@ function layoutRest(state, info, w, start, items, ctx, mk, ef) {
   const out = [];
   const bed = w.end;
   const M = CONFIG.weekendMeals;
+  const gym = info.gym ? { start: info.gymEnd - CONFIG.gym.minutes, end: info.gymEnd } : null;
+  const planAt = gym ? Math.max(toMin(CONFIG.sundayPlanAt), gym.end + 10) : toMin(CONFIG.sundayPlanAt);
   const anchors = [
     { type: 'meal', start: w.start, end: w.start + M.breakfast, title: 'Завтрак', detail: 'Спокойное утро' },
     ...(info.wd === 0 ? [{
-      type: 'plan', start: toMin(CONFIG.sundayPlanAt), end: toMin(CONFIG.sundayPlanAt) + CONFIG.sundayPlanMin,
+      type: 'plan', start: planAt, end: planAt + CONFIG.sundayPlanMin,
       title: 'План на неделю', detail: 'Открыть «Горит» и календарь, проверить дедлайны. 30 минут — и свободен.',
     }] : []),
     { type: 'meal', start: toMin(M.lunchAt), end: toMin(M.lunchAt) + M.lunch, title: 'Обед' },
@@ -620,6 +622,7 @@ function layoutRest(state, info, w, start, items, ctx, mk, ef) {
 
   for (const a of anchors) out.push(mk(a.type, Math.max(a.start, start), a.end, { title: a.title, detail: a.detail }));
   const occ = out.map((b) => ({ start: b.start, end: b.end }));
+  if (gym) occ.push(gym); // зал — стена: учёба и игра встают вокруг
 
   // Учёба — после обеда, если в этот день она вообще есть.
   let netLeft = floor5(homeCapFor(state, info) * ef);
@@ -684,9 +687,10 @@ function layoutRest(state, info, w, start, items, ctx, mk, ef) {
   out.sort((a, b) => a.start - b.start);
   const filled = [];
   let cur = start;
-  for (const b of out) {
+  const walls = gym && gym.end > start ? [...out, gym].sort((a, b) => a.start - b.start) : out;
+  for (const b of walls) {
     if (b.start - cur >= 10) filled.push(mk('free', cur, b.start, { title: 'Свободно', detail: info.wd === 0 ? 'Выходной: отдых' : 'Без плана' }));
-    filled.push(b);
+    if (b !== gym) filled.push(b);
     cur = Math.max(cur, b.end);
   }
   if (bed - cur >= 10) filled.push(mk('free', cur, bed, { title: 'Свободно' }));

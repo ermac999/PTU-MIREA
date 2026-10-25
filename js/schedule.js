@@ -161,6 +161,14 @@ export function daySkeleton(state, key) {
     }
     windows.push({ id: 'home', kind: 'home', start: gymOn ? gymEnd : info.home, end: info.bed });
   } else {
+    // Зал в выходной — утром, после завтрака; учёба, обед и игра встают вокруг
+    const gymAt = info.wake + CONFIG.weekendMeals.breakfast;
+    if (state.settings?.gym && (state.settings.gymDays || []).includes(info.wd) && !info.ov?.noGym
+      && info.bed - (gymAt + CONFIG.gym.minutes) >= CONFIG.gym.minEveningLeftMin) {
+      push('gym', gymAt, gymAt + CONFIG.gym.minutes, { title: 'Зал', detail: 'Дорога и тренировка, около 2,5 ч. Завтрак — до, обед — после', id: `${key}:gym` });
+      info.gym = true;
+      info.gymEnd = gymAt + CONFIG.gym.minutes;
+    }
     windows.push({ id: 'rest', kind: 'rest', start: info.wake, end: info.bed });
   }
 

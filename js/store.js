@@ -72,6 +72,7 @@ export function migrate(raw) {
   if (from < 9) upgradeTo9(st);
   if (from < 10) upgradeTo10(st);
   if (from < 11) upgradeTo11(st);
+  if (from < 13) upgradeTo13(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -207,6 +208,12 @@ function upgradeTo11(st) {
   const kr = st.events.find((e) => e.id === 'ev-linal-kr');
   const fresh = DEFAULT_DATA.events.find((e) => e.id === 'ev-linal-kr');
   if (kr && !kr.done && !(kr.topics || []).length) kr.topics = [...fresh.topics];
+}
+
+/** Версия 13 (25.10): зал и по воскресеньям (утром). Если дни зала уже меняли сами — не трогаем. */
+function upgradeTo13(st) {
+  const d = st.settings.gymDays;
+  if (Array.isArray(d) && d.length === 2 && d.includes(3) && d.includes(6)) st.settings.gymDays = [...DEFAULT_DATA.settings.gymDays];
 }
 
 export const store = {

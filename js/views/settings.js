@@ -434,9 +434,9 @@ function openHabits() {
       ${switchBtn('duo', 'Немецкий в Duolingo — 15 минут в электричке', s.duolingo)}
       ${switchBtn('sport', 'Зарядка 15 минут — вт, ср, сб, вс', s.sport)}
       ${switchBtn('gym', 'Зал — дорога и тренировка около 2,5 ч', s.gym)}
-      <div class="field"><span class="eyebrow">Дни зала — после пар, вечер должен остаться</span>
-        <div class="tchips" id="gym-days">${[[1, 'пн'], [2, 'вт'], [3, 'ср'], [4, 'чт'], [5, 'пт'], [6, 'сб']].map(([d, n]) => `<button class="tchip" type="button" data-day="${d}" aria-pressed="${(s.gymDays || []).includes(d)}">${n}</button>`).join('')}</div></div>
-      <p class="small muted" style="margin:0">Если после зала до отбоя меньше 2,5 ч — в этот день зала в плане не будет: сон и вечер важнее. Пн, чт и пт обычно так и выходят.</p>
+      <div class="field"><span class="eyebrow">Дни зала — после пар; в воскресенье — утром, после завтрака</span>
+        <div class="tchips" id="gym-days">${[[1, 'пн'], [2, 'вт'], [3, 'ср'], [4, 'чт'], [5, 'пт'], [6, 'сб'], [0, 'вс']].map(([d, n]) => `<button class="tchip" type="button" data-day="${d}" aria-pressed="${(s.gymDays || []).includes(d)}">${n}</button>`).join('')}</div></div>
+      <p class="small muted" style="margin:0">Если после зала до отбоя меньше 2,5 ч — в этот день зала в плане не будет: сон и вечер важнее. Пн, чт и пт обычно так и выходят. Если воскресенье занято учёбой, зал встаёт утром, а учёба — после обеда.</p>
       ${switchBtn('sunday', 'Воскресенье по необходимости — 2 ч учёбы', s.sundayExtra)}
       ${switchBtn('pause', 'Пауза поддержки слабых предметов', s.pauseMaintenance)}
       <button class="btn block" type="button" id="hb-save">Сохранить</button>`,

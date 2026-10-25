@@ -288,13 +288,20 @@ test('отработка: новые задачи из практик идут �
   assert.deepEqual(buildQueue(tasks, { e2: { seen: 1, correct: 0, wrong: 1, streak: 0, due: 0 } }, 1), ['e2', 'p1', 'p2', 'e1'], 'ошибки, которым пора, — всё равно первыми');
 });
 
-test('зал: среда и суббота сразу после пар, остальные дни — без зала, сон не страдает', () => {
+test('зал: среда и суббота сразу после пар, воскресенье утром, остальные дни — без зала, сон не страдает', () => {
   const st = defaultState();
   const days = { '2026-10-26': 1, '2026-10-27': 2, '2026-10-28': 3, '2026-10-29': 4, '2026-10-30': 5, '2026-10-31': 6, '2026-11-01': 0 };
   const sim = simulate(st, '2026-10-26', 7 * 60, 7);
   const gym = (k) => sim.plans[k].fixed.find((f) => f.type === 'gym');
   for (const [k, wd] of Object.entries(days)) {
-    if (wd === 3 || wd === 6) {
+    if (wd === 0) {
+      const g = gym(k);
+      assert.ok(g, 'вс: зал утром');
+      const info = sim.plans[k].info;
+      assert.equal(g.start, info.wake + CONFIG.weekendMeals.breakfast, 'после завтрака');
+      assert.ok(sim.plans[k].blocks.every((b) => b.start >= g.end || b.end <= g.start), 'вс: ничего не пересекается с залом');
+      assert.ok(sim.plans[k].blocks.some((b) => b.type === 'meal' && b.title === 'Обед'), 'обед на месте');
+    } else if (wd === 3 || wd === 6) {
       const g = gym(k);
       assert.ok(g, `${k}: зал есть`);
       assert.equal(g.end - g.start, CONFIG.gym.minutes);
@@ -324,6 +331,30 @@ test('обновление до версии 12: зал появляется у 
   delete v11.settings.gymDays;
   const m = migrate(JSON.parse(JSON.stringify(v11)));
   assert.equal(m.settings.gym, true);
-  assert.deepEqual(m.settings.gymDays, [3, 6]);
+  assert.deepEqual(m.settings.gymDays, [3, 6, 0]);
   assert.ok(m.settings.updateSeen < CONFIG.noteVersion);
+});
+
+test('обновление до версии 13: у тех, кто зал не трогал (ср, сб), добавляется воскресенье; свои дни остаются', () => {
+  const v12 = defaultState();
+  v12.version = 12;
+  v12.settings.gymDays = [3, 6];
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(v12))).settings.gymDays, [3, 6, 0]);
+  v12.settings.gymDays = [2, 6];
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(v12))).settings.gymDays, [2, 6], 'свои дни не трогаем');
+});
+
+test('зал в воскресенье: учебное воскресенье — зал утром, учёба после обеда, план недели после зала', () => {
+  const st = defaultState();
+  const sim = simulate(st, '2026-10-25', 7 * 60, 1);
+  const p = sim.plans['2026-10-25'];
+  const g = p.fixed.find((f) => f.type === 'gym');
+  const plan = p.blocks.find((b) => b.type === 'plan');
+  assert.ok(g && plan && plan.start >= g.end, 'план недели не наезжает на зал');
+  const st2 = defaultState();
+  st2.settings.sundayExtra = true;
+  const p2 = simulate(st2, '2026-10-25', 7 * 60, 1).plans['2026-10-25'];
+  const g2 = p2.fixed.find((f) => f.type === 'gym');
+  assert.ok(p2.blocks.filter((b) => b.type === 'study').length >= 1);
+  assert.ok(p2.blocks.every((b) => b.start >= g2.end || b.end <= g2.start), 'учёба не пересекается с залом');
 });
