@@ -1,8 +1,6 @@
 <!doctype html><html lang="ru"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Бит за битом</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Mono&family=VT323&display=swap">
+<script>/* тема и движение — как в «Рамках» */try{const s=JSON.parse(localStorage.getItem('ramki.v1')||'{}').settings||{};const r=document.documentElement;if(s.theme==='light'||s.theme==='dark')r.dataset.theme=s.theme;if(s.motion==='none')r.dataset.motion='none';}catch(e){}</script>
 <style>
 /* Пульт ЭВМ «Кварц-8»: одна колонка фосфорного терминала; всё моноширинное, акцент — яркость и инверсия, как у настоящего дисплея */
 :root {
@@ -556,6 +554,183 @@ button.bt:hover { border-color: var(--fg); }
   .crt::after { display: none; }
 }
 
+/* =====================================================================
+   Стиль «Спирали»: мир «Информатика · Кварц-8». Спокойнее, чем пульт:
+   без кинескопа, свечения и мигания; стекло, дымка с лучами, тонкий шрифт.
+   Тема — как в «Рамках» (настройка data-theme) или как у iPhone.
+   ===================================================================== */
+:root {
+  color-scheme: light;
+  --bg: #f4f7f5; --bg2: rgba(255, 255, 255, .62); --bg3: rgba(46, 160, 98, .1);
+  --fg: #1e8f55; --hi: #12201a; --dim: #5f6d66; --faint: rgba(20, 45, 32, .13);
+  --amber: #a8640f; --bad: #c0453a; --str: #1d7a70;
+  --glow: transparent; --glow-a: transparent; --glow-b: transparent;
+  --sheet: rgba(250, 252, 251, .94); --glass-line: rgba(255, 255, 255, .85);
+  --soft-shadow: 0 12px 30px rgba(20, 40, 30, .08), 0 2px 6px rgba(20, 40, 30, .05);
+  --bg-top: #cdd7d1; --bg-mid: #e3e9e5; --bg-low: #f3f6f4; --ray: rgba(255, 255, 255, .55); --halo: rgba(255, 255, 255, .95);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --display: -apple-system, "SF Pro Display", BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --digits: var(--display);
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0b1310; --bg2: rgba(30, 44, 37, .58); --bg3: rgba(79, 209, 139, .12);
+    --fg: #4fd18b; --hi: #e5eee9; --dim: #8b9d94; --faint: rgba(255, 255, 255, .1);
+    --amber: #f0b45a; --bad: #ff7d6e; --str: #86d9cb;
+    --sheet: rgba(18, 27, 23, .95); --glass-line: rgba(255, 255, 255, .06);
+    --soft-shadow: 0 14px 34px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+    --bg-top: #030705; --bg-mid: #0a120e; --bg-low: #111915; --ray: rgba(120, 230, 170, .07); --halo: rgba(110, 220, 160, .16);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1310; --bg2: rgba(30, 44, 37, .58); --bg3: rgba(79, 209, 139, .12);
+  --fg: #4fd18b; --hi: #e5eee9; --dim: #8b9d94; --faint: rgba(255, 255, 255, .1);
+  --amber: #f0b45a; --bad: #ff7d6e; --str: #86d9cb;
+  --sheet: rgba(18, 27, 23, .95); --glass-line: rgba(255, 255, 255, .06);
+  --soft-shadow: 0 14px 34px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+  --bg-top: #030705; --bg-mid: #0a120e; --bg-low: #111915; --ray: rgba(120, 230, 170, .07); --halo: rgba(110, 220, 160, .16);
+}
+
+html { background: linear-gradient(180deg, var(--bg-top) 0, var(--bg-mid) 380px, var(--bg-low) 820px) var(--bg-low) no-repeat; }
+body { background: transparent; color: var(--hi); font: var(--t-m)/1.5 var(--font); }
+body::before {
+  left: 50%; top: -14vh; right: auto; bottom: auto; width: 170vw; max-width: 1400px; height: 72vh; transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse 30% 55% at 50% 0%, var(--halo), transparent 72%),
+    repeating-conic-gradient(from 160deg at 50% -8%, var(--ray) 0deg 1.2deg, transparent 1.2deg 5.5deg);
+  -webkit-mask: radial-gradient(ellipse 60% 100% at 50% 0%, #000 30%, transparent 75%);
+  mask: radial-gradient(ellipse 60% 100% at 50% 0%, #000 30%, transparent 75%);
+}
+*, *::before, *::after { text-shadow: none !important; }
+.crt { display: none !important; }
+b, strong { font-weight: 600; }
+code, pre, pre.code, pre.cols, .codelines, .opt.mono .ot, .gbox code, .wg-ch code, .op-reg code, .wg-line code, .wg-in { font-family: var(--mono); }
+.prompt, .wg-calc, .codelines .n, .code .n { color: var(--hi); }
+.sb-mid b, .cmd-k, .ml small, .m-n, .mem-a, .op b, .l-n, .wg-val, .wg-msg, .gbox b, .wg-col, .bt, .bcol small.wt, .display, .opt .ok-k, .keys button, .fb-v, .res-h, .stats b, .sl.mem, .bit {
+  font-variant-numeric: tabular-nums; font-weight: 300;
+}
+
+/* поверхности: стекло, скругления, мягкая тень вместо свечения */
+.btn, .cmd, .mod, .lvl, .card, .opt, .talk, .wg, .mem, .stats > div, .op > div, .codelines, pre.code, pre.cols, .hintbox, .callout, .formula,
+.wg-b, .wg-k, .pb-btn, .st-skip, .wg-ch, .gbox, .display, .keys button, .wg-in {
+  border-radius: 16px;
+}
+.btn, .cmd, .mod, .lvl, .card, .opt, .talk, .mem, .stats > div, .op > div, .keys button {
+  background: var(--bg2); border: 1px solid var(--glass-line); box-shadow: var(--soft-shadow);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.wg, .formula { border: 1px solid var(--faint); background: var(--bg3); }
+.codelines, pre.code, pre.cols, .display, .wg-in { background: var(--bg); border: 1px solid var(--faint); box-shadow: none; }
+.display.ok { border-color: var(--fg); box-shadow: 0 0 0 3px var(--bg3); }
+.display.bad { border-color: var(--bad); }
+.tag, .nb.big, .wg-tag, .lamp-ok, .lamp-bad, .meta .re, .combo, .fb-v .xp { border-radius: 999px; }
+.tag { padding: 1px 8px; }
+.bt, .bit, .ml i, .reg i, .m-bar i, .pb-prog i, .segs i, .wg-dots i, .savenote i { border-radius: 6px; }
+.stars i { border-radius: 50%; }
+.m-n, .mh-n { border-radius: 14px; }
+.opt .ok-k { border-radius: 10px; }
+.btn:hover:not(:disabled), .btn:focus-visible, .mod:hover, .mod:focus-visible, .lvl:hover, .lvl:focus-visible, .opt:hover:not(:disabled) { border-color: var(--fg); background: var(--bg2); }
+.btn:active:not(:disabled) { background: var(--bg3); }
+.btn:active:not(:disabled) b, .btn:active:not(:disabled) small { color: inherit; }
+.btn b { letter-spacing: .08em; }
+.sec::after { border-top: 1px solid var(--faint); }
+.lvl.boss { border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent); border-width: 1px; }
+.lvl.next { border-color: var(--fg); box-shadow: var(--soft-shadow), 0 0 0 3px var(--bg3); }
+.opt.sel, .opt.right { background: var(--bg3); border-color: var(--fg); box-shadow: var(--soft-shadow); }
+.mod.ok .m-n, .ml.ok i, .reg i.on, .savenote i.on, .stars i.on, .pb-prog i.on, .bit.on, .bt.on, .wg-dots i { box-shadow: none; }
+.mx.logo, .mx.warm, .mx.num, .face { filter: none; }
+
+/* верхняя строка: стекло вместо зелёной полосы */
+.sbar { background: var(--sheet); color: var(--hi); border-bottom: 1px solid var(--faint); box-shadow: none;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.sb-mid b { color: var(--hi); font-size: 1.05rem; }
+.sbar a:hover, .sbar a:focus-visible, .sbar button:hover, .sbar button:focus-visible { background: var(--bg3); color: var(--hi); }
+.pbar, .dock { background: var(--sheet); border-color: var(--faint); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+
+/* главная команда: зелёная пилюля без курсора */
+.cmd { border: 1px solid var(--fg); background: color-mix(in srgb, var(--fg) 10%, var(--bg2)); border-radius: 20px; }
+.cmd-t b { color: var(--hi); letter-spacing: .06em; }
+.cmd-t b::after { display: none; }
+.cmd-k { color: var(--fg); }
+.cmd:hover:not(:disabled), .cmd:focus-visible { background: color-mix(in srgb, var(--fg) 18%, var(--bg2)); }
+.cmd:hover:not(:disabled) *, .cmd:focus-visible * { color: inherit; }
+.cmd:hover:not(:disabled) .cmd-k { color: var(--fg); }
+.cmd.repair { border-color: var(--amber); background: color-mix(in srgb, var(--amber) 10%, var(--bg2)); box-shadow: var(--soft-shadow); }
+.cmd.repair:hover, .cmd.repair:focus-visible { background: color-mix(in srgb, var(--amber) 18%, var(--bg2)); }
+
+/* Сэм: обычный текст, янтарь — только подпись и полоска */
+.talk { color: var(--hi); border-left: 3px solid var(--amber); }
+.talk .who, .sl.sam .who, .hintbox .who { color: var(--amber); opacity: 1; }
+.sl.sam { color: var(--hi); border-left: 3px solid var(--amber); }
+.hintbox, .callout { color: var(--hi); border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 7%, transparent); }
+.hintbox b, .callout b { color: var(--amber); text-decoration: none; font-weight: 600; }
+.sl.mem { border: 1px solid var(--faint); border-radius: 16px; background: var(--bg2); box-shadow: var(--soft-shadow); }
+
+/* заголовки — тонкий шрифт */
+.mhead h1, .panelx h2, .res-h, .rich h2 { font-family: var(--display); font-weight: 300; letter-spacing: -.01em; }
+.mhead h1 { font-size: 1.6rem; }
+.rich h2::before { content: none; }
+
+/* цифры под системный шрифт (раньше — пиксельный VT323) */
+.cmd-k { font-size: 1.35rem; }
+.ml small { font-size: .75rem; }
+.m-n { font-size: 1.35rem; }
+.mem-a { font-size: .8rem; }
+.op b { font-size: 1.25rem; }
+.l-n { font-size: 1.2rem; }
+.lvl.boss .l-n { font-size: .9rem; }
+.wg-val { font-size: 1.3rem; }
+.wg-val.big { font-size: 1.7rem; }
+.wg-msg { font-size: 1.5rem; }
+.gbox b { font-size: 1.3rem; }
+.wg-col { font-size: 1.3rem; }
+.wg-col tr.carry td { font-size: .85rem; }
+.bt { font-size: 1.15rem; }
+.bt.ro, .bword.sm .bt { font-size: .95rem; }
+.bword.sm .bt.ro { font-size: .8rem; }
+.bcol small.wt { font-size: .75rem; }
+.display { font-size: 1.8rem; }
+.display sub { font-size: .9rem; }
+.opt .ok-k { font-size: .95rem; }
+.keys button { font-size: 1.45rem; }
+.keys.hex button { font-size: 1.25rem; }
+.fb-v { font-size: 1.5rem; }
+.fb-v .xp { font-size: .9rem; }
+.res-h { font-size: 2.1rem; }
+.stats b { font-size: 1.5rem; }
+.sl.mem { font-size: 1.35rem; }
+.bit { font-size: calc(var(--s) * .52); }
+@media (max-width: 370px) {
+  .m-n { font-size: 1.2rem; }
+  .bt { font-size: 1rem; }
+  .bt.ro { font-size: .85rem; }
+}
+
+/* окна снизу */
+.fb { background: rgba(0, 0, 0, .3); }
+.backdrop { background: rgba(0, 0, 0, .35); }
+.fb-in, .panelx { background: var(--sheet); border-top: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0, 0, 0, .18);
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.fb-in { border-top: 3px solid var(--fg); }
+.fb.bad .fb-in { border-top-color: var(--bad); box-shadow: 0 -10px 40px rgba(0, 0, 0, .18); }
+.cheat li { background: var(--bg2); border-radius: 0 12px 12px 0; }
+
+/* включение и сюжет: без вспышек и мигания */
+.pw-btn { border: 1px solid var(--fg); background: color-mix(in srgb, var(--fg) 10%, var(--bg2)); color: var(--hi); box-shadow: var(--soft-shadow); animation: none; }
+.pw-btn:hover, .pw-btn:focus-visible { background: color-mix(in srgb, var(--fg) 20%, var(--bg2)); color: var(--hi); }
+.pw-ring { color: var(--fg); }
+.boot { animation: fadein .5s ease-out both; }
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } }
+.st-top { border-bottom: 1px solid var(--faint); }
+.st-more, .mem-l.fresh .mem-new, .pb-prog i.cur { animation: none; }
+.pb-prog i.cur { border-color: var(--fg); background: var(--bg3); }
+.stage.shake, .stage.flash .display, .stage.flash .opt.right, .stage.flash .bitsbox { animation: none; }
+.stars.big i.on { animation: soft-on .5s ease-out both; }
+@keyframes soft-on { from { opacity: 0; transform: scale(.6); } }
+:root[data-motion="none"] *, :root[data-motion="none"] *::before, :root[data-motion="none"] *::after { animation: none !important; transition: none !important; }
 </style>
 <div id="app"></div>
 <div id="sheet" hidden></div>
@@ -3762,7 +3937,7 @@ function render() {
 function sbar() {
   const r = rank(S.xp);
   return `<header class="sbar">
-    <a class="sb-back" href="../../#spiral/inf" aria-label="Назад в «Рамки»">‹</a>
+    <a class="sb-back" href="../../#spiral/inf" aria-label="Назад в «Спираль»">‹</a>
     <button class="sb-home" data-a="home" aria-label="На пульт">КВАРЦ-8</button>
     <span class="sb-mid"><span>${r.name}</span><b>${S.xp}</b><small>XP</small></span>
     <button class="sb-btn" data-a="sound" aria-pressed="${S.opts.sound}" aria-label="Звук ${S.opts.sound ? 'включён' : 'выключен'}">ЗВУК <i>${S.opts.sound ? 'ВКЛ' : 'ВЫКЛ'}</i></button>
@@ -3794,7 +3969,7 @@ function viewBoot() {
       <p class="pw-state">ПИТАНИЕ: <b>ВЫКЛ</b></p>
       <button class="pw-btn" data-a="power" id="pw"><span class="pw-ring" aria-hidden="true"></span><span>ВКЛЮЧИТЬ</span></button>
       <p class="pw-hint">Звук включится вместе с машиной. Выключить можно в верхней панели.</p>
-      <a class="pw-hint pw-back" href="../../#spiral/inf">‹ назад в «Рамки»</a>
+      <a class="pw-hint pw-back" href="../../#spiral/inf">‹ назад в «Спираль»</a>
     </div>`;
   }
   return `<div class="boot" data-a="bootskip">
