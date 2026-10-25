@@ -1,7 +1,8 @@
 /* =====================================================================
    «Рамки» — стили.
-   Layout: одна колонка 600px, редакционная подача — капс-подписи с разрядкой,
-   крупные заголовки с засечками, тонкие линии, тёмные «ленты»; холодная гамма.
+   Layout: одна колонка 600px. Стиль — по мотивам INRA 70 ans: светлая дымка с лучами,
+   стеклянные карточки, тонкие гротескные заголовки, мягкие тени, всё скруглённое.
+   Блок «Стиль INRA» в конце файла переопределяет базовые правила.
    Цвета — только через токены ниже: светлая тема, тёмная по настройке iPhone,
    и ручной выбор (data-theme) в обе стороны.
    ===================================================================== */
@@ -39,9 +40,9 @@
   --danger: #AE4250;
 
   /* Блоки дня: серые — не учусь; цветные — учёба, отдых, привычки */
-  --grey: #DADFE3;
+  --grey: rgba(255, 255, 255, .5);
   --grey-ink: #46515B;
-  --sleep: #CBD2D8;
+  --sleep: rgba(205, 212, 218, .55);
   --c-study: #3B5A78;  --c-study-bg: #DAE2EA;
   --c-train: #397B82;  --c-train-bg: #D5E4E5;
   --c-review: #64659A; --c-review-bg: #DFDFEB;
@@ -57,11 +58,11 @@
   --t-session: #0F1418;
   --t-dz: #397C68;
 
-  --font-display: "Playfair Display", ui-serif, "New York", Georgia, "Times New Roman", serif;
+  --font-display: -apple-system, "SF Pro Display", BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --gutter: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
-  --radius: 2px;
+  --radius: 16px;
   --nav-h: 62px;
   color-scheme: light;
 }
@@ -71,7 +72,7 @@
     --bg: #0C1013; --paper: #141A1F; --ink: #E5E9EC; --ink-2: #B6BFC7; --muted: #8B97A1;
     --line: #2A333B; --line-soft: #1D242B; --band: #06090B; --band-ink: #E5E9EC; --band-muted: #7E8B96; --band-line: #222A31;
     --accent: #8CAECF; --focus: #8CAECF; --ok: #73C19B; --warn: #DFA05D; --danger: #E47C88;
-    --grey: #192026; --grey-ink: #A1ACB6; --sleep: #141A20;
+    --grey: rgba(255, 255, 255, .04); --grey-ink: #A1ACB6; --sleep: rgba(255, 255, 255, .025);
     --c-study: #8CAECF;  --c-study-bg: #17222E;
     --c-train: #7CB5BA;  --c-train-bg: #142729;
     --c-review: #A5A6D7; --c-review-bg: #1F2039;
@@ -86,7 +87,7 @@
   --bg: #0C1013; --paper: #141A1F; --ink: #E5E9EC; --ink-2: #B6BFC7; --muted: #8B97A1;
   --line: #2A333B; --line-soft: #1D242B; --band: #06090B; --band-ink: #E5E9EC; --band-muted: #7E8B96; --band-line: #222A31;
   --accent: #8CAECF; --focus: #8CAECF; --ok: #73C19B; --warn: #DFA05D; --danger: #E47C88;
-  --grey: #192026; --grey-ink: #A1ACB6; --sleep: #141A20;
+  --grey: rgba(255, 255, 255, .04); --grey-ink: #A1ACB6; --sleep: rgba(255, 255, 255, .025);
   --c-study: #8CAECF;  --c-study-bg: #17222E;
   --c-train: #7CB5BA;  --c-train-bg: #142729;
   --c-review: #A5A6D7; --c-review-bg: #1F2039;
@@ -583,3 +584,111 @@ pre.code { margin: 0; padding: 12px; background: var(--bg); border: 1px solid va
 .splash.out { animation: dissolve .75s ease-in forwards; }
 @keyframes emerge { from { opacity: 0; filter: blur(14px) drop-shadow(0 28px 22px var(--sc-shadow)); transform: translateY(18px) scale(.96); } }
 @keyframes dissolve { to { opacity: 0; filter: blur(10px); } }
+
+/* ===================== Стиль INRA (весь сайт) ===================== */
+:root {
+  --glass: rgba(255, 255, 255, .6); --glass-strong: rgba(250, 250, 251, .86); --glass-line: rgba(255, 255, 255, .8);
+  --soft-shadow: 0 12px 34px rgba(25, 35, 45, .08), 0 2px 6px rgba(25, 35, 45, .05);
+  --bg-top: #d2d4d9; --bg-mid: #e5e6e9; --bg-low: #f4f4f5; --line: #cfd4d9; --line-soft: rgba(30, 40, 50, .07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --glass: rgba(28, 35, 42, .58); --glass-strong: rgba(20, 26, 31, .88); --glass-line: rgba(255, 255, 255, .06);
+    --soft-shadow: 0 14px 36px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+    --bg-top: #05070a; --bg-mid: #0d1216; --bg-low: #141a1f; --line: #2a333b; --line-soft: rgba(255, 255, 255, .06);
+  }
+}
+:root[data-theme="dark"] {
+  --glass: rgba(28, 35, 42, .58); --glass-strong: rgba(20, 26, 31, .88); --glass-line: rgba(255, 255, 255, .06);
+  --soft-shadow: 0 14px 36px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .3);
+  --bg-top: #05070a; --bg-mid: #0d1216; --bg-low: #141a1f; --line: #2a333b; --line-soft: rgba(255, 255, 255, .06);
+}
+
+/* фон: дымка сверху вниз и лучи света, на всех экранах */
+html { background: linear-gradient(180deg, var(--bg-top) 0, var(--bg-mid) 380px, var(--bg-low) 820px) var(--bg-low) no-repeat; }
+body { background: transparent; }
+body::before {
+  content: ""; position: fixed; left: 50%; top: -14vh; width: 170vw; max-width: 1400px; height: 72vh; z-index: -1; pointer-events: none;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse 30% 55% at 50% 0%, var(--sc-glow), transparent 72%),
+    repeating-conic-gradient(from 160deg at 50% -8%, var(--sc-ray) 0deg 1.2deg, transparent 1.2deg 5.5deg);
+  -webkit-mask-image: radial-gradient(ellipse 48% 95% at 50% 0%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 48% 95% at 50% 0%, #000 20%, transparent 75%);
+  filter: blur(5px); opacity: .7;
+}
+
+/* верхняя строка и нижнее меню — стекло вместо чёрных лент */
+.strip { background: transparent; color: var(--muted); }
+.strip-in b { color: var(--ink); }
+.nav {
+  background: var(--glass-strong); color: var(--muted);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 -1px 0 var(--glass-line), 0 -10px 30px rgba(0, 0, 0, .06);
+}
+.nav a[aria-current="page"] { color: var(--ink); }
+.nav a[aria-current="page"]::before { background: var(--ink); left: 34%; right: 34%; border-radius: 0 0 2px 2px; }
+
+/* типографика: тонкий гротеск, подписи — мелкий капс */
+.display { font-weight: 200; letter-spacing: -.035em; line-height: 1.02; }
+.display.m { font-weight: 300; letter-spacing: -.025em; }
+.sec { font-family: var(--font-text); font-weight: 600; font-size: 12px; letter-spacing: .2em; color: var(--ink-2); }
+.sec-row { border-bottom-color: var(--line); }
+.eyebrow { letter-spacing: .22em; }
+.tile-t, .mod .t, .task-body .t, .q, .flash .fq, .check .q, .sheet-head h2, .cal-nav .m, .result .r { font-weight: 300; letter-spacing: -.01em; }
+.d .n, .ev-date .n, .task-n, .stat .big, .daysum .v, .ring-label .tm { font-weight: 200; }
+
+/* поверхности — стекло с мягкой тенью */
+.card, .mod, .tile, .stat, .flash, .list, .cal, .hbt, .opt, .ev-list {
+  background: var(--glass); border: 1px solid var(--glass-line); border-radius: var(--radius); box-shadow: var(--soft-shadow);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.list { padding: 0 14px; }
+.li { border-bottom-color: var(--line-soft); }
+.mod, .tile { border-color: var(--glass-line); }
+.opt { box-shadow: none; }
+.opt.right { background: var(--ok); }
+.flash { border: 1px solid var(--glass-line); }
+
+/* кнопки, сегменты, чипы, поля — скруглённые */
+.btn { border-radius: 999px; box-shadow: 0 6px 18px rgba(20, 30, 40, .12); }
+.btn.ghost { background: var(--glass); border-color: var(--line); box-shadow: none; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.btn.quiet { box-shadow: none; }
+.btn.danger { box-shadow: none; }
+.ibtn { border-radius: 12px; background: var(--glass); }
+.seg { border: 1px solid var(--line); background: var(--glass); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border-right: 0; border-radius: 999px; }
+.seg.col { border-radius: 18px; }
+.seg.col button { border-bottom: 0; border-radius: 14px; }
+.chip { border-radius: 999px; }
+.inp { border-radius: 12px; background: var(--glass-strong); }
+.switch { border-bottom-color: var(--line-soft); }
+
+/* лента дня и календарь */
+.blk { border-radius: 12px; }
+.blk.free, .blk.ride, .blk.break { border-radius: 12px; }
+.cal { padding: 4px; border-top: 1px solid var(--glass-line); border-left: 1px solid var(--glass-line); overflow: hidden; }
+.cal-wd, .d { border-color: transparent; }
+.d { border-radius: 10px; }
+.d.today { background: var(--ink); color: var(--bg-low); box-shadow: 0 6px 16px rgba(20, 30, 40, .2); }
+.daysum { border-top-color: var(--line); border-bottom-color: var(--line-soft); }
+.task { border-bottom-color: var(--line-soft); }
+.ev { border-bottom-color: var(--line-soft); }
+.result { border-top-color: var(--line); }
+
+/* тёмный акцентный блок («Горит») — скруглённая карточка, а не лента на всю ширину */
+.band { margin-left: 0; margin-right: 0; border-radius: 20px; padding-left: 18px; padding-right: 18px; box-shadow: var(--soft-shadow); background: linear-gradient(160deg, #1d252d, #0b0f13); }
+
+/* шторка и тост */
+.sheet {
+  border-top: 1px solid var(--glass-line); border-radius: 22px 22px 0 0; background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3); backdrop-filter: blur(22px) saturate(1.3); box-shadow: 0 -16px 40px rgba(0, 0, 0, .14);
+}
+.sheet-head { background: transparent; border-bottom-color: var(--line-soft); }
+.sheet-back { background: rgba(6, 9, 12, .35); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.toast { border-radius: 16px; background: rgba(18, 24, 30, .9); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+/* теория */
+.md pre.md-code, .md-table th { background: var(--glass); }
+.md code, .md .fm { border-radius: 6px; }
+pre.code { border-radius: 12px; }
