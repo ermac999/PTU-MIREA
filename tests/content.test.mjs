@@ -112,7 +112,7 @@ test('модули: файлы на месте, предмет и темы су�
       assert.ok(sw.includes(`'${m.seed}'`), `${m.seed} — в кэше для офлайна`);
     }
     const html = readFileSync(file(m.href), 'utf8');
-    assert.ok(html.includes(`../../#subject/${m.subject}`), 'из игры есть ссылка назад в «Рамки» — на страницу предмета');
+    assert.ok(html.includes(`../../#spiral/${m.subject}`), 'из игры есть ссылка назад — в мир «Спирали»');
     assert.ok(html.includes(`'${m.storageKey}'`), 'игра хранит прогресс под тем ключом, который читают «Рамки»');
   }
   assert.deepEqual(modulesFor({ topic: 'phys-1' }).map((m) => m.id), ['kinematics']);
@@ -372,4 +372,22 @@ test('главная: артефакты разложены по раздела�
   assert.deepEqual(artifactsIn('chess').map((a) => a.title), ['Дебютная тетрадь']);
   const sw = readFileSync(file('sw.js'), 'utf8');
   for (const f of ['js/portal.js', 'js/views/home.js']) assert.ok(sw.includes(`'${f}'`), `${f} в кэше`);
+});
+
+test('«Спираль»: миры — предметы, игры физики и информатики внутри, история пока пустая', async () => {
+  const { WORLDS, gamesOf, worldProgress, gameTotals } = await import('../js/game.js');
+  const subjects = new Set(defaultState().subjects.map((s) => s.id));
+  for (const w of WORLDS) assert.ok(subjects.has(w.subject), w.id);
+  assert.ok(!WORLDS.some((w) => w.subject === 'de'), 'немецкий — без мира');
+  assert.deepEqual(gamesOf(WORLDS.find((w) => w.id === 'phys')).map((m) => m.id), ['kinematics']);
+  assert.deepEqual(gamesOf(WORLDS.find((w) => w.id === 'inf')).map((m) => m.id), ['bits']);
+  assert.equal(worldProgress(WORLDS.find((w) => w.id === 'hist')), null, 'история — мир строится');
+  const kin = JSON.parse(readFileSync(file('modules/kinematics/seed.json'), 'utf8'));
+  const bits = JSON.parse(readFileSync(file('modules/bits/seed.json'), 'utf8'));
+  withStorage({ 'kin-zachet-v1': JSON.stringify(kin), 'bzb.progress.v1': JSON.stringify(bits) }, () => {
+    const t = gameTotals();
+    assert.equal(t.stars, 26);
+    assert.equal(t.maxStars, 48 + 156);
+    assert.equal(t.rank, 'Ученик');
+  });
 });

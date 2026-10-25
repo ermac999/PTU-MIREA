@@ -3762,7 +3762,7 @@ function render() {
 function sbar() {
   const r = rank(S.xp);
   return `<header class="sbar">
-    <a class="sb-back" href="../../#subject/inf" aria-label="Назад в «Рамки»">‹</a>
+    <a class="sb-back" href="../../#spiral/inf" aria-label="Назад в «Рамки»">‹</a>
     <button class="sb-home" data-a="home" aria-label="На пульт">КВАРЦ-8</button>
     <span class="sb-mid"><span>${r.name}</span><b>${S.xp}</b><small>XP</small></span>
     <button class="sb-btn" data-a="sound" aria-pressed="${S.opts.sound}" aria-label="Звук ${S.opts.sound ? 'включён' : 'выключен'}">ЗВУК <i>${S.opts.sound ? 'ВКЛ' : 'ВЫКЛ'}</i></button>
@@ -3794,7 +3794,7 @@ function viewBoot() {
       <p class="pw-state">ПИТАНИЕ: <b>ВЫКЛ</b></p>
       <button class="pw-btn" data-a="power" id="pw"><span class="pw-ring" aria-hidden="true"></span><span>ВКЛЮЧИТЬ</span></button>
       <p class="pw-hint">Звук включится вместе с машиной. Выключить можно в верхней панели.</p>
-      <a class="pw-hint pw-back" href="../../#subject/inf">‹ назад в «Рамки»</a>
+      <a class="pw-hint pw-back" href="../../#spiral/inf">‹ назад в «Рамки»</a>
     </div>`;
   }
   return `<div class="boot" data-a="bootskip">

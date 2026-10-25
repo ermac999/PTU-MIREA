@@ -10,6 +10,7 @@ import { daysBetween, esc, plural, relDays } from '../util.js';
 import { icon } from '../ui.js';
 import { MODULES } from '../modules.js';
 import { ARTIFACTS, artifactsIn } from '../portal.js';
+import { GAME_TITLE, WORLDS, gameTotals } from '../game.js';
 import { eventTitle, today, upcoming } from './shared.js';
 
 const tile = (to, ic, title, sub) => `<button class="tile" type="button" data-act="go" data-to="${to}">
@@ -85,6 +86,11 @@ export function renderHome() {
     </div>
     <section class="sc-below">
       <div class="tiles">
+        <button class="tile wide" type="button" data-act="go" data-to="spiral">
+          <span class="tile-ic">${icon('target')}</span>
+          <span class="tile-t">${esc(GAME_TITLE)}</span>
+          <span class="tile-m">Игра семестра: ${gameTotals().stars} ★ · ${esc(gameTotals().rank)} · миров ${WORLDS.length}</span>
+        </button>
         ${tile('calendar', 'calendar', 'Календарь', next ? `${eventTitle(next)} · ${relDays(t, next.date)}` : 'Дедлайнов не видно')}
         ${tile('topics', 'topics', 'Предметы', `${subjects.length} ${plural(subjects.length, 'предмет', 'предмета', 'предметов')}${behind ? ` · догоняю ${behind}` : ''} · игр ${MODULES.length}`)}
         ${tile('fun', 'game', 'Развлечения', 'Шахматы и КС')}
@@ -95,7 +101,7 @@ export function renderHome() {
 
 /* Пылинки в лучах: живут, пока на экране есть холст; переживают перерисовку экрана. */
 let dustRaf = 0;
-function startDust() {
+export function startDust() {
   if (dustRaf || reduced()) return;
   const parts = Array.from({ length: 42 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.6, s: 0.012 + Math.random() * 0.03, a: 0.2 + Math.random() * 0.55, ph: Math.random() * 6.28 }));
   let last = 0;

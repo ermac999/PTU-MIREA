@@ -141,7 +141,7 @@ export function renderSubject([id]) {
       <h1 class="display m">${esc(s.short)}</h1>
     </header>
     ${catchUpLine(st, s)}
-    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${mods.map((m) => moduleCard(m)).join('')}</section>` : ''}
+    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2><button class="btn quiet small" type="button" data-act="go" data-to="spiral/${esc(id)}">В «Спираль» →</button></div>${mods.map((m) => moduleCard(m)).join('')}</section>` : ''}
     <section>
       <div class="sec-row"><h2 class="sec">Темы</h2>${ts.length ? `<span class="small muted">закрыто ${ts.filter(isClosedTopic).length} из ${ts.length}</span>` : ''}</div>
       ${ts.length ? `<ul class="list">${ts.map((t) => topicRow(t, tasks)).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}

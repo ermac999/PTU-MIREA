@@ -1,13 +1,13 @@
 /* Service worker: приложение открывается и работает без интернета (в электричке).
    При обновлении сайта поменяйте VERSION — старый кэш удалится. */
 
-const VERSION = 'ramki-v17';
+const VERSION = 'ramki-v18';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/schedule.js', 'js/planner.js', 'js/practice.js',
-  'js/parse.js', 'js/ics.js', 'js/store.js', 'js/ui.js', 'js/nav.js', 'js/bank.js', 'js/theory.js', 'js/modules.js', 'js/portal.js',
+  'js/parse.js', 'js/ics.js', 'js/store.js', 'js/ui.js', 'js/nav.js', 'js/bank.js', 'js/theory.js', 'js/modules.js', 'js/portal.js', 'js/game.js',
   'js/views/shared.js', 'js/views/calendar.js', 'js/views/events.js', 'js/views/day.js',
-  'js/views/today.js', 'js/views/topics.js', 'js/views/settings.js', 'js/views/home.js',
+  'js/views/today.js', 'js/views/topics.js', 'js/views/settings.js', 'js/views/home.js', 'js/views/game.js',
   'data/bank.json', 'data/theory.json',
   'modules/kinematics/index.html', 'modules/kinematics/seed.json', 'modules/bits/index.html', 'modules/bits/seed.json',
   'fonts/playfair-display-cyrillic-400-normal.woff2', 'fonts/playfair-display-latin-400-normal.woff2',

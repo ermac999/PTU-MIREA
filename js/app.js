@@ -15,6 +15,7 @@ import { daysBetween, esc, humanDate, minutesNow, plural } from './util.js';
 import { blockActionHandlers, ensureTodayPlan, today } from './views/shared.js';
 import { calendarActions, renderCalendar } from './views/calendar.js';
 import { mountHome, renderFun, renderHome, renderProjects } from './views/home.js';
+import { mountSpiral, renderSpiral } from './views/game.js';
 import { eventActions } from './views/events.js';
 import { dayActions, renderDay } from './views/day.js';
 import { ensureTicker, paintTimer, renderBurning, renderToday, todayActions } from './views/today.js';
@@ -28,6 +29,7 @@ import {
 const ROUTES = {
   home: { tab: 'home', title: 'Главная', render: renderHome, mount: mountHome },
   fun: { tab: 'home', title: 'Развлечения', render: renderFun },
+  spiral: { tab: 'home', title: 'Спираль', render: renderSpiral, mount: mountSpiral },
   projects: { tab: 'home', title: 'Проекты', render: renderProjects },
   calendar: { tab: 'calendar', title: 'Календарь', render: renderCalendar },
   day: { tab: 'calendar', title: 'День', render: renderDay, scrollToNow: true },
