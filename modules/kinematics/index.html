@@ -1,8 +1,6 @@
 <!doctype html><html lang="ru"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Кинематика на зачёт</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Unbounded:wght@600;800&display=swap">
+<script>/* тема и движение — как в «Рамках» */try{const s=JSON.parse(localStorage.getItem('ramki.v1')||'{}').settings||{};const r=document.documentElement;if(s.theme==='light'||s.theme==='dark')r.dataset.theme=s.theme;if(s.motion==='none')r.dataset.motion='none';}catch(e){}</script>
 <style>
 /* Layout: одна колонка-«тетрадь» на миллиметровке, как в конспектах; карта уровней — вертикальная ось с точками-станциями; ошибки помечены «красной ручкой» */
 :root{
@@ -231,6 +229,141 @@ details.theory li::before{content:"";position:absolute;left:4px;top:.6em;width:7
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* =====================================================================
+   Стиль «Спирали»: мир «Физика · Траектории». Дымка с лучами и пылью,
+   стекло, тонкий шрифт, большая мягкая цифра звёзд и мяч на параболе.
+   Тема — как в «Рамках» (data-theme) или как у iPhone.
+   ===================================================================== */
+:root{
+  --paper:#eef3f8;--card:#ffffff;--card-2:#e3ecf6;--ink:#132232;--ink-2:#566577;--line:#d2dce7;
+  --accent:#2f7fcf;--on-accent:#fff;--pen:#c4473a;--on-pen:#fff;--ok:#1f8a5a;--hi:#f5c542;--on-hi:#3a2c00;
+  --grid-2:rgba(47,127,207,.28);--shade:rgba(10,20,30,.32);
+  --glass:rgba(255,255,255,.62);--glass-strong:rgba(250,252,254,.9);--glass-line:rgba(255,255,255,.85);
+  --soft-shadow:0 12px 32px rgba(20,35,55,.09),0 2px 6px rgba(20,35,55,.05);
+  --bg-top:#cbd5e0;--bg-mid:#e1e7ee;--bg-low:#f2f5f8;--ray:rgba(255,255,255,.55);--halo:rgba(255,255,255,.95);--dust:#ffffff;--num:#ffffff;--num-shadow:rgba(30,60,100,.16);
+  --display:-apple-system,"SF Pro Display",BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --hand:var(--display);--r:20px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0a121b;--card:#13202d;--card-2:#1b2b3b;--ink:#e6eef6;--ink-2:#93a4b5;--line:#26384a;
+  --accent:#5aa9e6;--on-accent:#06121d;--pen:#ff7d6e;--on-pen:#240a06;--ok:#4fd18b;--hi:#ffd54f;--on-hi:#2e2400;
+  --grid-2:rgba(90,169,230,.3);--shade:rgba(0,0,0,.55);
+  --glass:rgba(24,36,50,.58);--glass-strong:rgba(15,24,34,.92);--glass-line:rgba(255,255,255,.06);
+  --soft-shadow:0 14px 36px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --bg-top:#03060a;--bg-mid:#0a1119;--bg-low:#101821;--ray:rgba(140,190,240,.08);--halo:rgba(120,180,240,.18);--dust:#bcd6f0;--num:#dfe9f3;--num-shadow:rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0a121b;--card:#13202d;--card-2:#1b2b3b;--ink:#e6eef6;--ink-2:#93a4b5;--line:#26384a;
+  --accent:#5aa9e6;--on-accent:#06121d;--pen:#ff7d6e;--on-pen:#240a06;--ok:#4fd18b;--hi:#ffd54f;--on-hi:#2e2400;
+  --grid-2:rgba(90,169,230,.3);--shade:rgba(0,0,0,.55);
+  --glass:rgba(24,36,50,.58);--glass-strong:rgba(15,24,34,.92);--glass-line:rgba(255,255,255,.06);
+  --soft-shadow:0 14px 36px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3);
+  --bg-top:#03060a;--bg-mid:#0a1119;--bg-low:#101821;--ray:rgba(140,190,240,.08);--halo:rgba(120,180,240,.18);--dust:#bcd6f0;--num:#dfe9f3;--num-shadow:rgba(0,0,0,.6);color-scheme:dark}
+
+/* фон: дымка, лучи, пыль */
+html{background:linear-gradient(180deg,var(--bg-top) 0,var(--bg-mid) 380px,var(--bg-low) 820px) var(--bg-low) no-repeat;min-height:100%}
+body{background:transparent;background-image:none}
+body::before{content:"";display:block;position:fixed;left:50%;top:-14vh;bottom:auto;width:170vw;max-width:1400px;height:72vh;z-index:-2;pointer-events:none;transform:translateX(-50%);
+  background:radial-gradient(ellipse 30% 55% at 50% 0%,var(--halo),transparent 72%),repeating-conic-gradient(from 160deg at 50% -8%,var(--ray) 0deg 1.2deg,transparent 1.2deg 5.5deg);
+  -webkit-mask:radial-gradient(ellipse 60% 100% at 50% 0%,#000 30%,transparent 75%);mask:radial-gradient(ellipse 60% 100% at 50% 0%,#000 30%,transparent 75%)}
+#kdust{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;color:var(--dust)}
+.spark{position:fixed;inset:0;width:100%;height:100%;z-index:70;pointer-events:none}
+
+/* поверхности */
+.top{background:var(--glass-strong);border-bottom:1px solid var(--glass-line);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.brand{font-weight:600;letter-spacing:-.01em}
+.icon-btn{border:1px solid var(--glass-line);background:var(--glass);border-radius:999px;box-shadow:var(--soft-shadow)}
+.stotal{box-shadow:0 4px 14px color-mix(in srgb,var(--hi) 40%,transparent)}
+.tabbar{padding-bottom:12px}
+.tab{border:1px solid var(--glass-line);background:var(--glass);border-radius:999px;font-weight:600;letter-spacing:.02em;transition:background .25s,color .25s}
+.tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent)}
+.hero,.card,.lv,.weak,.panel,.fb{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.hero,.card,.lv,.weak{border-radius:var(--r)}
+.panel{background:var(--glass-strong);border-radius:24px}
+.btn{border-radius:999px;transition:transform .15s ease,box-shadow .25s ease,background .25s}
+.btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 82%,#fff),var(--accent));box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 38%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.primary:hover:not([disabled]){box-shadow:0 10px 28px color-mix(in srgb,var(--accent) 50%,transparent),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.ghost{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow)}
+.btn.warn{box-shadow:0 8px 22px color-mix(in srgb,var(--pen) 30%,transparent)}
+.opt,.mi,.chipbtn,.seg button,.numrow input{background:var(--glass)}
+.opt,.mi,.numrow input{border:1.5px solid var(--line);border-radius:16px;transition:border-color .2s,background .2s,transform .15s}
+.opt:active:not([disabled]),.mi:active{transform:scale(.99)}
+.opt.yes{background:color-mix(in srgb,var(--ok) 12%,var(--glass))}
+.opt.no{background:color-mix(in srgb,var(--pen) 8%,var(--glass))}
+.seg{border:1.5px solid var(--line);border-radius:16px}
+.fm{background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:8px}
+.bar{height:6px;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.bar i{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 60%,#fff),var(--accent));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 50%,transparent)}
+.ruler i{background:color-mix(in srgb,var(--ink) 7%,transparent);border-color:transparent;border-radius:99px}
+.ruler i.done,.ruler .rs{border-radius:99px}
+.ruler i.cur{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+
+/* шрифты: тонкий дисплейный */
+.hero h1,.chapter h2,.lvhead h1,.res h2,.panel h2{font-weight:300;letter-spacing:-.02em}
+.hero h1{font-size:clamp(26px,7vw,36px)}
+.chapter h2{font-size:28px;margin:2px 0 10px}
+.lvhead h1{font-size:clamp(24px,6vw,30px)}
+.eyebrow{font-family:var(--body);font-weight:500;letter-spacing:.2em;font-size:10.5px}
+.intro .big,details.theory .big{font-weight:600;letter-spacing:-.01em}
+.intro .big{padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--accent) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);text-align:center}
+.intro li::before,details.theory li::before{border-radius:50%}
+.weak{border-left:3px solid var(--pen)}
+.weak h3,.pen-t{font-weight:300;font-size:24px;letter-spacing:-.01em}
+.mist{font-family:var(--body)}
+
+/* сцена карты: большая мягкая цифра и мяч на параболе */
+.hero.kscene{position:relative;overflow:hidden;padding-top:8px;gap:10px}
+.kscene .kstage{position:relative;height:190px;margin:0 -20px}
+.kscene .traj{position:absolute;left:0;right:0;bottom:6px;width:100%;height:150px;overflow:visible}
+.traj-p{fill:none;stroke:var(--grid-2);stroke-width:2;stroke-dasharray:3 7;stroke-linecap:round}
+.traj-g{stroke:color-mix(in srgb,var(--ink) 10%,transparent);stroke-width:1.5}
+.traj-b{fill:var(--accent);filter:drop-shadow(0 0 6px var(--accent))}
+.knum{position:absolute;left:50%;top:0;width:min(62vw,280px);height:auto;transform:translateX(-50%);overflow:visible;filter:drop-shadow(0 22px 18px var(--num-shadow));animation:float 7s ease-in-out infinite alternate}
+.knum text{font-family:var(--body);font-weight:300;font-size:270px;letter-spacing:-6px;fill:var(--num);stroke:var(--num);stroke-width:26px;stroke-linejoin:round;paint-order:stroke}
+.kcap{margin:-4px 0 0;text-align:center;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2)}
+@keyframes float{to{transform:translate(-50%,-8px)}}
+
+/* карта уровней: орбиты-станции */
+.axis::before{left:25px;width:2px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 45%,transparent),color-mix(in srgb,var(--accent) 12%,transparent))}
+.node{border:1px solid var(--glass-line);background:var(--glass);box-shadow:var(--soft-shadow);font-family:var(--body);font-weight:600;font-size:13px}
+.st.done .node{border:0;color:var(--on-accent);font-weight:700;background:radial-gradient(circle at 30% 26%,rgba(255,255,255,.7) 0,transparent 34%),radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--accent) 80%,#fff),var(--accent) 75%);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 14%,transparent),0 6px 16px color-mix(in srgb,var(--accent) 40%,transparent)}
+.st.now .node{border:2px solid var(--accent);background:var(--glass);color:var(--accent);box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent);animation:ping 2.2s ease-out infinite}
+@keyframes ping{70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.lv{transition:transform .2s ease,border-color .2s,box-shadow .2s}
+.lv:hover:not([disabled]){transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.st.now .lv{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.lv-t{font-weight:500}
+
+/* ответы */
+.fb.ok{border:1.5px solid var(--ok);background:color-mix(in srgb,var(--ok) 8%,var(--glass));animation:okglow .9s ease-out}
+.fb.no{border:1.5px solid color-mix(in srgb,var(--pen) 70%,transparent);background:color-mix(in srgb,var(--pen) 6%,var(--glass));animation:shake .35s}
+.fb.hint,.fb.warn{border:1px solid var(--glass-line);background:var(--glass)}
+@keyframes okglow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 45%,transparent)}to{box-shadow:0 0 0 14px transparent}}
+
+/* итог: оценка в светящемся кольце */
+.mark{position:relative;font-family:var(--display);font-weight:200;font-size:96px;color:var(--ink);width:150px;height:150px;border:0;transform:none;
+  background:radial-gradient(circle at 50% 42%,var(--glass),transparent 70%);animation:markin .7s cubic-bezier(.2,.8,.2,1) both}
+.mark::before{content:"";position:absolute;inset:0;border-radius:50%;padding:3px;background:conic-gradient(from 0deg,var(--accent),var(--hi),var(--ok),var(--accent));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);animation:spin 8s linear infinite}
+.mark::after{content:"";position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%);z-index:-1}
+@keyframes spin{to{transform:rotate(1turn)}}
+@keyframes markin{from{opacity:0;transform:scale(.7);filter:blur(8px)}}
+.stars.big .star.on{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--hi) 70%,transparent))}
+
+/* переход между экранами: всплытие из дымки */
+.wrap.enter>*{animation:enter .5s cubic-bezier(.2,.7,.2,1) both}
+.wrap.enter>*:nth-child(2){animation-delay:.06s}
+.wrap.enter>*:nth-child(3){animation-delay:.12s}
+.wrap.enter>*:nth-child(n+4){animation-delay:.18s}
+@keyframes enter{from{opacity:0;transform:translateY(12px);filter:blur(6px)}}
+.toast{background:var(--glass-strong);color:var(--ink);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:999px}
+.danger{border:1px solid color-mix(in srgb,var(--pen) 55%,transparent);border-radius:16px}
+
+@media (prefers-reduced-motion:reduce){.traj-b{display:none}}
+:root[data-motion="none"] .traj-b{display:none}
+:root[data-motion="none"] *,:root[data-motion="none"] *::before,:root[data-motion="none"] *::after{animation:none!important;transition:none!important}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
@@ -242,7 +375,7 @@ details.theory li::before{content:"";position:absolute;left:4px;top:.6em;width:7
 </defs></svg>
 
 <header class="top"><div class="in">
-  <a class="icon-btn home" href="../../#spiral/phys" aria-label="Назад в «Рамки»"><svg viewBox="0 0 24 24" aria-hidden="true" class="f-none s-ink" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <a class="icon-btn home" href="../../#spiral/phys" aria-label="Назад в «Спираль»"><svg viewBox="0 0 24 24" aria-hidden="true" class="f-none s-ink" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
   <div class="brand"><svg viewBox="0 0 30 22" aria-hidden="true"><path d="M2 20 Q15 -6 28 20" class="f-none s-acc" stroke-width="2.5" stroke-dasharray="3 3"/><circle cx="21" cy="9" r="3.5" class="f-pen"/></svg><b>Кинематика на зачёт</b></div>
   <div class="save" id="save" data-s="local" title="Сохранено на этом устройстве"><i></i><span>На устройстве</span></div>
   <div class="stotal" id="stotal" aria-label="Звёзды">0/48</div>
@@ -250,6 +383,7 @@ details.theory li::before{content:"";position:absolute;left:4px;top:.6em;width:7
 </div>
 <div class="tabbar" role="group" aria-label="Разделы"><button class="tab" data-act="tab" data-tab="levels" aria-pressed="true">Уровни</button><button class="tab" data-act="tab" data-tab="drill" aria-pressed="false">Нарешка</button></div>
 </header>
+<canvas id="kdust" aria-hidden="true"></canvas>
 <main class="wrap" id="main"></main>
 <div id="overlay"></div>
 <script>
@@ -764,12 +898,20 @@ function renderMap() {
   else { h1 = stars === MAXSTARS ? 'Кинематика сдана на «5»' : 'Всё пройдено'; p = stars === MAXSTARS ? `Все ${MAXSTARS} звёзд собраны.` : `Можно добрать звёзды: осталось ${MAXSTARS - stars}. Уровни с одной звездой отмечены «повторить».`; btn = null; }
   const pct = Math.round(done / LEVELS.length * 100);
   const chapters = [['Часть 1', 'Школа', 0, 7], ['Часть 2', 'Вуз', 8, 14], ['Финал', 'Контрольная', 15, 15]];
-  main.innerHTML = `<section class="hero"><p class="eyebrow">Кинематика · ${LEVELS.length} уровней</p><h1>${esc(h1)}</h1><p>${p}</p>
+  main.innerHTML = `<section class="hero kscene">${sceneHTML(stars, done)}<p class="eyebrow">Кинематика · ${LEVELS.length} уровней</p><h1>${esc(h1)}</h1><p>${p}</p>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${LEVELS.length}" aria-valuenow="${done}" aria-label="Пройдено уровней"><i style="width:${pct}%"></i></div>
     <div class="meta"><span>пройдено ${done} из ${LEVELS.length}</span><span>звёзд ${stars} из ${MAXSTARS}</span></div>
     ${btn ? `<div class="actions"><button class="btn primary" data-act="continue">${btn}</button></div>` : ''}</section>
     ${weakHTML()}
     ${chapters.map(([e, tt, a, b]) => `<section class="chapter"><p class="eyebrow">${e}</p><h2>${tt}</h2><ol class="track">${LEVELS.slice(a, b + 1).map((L, k) => rowHTML(a + k)).join('')}</ol></section>`).join('')}`;
+}
+// Сцена: большая мягкая цифра звёзд и мяч, летящий по параболе (медленнее у вершины — как в жизни)
+function sceneHTML(stars, done) {
+  return `<div class="kstage" aria-hidden="true"><svg class="traj" viewBox="0 0 400 150" preserveAspectRatio="xMidYMax meet">
+      <line x1="0" y1="146" x2="400" y2="146" class="traj-g"/><path id="kpath" d="M24 146 Q200 -40 376 146" class="traj-p"/>
+      <circle r="6" class="traj-b"><animateMotion dur="3.4s" repeatCount="indefinite" calcMode="spline" keyPoints="0;0.5;1" keyTimes="0;0.5;1" keySplines="0.2 0.6 0.5 1;0.5 0 0.8 0.4"><mpath href="#kpath"/></animateMotion></circle>
+    </svg><svg class="knum" viewBox="0 0 600 300"><text x="300" y="235" text-anchor="middle">${stars}</text></svg></div>
+    <p class="kcap">звёзд из ${MAXSTARS} · уровней ${done} из ${LEVELS.length}</p>`;
 }
 function rowHTML(i) {
   const L = LEVELS[i], st = lvStars(i), lock = !unlocked(i), inprog = !!(P.current && P.current.id === L.id);
@@ -943,6 +1085,7 @@ function finish() {
   P.current = null; save();
   lastResult = { li: run.li, stars, m, weak: Object.keys(run.miss).map(k => +k.split('.')[1]).sort((a, b) => a - b) };
   view = 'result'; render(); toTop();
+  sparkle($('.mark'), 20 + stars * 25);
 }
 function renderResult() {
   const r = lastResult, L = LEVELS[r.li], mark = { 3: '5', 2: '4', 1: '3' }[r.stars], boss = r.li === LAST;
@@ -975,6 +1118,45 @@ function doReset() {
   sheet = null; renderSheet(); view = 'map'; run = null; ts = null; lastResult = null; busy = false; peek = null; lvSaved = null; DR.ts = null; DR.view = 'home'; render(); toTop();
   toast('Прогресс сброшен. Начинаем с первого уровня.');
 }
+// Салют из искр после уровня: искры разлетаются и падают с ускорением g
+function sparkle(el, n) {
+  if (!el || REDUCED || document.documentElement.dataset.motion === 'none') return;
+  const r = el.getBoundingClientRect(), c = document.createElement('canvas'), dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+  c.className = 'spark'; c.width = W * dpr; c.height = H * dpr; document.body.appendChild(c);
+  const g = c.getContext('2d'); g.scale(dpr, dpr);
+  const cs = getComputedStyle(document.documentElement), cols = ['--hi', '--accent', '--ok'].map(v => cs.getPropertyValue(v).trim() || '#fff');
+  const ps = Array.from({ length: n }, () => { const a = Math.random() * 6.283, v = 2 + Math.random() * 5; return { x: r.left + r.width / 2, y: r.top + r.height / 2, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 2.5, s: 1.5 + Math.random() * 2.5, c: pick(cols) }; });
+  const t0 = performance.now();
+  const f = now => {
+    const t = (now - t0) / 1500; g.clearRect(0, 0, W, H);
+    if (t >= 1) { c.remove(); return; }
+    for (const q of ps) { q.x += q.vx; q.y += q.vy; q.vy += 0.13; q.vx *= 0.985; g.globalAlpha = 1 - t * t; g.fillStyle = q.c; g.beginPath(); g.arc(q.x, q.y, q.s, 0, 6.283); g.fill(); }
+    requestAnimationFrame(f);
+  };
+  requestAnimationFrame(f);
+}
+// Пылинки в лучах света на фоне
+function startDust() {
+  const c = $('#kdust');
+  if (!c || REDUCED || document.documentElement.dataset.motion === 'none') return;
+  const parts = Array.from({ length: 34 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.5, s: 0.008 + Math.random() * 0.02, a: 0.15 + Math.random() * 0.45, ph: Math.random() * 6.28 }));
+  let last = 0, color = '#fff';
+  const tick = now => {
+    if (document.hidden) { last = 0; requestAnimationFrame(tick); return; }
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0; last = now;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); color = getComputedStyle(c).color; }
+    const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h); g.fillStyle = color;
+    for (const q of parts) {
+      q.y -= q.s * dt; q.x += Math.sin(now / 3000 + q.ph) * 0.004 * dt;
+      if (q.y < -0.02) { q.y = 1.02; q.x = Math.random(); }
+      g.globalAlpha = q.a * (0.6 + 0.4 * Math.sin(now / 1200 + q.ph)) * Math.max(0, 1 - q.y * 0.9);
+      g.beginPath(); g.arc(q.x * w, q.y * h, q.r, 0, 6.283); g.fill();
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
 function toast(msg) { const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.textContent = msg; document.body.appendChild(d); setTimeout(() => d.remove(), 2800); }
 
 // ===== отрисовка и события =====
@@ -984,7 +1166,15 @@ function updateTop() {
   el.setAttribute('aria-label', `Звёзд: ${totalStars()} из ${MAXSTARS}`);
   setSave(SYNC.state);
 }
+// Новый экран всплывает из дымки; перерисовка того же экрана (ответ, подсказка) — без анимации
+let screenKey = '';
+function enterIfNew() {
+  const k = tab === 'drill' ? `d:${DR.view}:${DR.tli}` : `${view}:${run ? `${run.li}:${run.ti}` : ''}:${peek}`;
+  if (k === screenKey) return;
+  screenKey = k; main.classList.remove('enter'); void main.offsetWidth; main.classList.add('enter');
+}
 function render() {
+  queueMicrotask(enterIfNew);
   document.querySelectorAll('[data-act="tab"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
   if (tab === 'drill') { renderDrill(); updateTop(); return; }
   if (view === 'intro' && run) renderIntro();
@@ -1767,6 +1957,7 @@ function goLaunch(t) {
 
 // ===== запуск =====
 render();
+startDust();
 initSync();
 try { if (window.claude && window.claude.hot && typeof window.claude.hot.snapshot === 'function') window.claude.hot.snapshot(() => (tab === 'levels' && peek === null ? { view, run, ts: view === 'task' ? ts : null, lastResult } : { view: 'map' })); } catch (e) {}
 try {
