@@ -97,7 +97,7 @@ export const PLACE_LABEL = { train: 'электричка', home: 'дома', am
 const BLOCK_LABEL = {
   sleep: 'Сон', morning: 'Утро', commute: 'Дорога', class: 'Пара', break: 'Перерыв', meal: 'Еда',
   transfer: 'Дорога', ride: 'Дорога', study: 'Учёба', review: 'Повторение', plan: 'План',
-  game: 'Отдых', habit: 'Привычка', nap: 'Сон днём', free: 'Свободно',
+  game: 'Отдых', habit: 'Привычка', nap: 'Сон днём', free: 'Свободно', gym: 'Тренировка',
 };
 const MARKABLE = new Set(['study', 'habit', 'review', 'plan']);
 
@@ -140,7 +140,7 @@ export function eventRow(ev, extra = '') {
 /* ---------- Лента дня ---------- */
 
 function blockClass(b) {
-  if (b.fixed) return b.type === 'sleep' ? 'g sleep' : 'g';
+  if (b.fixed) return b.type === 'sleep' ? 'g sleep' : b.type === 'gym' ? 'habit' : 'g';
   if (b.type === 'study') return b.place === 'train' || b.place === 'am' ? 'train' : 'study';
   return { review: 'review', plan: 'plan', game: 'game', habit: 'habit', nap: 'nap', free: 'free', ride: 'ride', break: 'break' }[b.type] || 'g';
 }

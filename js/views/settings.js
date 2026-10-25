@@ -55,7 +55,7 @@ export function renderSettings() {
 
     <section><div class="sec-row"><h2 class="sec">Контроль</h2></div><ul class="list">
       ${row('set-control', 'Строгость и договорённость', `${{ soft: 'мягко', medium: 'средне', strict: 'строго' }[s.strictness]}${s.agreement ? ' · утром договорились, вечером отчёт' : ''}`)}
-      ${row('set-habits', 'Игра и привычки', `${s.gameMinutes ? `Counter-Strike ${s.gameMinutes} мин после учёбы` : 'без игры'}${s.duolingo ? ' · Duolingo' : ''}${s.sport ? ' · зарядка' : ''}`)}
+      ${row('set-habits', 'Игра и привычки', `${s.gameMinutes ? `Counter-Strike ${s.gameMinutes} мин после учёбы` : 'без игры'}${s.duolingo ? ' · Duolingo' : ''}${s.sport ? ' · зарядка' : ''}${s.gym ? ' · зал' : ''}`)}
       ${row('set-reminders', 'Напоминания', 'Календарь iPhone (.ics) — сейчас; Telegram-бот — второй этап')}
     </ul></section>
 
@@ -433,13 +433,23 @@ function openHabits() {
       <p class="small muted" style="margin:0">Игра всегда заканчивается за ${CONFIG.game.endBeforeSleepMin} минут до отбоя. Если вечер короткий — игры нет, сон важнее.</p>
       ${switchBtn('duo', 'Немецкий в Duolingo — 15 минут в электричке', s.duolingo)}
       ${switchBtn('sport', 'Зарядка 15 минут — вт, ср, сб, вс', s.sport)}
+      ${switchBtn('gym', 'Зал — дорога и тренировка около 2,5 ч', s.gym)}
+      <div class="field"><span class="eyebrow">Дни зала — после пар, вечер должен остаться</span>
+        <div class="tchips" id="gym-days">${[[1, 'пн'], [2, 'вт'], [3, 'ср'], [4, 'чт'], [5, 'пт'], [6, 'сб']].map(([d, n]) => `<button class="tchip" type="button" data-day="${d}" aria-pressed="${(s.gymDays || []).includes(d)}">${n}</button>`).join('')}</div></div>
+      <p class="small muted" style="margin:0">Если после зала до отбоя меньше 2,5 ч — в этот день зала в плане не будет: сон и вечер важнее. Пн, чт и пт обычно так и выходят.</p>
       ${switchBtn('sunday', 'Воскресенье по необходимости — 2 ч учёбы', s.sundayExtra)}
       ${switchBtn('pause', 'Пауза поддержки слабых предметов', s.pauseMaintenance)}
       <button class="btn block" type="button" id="hb-save">Сохранить</button>`,
     onMount: (body) => {
       wireControls(body);
+      body.querySelector('#gym-days').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-day]');
+        if (b) b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+      });
       body.querySelector('#hb-save').addEventListener('click', () => {
         commit((st) => {
+          st.settings.gym = switchValue(body, 'gym');
+          st.settings.gymDays = [...body.querySelectorAll('#gym-days [aria-pressed="true"]')].map((b) => Number(b.dataset.day));
           st.settings.gameMinutes = Number(segValue(body, 'game') ?? 75);
           st.settings.duolingo = switchValue(body, 'duo');
           st.settings.sport = switchValue(body, 'sport');

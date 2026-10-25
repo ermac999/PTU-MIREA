@@ -532,7 +532,7 @@ function layoutHome(state, info, w, start, items, ctx, mk, ef, flags) {
     t += CONFIG.napMin;
   }
   // Зарядка в дни с длинным вечером, если есть силы.
-  if (flags.fresh && state.settings.sport && CONFIG.habits.sportDays.includes(info.wd) && ef >= 1 && bed - t >= 150) {
+  if (flags.fresh && state.settings.sport && !info.gym && CONFIG.habits.sportDays.includes(info.wd) && ef >= 1 && bed - t >= 150) {
     out.push(mk('habit', t, t + CONFIG.habits.sportMin, { habit: 'sport', title: 'Зарядка', detail: '15 минут — разогнаться перед учёбой' }));
     t += CONFIG.habits.sportMin;
   }

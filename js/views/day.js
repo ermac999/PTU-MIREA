@@ -134,6 +134,7 @@ function openEdit(key) {
       ${!cur.classes.length || ov.study ? switchBtn('study', 'Учиться в этот выходной (до 2–3 ч после обеда)', !!ov.study) : ''}
       ${cur.classes.length || ov.morningStudy ? switchBtn('morningStudy', 'Учиться в утренней дороге', !!ov.morningStudy) : ''}
       ${switchBtn('noGame', 'Без игры в этот день', !!ov.noGame)}
+      ${st.settings.gym && (st.settings.gymDays || []).includes(cur.wd) ? switchBtn('noGym', 'Сегодня без зала', !!ov.noGym) : ''}
       <div class="row">
         <button class="btn" type="button" id="de-save">Сохранить</button>
         <button class="btn ghost" type="button" id="de-reset">Как в шаблоне</button>
@@ -163,7 +164,7 @@ function openEdit(key) {
           else delete o[f];
         }
         delete o.homeShift; // точное время «дома в» важнее сдвига
-        for (const sw of ['noClasses', 'morningStudy', 'noGame', 'study']) {
+        for (const sw of ['noClasses', 'morningStudy', 'noGame', 'study', 'noGym']) {
           if (switchValue(body, sw)) o[sw] = true;
           else delete o[sw];
         }

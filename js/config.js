@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 11,
-  noteVersion: 9,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 12,
+  noteVersion: 10,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -63,6 +63,12 @@ export const CONFIG = {
     duolingoMin: 15,           // немецкий в Duolingo — в электричке
     sportMin: 15,              // зарядка / спорт
     sportDays: [2, 3, 6, 0],   // вт, ср, сб, вс — дни с длинным вечером
+  },
+
+  /* ---------- Зал ---------- */
+  gym: {
+    minutes: 150,              // дорога (~1 ч) + тренировка (~1,5 ч), сразу после прихода домой с пар
+    minEveningLeftMin: 150,    // если после зала до отбоя меньше — в этот день зала нет, сон и вечер важнее
   },
 
   /* ---------- Подготовка к событиям ---------- */
@@ -248,6 +254,8 @@ export const DEFAULT_DATA = {
     gameMinutes: CONFIG.game.minutes,
     duolingo: true,
     sport: true,
+    gym: true,                   // зал: дни — gymDays
+    gymDays: [3, 6],             // ср и сб — самые свободные вечера (дом 15:30)
     sundayExtra: false,
     pauseMaintenance: false,
     quiet: { classes: true, game: true, morningTrain: true },
@@ -256,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 9,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 10,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */

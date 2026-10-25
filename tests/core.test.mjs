@@ -258,6 +258,7 @@ test('воскресенье 18.10: до обеда информатика (КР
 
 test('слабый предмет (информатика «с нуля»): подготовка к КР — по порядку, а не «реши без подсказок»; сильный — как раньше', () => {
   const st = defaultState();
+  st.settings.gym = false; // тест про формулировки в неделе КР — зал вечер не занимает
   const sim = simulate(st, TODAY, 7 * 60, 7);
   const blocks = Object.values(sim.plans).flatMap((p) => p.blocks).filter((b) => b.type === 'study' && !b.catchUp && !b.maint);
   const inf = blocks.filter((b) => b.eventId === 'ev-inf-kr');
@@ -272,6 +273,7 @@ test('слабый предмет (информатика «с нуля»): по
   // уровень предмета поменяли на 4 — тексты как у остальных
   const strong = defaultState();
   strong.subjects.find((s) => s.id === 'inf').level = 4;
+  strong.settings.gym = false;
   const sbs = Object.values(simulate(strong, TODAY, 7 * 60, 7).plans).flatMap((p) => p.blocks).filter((b) => b.eventId === 'ev-inf-kr');
   assert.ok(sbs.length);
   for (const b of sbs) assert.ok(!/первую практику|первой темы/.test(b.first) && !/с нуля/.test(b.title), `сильный предмет: «${b.first}»`);

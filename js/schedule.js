@@ -151,7 +151,15 @@ export function daySkeleton(state, key) {
     const trainStart = Math.max(info.classEnd, info.home - CONFIG.trainMin);
     push('transfer', info.classEnd, trainStart, { title: 'Обед и дорога до электрички', id: `${key}:transfer` });
     windows.push({ id: 'train', kind: 'train', start: trainStart, end: info.home });
-    windows.push({ id: 'home', kind: 'home', start: info.home, end: info.bed });
+    // Зал: сразу после прихода домой; нет, если вечер после него слишком короткий (сон важнее)
+    const gymEnd = info.home + CONFIG.gym.minutes;
+    const gymOn = state.settings?.gym && (state.settings.gymDays || []).includes(info.wd) && !info.ov?.noGym
+      && info.bed - gymEnd >= CONFIG.gym.minEveningLeftMin;
+    if (gymOn) {
+      push('gym', info.home, gymEnd, { title: 'Зал', detail: 'Дорога и тренировка, около 2,5 ч. Ужин — после', id: `${key}:gym` });
+      info.gym = true;
+    }
+    windows.push({ id: 'home', kind: 'home', start: gymOn ? gymEnd : info.home, end: info.bed });
   } else {
     windows.push({ id: 'rest', kind: 'rest', start: info.wake, end: info.bed });
   }

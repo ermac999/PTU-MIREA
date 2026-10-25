@@ -287,3 +287,43 @@ test('отработка: новые задачи из практик идут �
   assert.deepEqual(buildQueue(tasks, {}, 0), ['p1', 'p2', 'e1', 'e2']);
   assert.deepEqual(buildQueue(tasks, { e2: { seen: 1, correct: 0, wrong: 1, streak: 0, due: 0 } }, 1), ['e2', 'p1', 'p2', 'e1'], 'ошибки, которым пора, — всё равно первыми');
 });
+
+test('зал: среда и суббота сразу после пар, остальные дни — без зала, сон не страдает', () => {
+  const st = defaultState();
+  const days = { '2026-10-26': 1, '2026-10-27': 2, '2026-10-28': 3, '2026-10-29': 4, '2026-10-30': 5, '2026-10-31': 6, '2026-11-01': 0 };
+  const sim = simulate(st, '2026-10-26', 7 * 60, 7);
+  const gym = (k) => sim.plans[k].fixed.find((f) => f.type === 'gym');
+  for (const [k, wd] of Object.entries(days)) {
+    if (wd === 3 || wd === 6) {
+      const g = gym(k);
+      assert.ok(g, `${k}: зал есть`);
+      assert.equal(g.end - g.start, CONFIG.gym.minutes);
+      const info = sim.plans[k].info;
+      assert.equal(g.start, info.home, 'сразу после прихода домой');
+      assert.ok(info.bed - g.end >= CONFIG.gym.minEveningLeftMin, 'вечер после зала остаётся');
+      assert.ok(sim.plans[k].blocks.every((b) => b.start >= g.end || b.end <= g.start), 'учёба не пересекается с залом');
+      assert.ok(!sim.plans[k].blocks.some((b) => b.habit === 'sport'), 'зарядка в день зала не нужна');
+    } else assert.ok(!gym(k), `${k}: без зала`);
+  }
+  // свои дни и «сегодня без зала»
+  st.settings.gymDays = [1, 3];
+  assert.ok(simulate(st, '2026-10-26', 7 * 60, 1).plans['2026-10-26'].fixed.some((f) => f.type === 'gym') === false, 'пн: вечер слишком короткий, зала нет');
+  st.settings.gymDays = [3];
+  st.dayOverrides['2026-10-28'] = { noGym: true };
+  assert.ok(!simulate(st, '2026-10-26', 7 * 60, 3).plans['2026-10-28'].fixed.some((f) => f.type === 'gym'));
+  st.settings.gym = false;
+  st.dayOverrides = {};
+  assert.ok(!simulate(st, '2026-10-26', 7 * 60, 3).plans['2026-10-28'].fixed.some((f) => f.type === 'gym'), 'зал выключен в настройках');
+});
+
+test('обновление до версии 12: зал появляется у старых данных, заметка покажется', () => {
+  const v11 = defaultState();
+  v11.version = 11;
+  v11.settings.updateSeen = 9;
+  delete v11.settings.gym;
+  delete v11.settings.gymDays;
+  const m = migrate(JSON.parse(JSON.stringify(v11)));
+  assert.equal(m.settings.gym, true);
+  assert.deepEqual(m.settings.gymDays, [3, 6]);
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion);
+});
