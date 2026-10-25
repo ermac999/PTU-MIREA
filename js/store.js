@@ -73,6 +73,7 @@ export function migrate(raw) {
   if (from < 10) upgradeTo10(st);
   if (from < 11) upgradeTo11(st);
   if (from < 13) upgradeTo13(st);
+  if (from < 14) upgradeTo14(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -126,6 +127,18 @@ function upgradeTo3(st) {
     ev.note = evNew.note;
   }
   if (st.settings.sessionStart === '2026-12-01' && st.settings.sessionApprox !== false) st.settings.sessionStart = d.settings.sessionStart;
+}
+
+/** Версия 14 (25.10): сессия в начале января, а не 22 декабря. Если дату поправили сами — не трогаем. */
+function upgradeTo14(st) {
+  const d = DEFAULT_DATA;
+  const ev = st.events.find((e) => e.id === 'ev-session');
+  const evNew = d.events.find((e) => e.id === 'ev-session');
+  if (ev && ev.date === '2026-12-22' && !ev.confirmed) {
+    ev.date = evNew.date;
+    ev.title = evNew.title;
+  }
+  if (st.settings.sessionStart === '2026-12-22' && st.settings.sessionApprox !== false) st.settings.sessionStart = d.settings.sessionStart;
 }
 
 /** Версия 4 (17.10): историю растянули с 6 до 8 недель — сессия в конце декабря. Если срок меняли сами — не трогаем. */

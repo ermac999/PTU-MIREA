@@ -14,7 +14,7 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 13,
+  dataVersion: 14,
   noteVersion: 11,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
@@ -259,7 +259,7 @@ export const DEFAULT_DATA = {
     sundayExtra: false,
     pauseMaintenance: false,
     quiet: { classes: true, game: true, morningTrain: true },
-    sessionStart: '2026-12-22',
+    sessionStart: '2027-01-11',
     sessionApprox: true,
     lastBackupAt: null,
     backupSnoozeUntil: null,
@@ -336,7 +336,7 @@ export const DEFAULT_DATA = {
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab4', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2027-01-12', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
-    { id: 'ev-session', subject: null, type: 'session', title: 'Начало сессии (конец декабря, примерно)', date: '2026-12-22', time: null,
+    { id: 'ev-session', subject: null, type: 'session', title: 'Начало сессии (начало января, примерно)', date: '2027-01-11', time: null,
       format: '', phone: '?', confirmed: false, note: 'Сессия в конце декабря, точной даты нет — поменяй, когда узнаешь.' },
   ],
 

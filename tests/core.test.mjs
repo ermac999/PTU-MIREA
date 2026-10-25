@@ -584,17 +584,17 @@ test('копия: импорт проверяет файл и дополняет
   assert.deepEqual(m.done, {});
 });
 
-test('сессия — в конце декабря: у старых данных дата сдвигается, ручную правку не трогаем', () => {
-  assert.equal(defaultState().events.find((e) => e.id === 'ev-session').date, '2026-12-22');
-  assert.equal(defaultState().settings.sessionStart, '2026-12-22');
+test('сессия — в начале января: у старых данных дата сдвигается, ручную правку не трогаем', () => {
+  assert.equal(defaultState().events.find((e) => e.id === 'ev-session').date, '2027-01-11');
+  assert.equal(defaultState().settings.sessionStart, '2027-01-11');
   const old = defaultState();
   old.version = 2;
   const ev = old.events.find((e) => e.id === 'ev-session');
   ev.date = '2026-12-01';
   old.settings.sessionStart = '2026-12-01';
   const m = migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.events.find((e) => e.id === 'ev-session').date, '2026-12-22');
-  assert.equal(m.settings.sessionStart, '2026-12-22');
+  assert.equal(m.events.find((e) => e.id === 'ev-session').date, '2027-01-11');
+  assert.equal(m.settings.sessionStart, '2027-01-11');
   assert.equal(m.settings.updateSeen, old.settings.updateSeen, 'заметка «что нового» не повторяется');
   // дату поправили сами (например, на 25.12) — остаётся как есть
   const mine = JSON.parse(JSON.stringify(old));
@@ -718,4 +718,18 @@ test('обновление с версии 1: отставание, темы д�
   assert.ok(m2.topics.some((t) => t.id === 'hist-1' && t.note === 'мой конспект'));
   assert.equal(m2.topics.filter((t) => t.subject === 'hist').length, 32);
   assert.ok(simulate(m2, TODAY, 7 * 60, 7).plans['2026-10-18'].blocks.some((b) => b.eventId === 'ev-linal-kr'));
+});
+
+test('версия 14: сессия с 22 декабря переезжает на начало января, своя дата остаётся', () => {
+  const old = defaultState();
+  old.version = 13;
+  old.events.find((e) => e.id === 'ev-session').date = '2026-12-22';
+  old.settings.sessionStart = '2026-12-22';
+  const m = migrate(JSON.parse(JSON.stringify(old)));
+  assert.equal(m.events.find((e) => e.id === 'ev-session').date, '2027-01-11');
+  assert.equal(m.settings.sessionStart, '2027-01-11');
+  const mine = JSON.parse(JSON.stringify(old));
+  mine.events.find((e) => e.id === 'ev-session').date = '2027-01-15';
+  mine.settings.sessionStart = '2027-01-15';
+  assert.equal(migrate(mine).events.find((e) => e.id === 'ev-session').date, '2027-01-15');
 });
