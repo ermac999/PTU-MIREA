@@ -1,6 +1,6 @@
 <!doctype html><html lang="ru"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Дебютная тетрадь</title>
-<script>/* тема — как в «Рамках»; стиль и доска — свои */(function(){var r=document.documentElement;try{var s=JSON.parse(localStorage.getItem('ramki.v1')||'{}').settings||{};if(s.theme==='light'||s.theme==='dark')r.dataset.theme=s.theme;if(s.motion==='none')r.dataset.motion='none';var l=JSON.parse(localStorage.getItem('debut-notebook.look')||'{}')||{};r.dataset.style=l.style||'spiral';r.dataset.board=l.board||'classic';}catch(e){r.dataset.style='spiral';r.dataset.board='classic';}})();</script>
+<script>/* тема — как в «Рамках»; стиль и доска — свои */(function(){var r=document.documentElement;try{var s=JSON.parse(localStorage.getItem('ramki.v1')||'{}').settings||{};if(s.theme==='light'||s.theme==='dark')r.dataset.theme=s.theme;if(s.motion==='none')r.dataset.motion='none';var l=JSON.parse(localStorage.getItem('debut-notebook.look')||'{}')||{};r.dataset.style=l.style||'spiral';r.dataset.board=l.board||'classic';r.dataset.pieces=l.pieces||'classic';}catch(e){r.dataset.style='spiral';r.dataset.board='classic';r.dataset.pieces='classic';}})();</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -863,43 +863,83 @@ details.tbl td,details.tbl th{padding:4px 12px 4px 0;text-align:left;border-bott
 @media (hover:hover){:root[data-style="neon"] :is(.card,.gym-card,.tile,.pz,.mini-card,.trap):hover{border-color:rgba(255,63,180,.55);box-shadow:0 0 0 1px rgba(255,63,180,.3),0 0 26px -6px rgba(255,63,180,.55)}}
 :root[data-style="neon"] .board{border-radius:4px;box-shadow:0 0 0 1px rgba(45,226,230,.6),0 0 26px -4px rgba(45,226,230,.5),0 0 60px -20px rgba(255,63,180,.5)}
 
-/* ---------- окно «Стиль и доска» */
+/* ---------- окно «Вид»: стиль, доска, фигуры, эффекты, звук; сверху — живое превью */
 .look{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.38);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
 .look.on{opacity:1}
 .look[hidden]{display:none}
-.lk-in{width:min(640px,100%);max-height:90vh;overflow:auto;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px;box-shadow:0 -12px 40px rgba(0,0,0,.28);transform:translateY(28px);transition:transform .26s cubic-bezier(.2,.75,.25,1)}
+.lk-in{--lk-px:max(16px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));width:min(680px,100%);max-height:92vh;max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:var(--paper);color:var(--ink);border-radius:22px 22px 0 0;padding:0 0 calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(0,0,0,.28);transform:translateY(28px);transition:transform .26s cubic-bezier(.2,.75,.25,1)}
 :root[data-style="neon"] .lk-in{background:#0d0a1c;box-shadow:0 0 0 1px rgba(45,226,230,.3),0 -12px 40px rgba(255,63,180,.25)}
 .look.on .lk-in{transform:none}
-@media (min-width:700px){.look{align-items:center}.lk-in{border-radius:22px}}
+@media (min-width:700px){.look{align-items:center}.lk-in{border-radius:22px;max-height:88vh;max-height:88dvh}}
+.lk-top{position:sticky;top:0;z-index:3;background:inherit;padding:14px var(--lk-px) 10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+@media (max-height:560px){.lk-top{position:static}}
 .lk-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .lk-head h2{font:700 22px/1.2 var(--f-display)}
+.lk-panel{padding:14px var(--lk-px) 0;display:flex;flex-direction:column;gap:10px}
+.lk-now{font-size:12.5px;color:var(--muted);line-height:1.4}
+/* живое превью: кусок доски 6×3, конь бьёт пешку с выбранным эффектом и звуком */
+.lk-show{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:10px 14px;align-items:center}
+.lk-b.lk-stage{grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(3,1fr);aspect-ratio:2/1;width:100%;max-width:300px;justify-self:end;border-radius:10px;--sq:calc(100cqw / 6);cursor:pointer;box-shadow:0 12px 28px -16px rgba(0,0,0,.55)}
+.lk-cap{display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:12px;color:var(--muted);line-height:1.3;min-width:0}
+.lk-cap span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk-cap b{color:var(--ink);font-weight:650}
+.lk-play{margin-top:6px;display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:650;font-size:12.5px}
+.lk-play svg{width:12px;height:12px}
+.lk-tabs{display:flex;gap:3px;padding:3px;border-radius:12px;background:var(--surface-2,var(--surface));border:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.lk-tabs::-webkit-scrollbar{display:none}
+.lk-tabs button{flex:1 1 auto;min-width:0;padding:8px 4px;border:0;border-radius:9px;background:none;font-weight:650;font-size:13px;color:var(--muted);white-space:nowrap;box-shadow:none}
+.lk-tabs button[aria-selected="true"]{background:var(--pen);color:var(--pen-ink);box-shadow:0 2px 8px -3px rgba(0,0,0,.35)}
 .lk-styles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .lk-st{display:flex;flex-direction:column;gap:4px;text-align:left;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);min-width:0}
 .lk-st b{font:700 15px/1.2 var(--f-display)}
 .lk-st span:last-child{font-size:12.5px;color:var(--muted);line-height:1.35}
-.lk-st[aria-pressed="true"],.lk-bd[aria-pressed="true"]{border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-soft)}
+:is(.lk-st,.lk-bd,.lk-set,.lk-op)[aria-pressed="true"]{border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-soft)}
 .lk-sw{display:flex;gap:5px;margin-bottom:4px}
 .lk-sw i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(127,127,127,.3)}
 .lk-sw[data-s="spiral"] i:nth-child(1){background:linear-gradient(180deg,#cfd3d9,#f4f4f5)} .lk-sw[data-s="spiral"] i:nth-child(2){background:#3B5A78} .lk-sw[data-s="spiral"] i:nth-child(3){background:rgba(255,255,255,.85)}
 .lk-sw[data-s="club"] i:nth-child(1){background:radial-gradient(circle at 30% 30%,#2d6b4b,#163b29)} .lk-sw[data-s="club"] i:nth-child(2){background:#EFE6D2} .lk-sw[data-s="club"] i:nth-child(3){background:linear-gradient(180deg,#e6c46f,#a87a25)}
 .lk-sw[data-s="neon"] i:nth-child(1){background:#07060D} .lk-sw[data-s="neon"] i:nth-child(2){background:#FF3FB4;box-shadow:0 0 8px #FF3FB4} .lk-sw[data-s="neon"] i:nth-child(3){background:#2DE2E6;box-shadow:0 0 8px #2DE2E6}
 .lk-sw[data-s="gold"] i:nth-child(1){background:#100F0D} .lk-sw[data-s="gold"] i:nth-child(2){background:linear-gradient(180deg,#D9AE57,#8a6212)} .lk-sw[data-s="gold"] i:nth-child(3){background:#F7F2E8}
-.lk-boards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lk-boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
 .lk-bd{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:13px;min-width:0}
-.lk-b{position:relative;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);width:100%;aspect-ratio:1;border-radius:6px;overflow:hidden;container-type:inline-size}
+.lk-b{position:relative;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);width:100%;aspect-ratio:1;border-radius:6px;overflow:hidden;container-type:inline-size;--sq:25cqw}
 .lk-b .sq{display:block}
-.lk-p{position:absolute;width:25%;height:25%;display:grid;place-items:center;z-index:2}
-.lk-p i,.lk-p b{grid-area:1/1;font:normal 21cqw/1 var(--f-piece);font-style:normal;font-weight:400}
-.lk-p.w{left:25%;top:50%} .lk-p.b{left:50%;top:25%}
-.lk-now{font-size:13px;color:var(--muted)}
+/* наборы фигур: полоска 4×2 на текущей доске */
+.lk-sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.lk-set{display:flex;flex-direction:column;gap:5px;padding:8px 8px 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-align:left;min-width:0}
+.lk-set>b{font:700 14.5px/1.2 var(--f-display);padding:2px 2px 0}
+.lk-set>span:last-child{font-size:12px;line-height:1.3;color:var(--muted);padding:0 2px}
+.lk-b.lk-strip{grid-template-rows:repeat(2,1fr);aspect-ratio:2/1;border-radius:8px}
+/* эффекты и звук: карточки со значком */
+.lk-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.lk-op{display:grid;grid-template-columns:30px minmax(0,1fr);gap:1px 10px;align-items:center;text-align:left;padding:11px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);min-width:0}
+.lk-op svg{grid-row:span 2;width:28px;height:28px;color:var(--pen)}
+.lk-op b{font:700 14.5px/1.2 var(--f-display)}
+.lk-op span{font-size:12px;line-height:1.3;color:var(--muted)}
+.lk-snd-on{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface)}
+.lk-snd-on svg{width:24px;height:24px;color:var(--pen);flex:none}
+.lk-snd-on>span{display:flex;flex-direction:column;flex:1;min-width:0;font-size:12.5px;color:var(--muted)}
+.lk-snd-on>span b{font:700 15px/1.2 var(--f-display);color:var(--ink)}
+.lk-tg{position:relative;flex:none;width:44px;height:26px;border-radius:99px;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:background .2s}
+.lk-tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.lk-snd-on[aria-pressed="true"] .lk-tg{background:var(--pen)}
+.lk-snd-on[aria-pressed="true"] .lk-tg::after{transform:translateX(18px)}
+/* эффекты на доске: холст поверх клеток, «удар» фигуры и дрожь доски */
+.fxc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:15}
+.pc.fx-land{animation:fxLand .3s cubic-bezier(.3,1.6,.5,1)}
+@keyframes fxLand{0%{scale:1}40%{scale:1.14}100%{scale:1}}
+.fx-shake{animation:fxShake .34s cubic-bezier(.36,.07,.19,.97)}
+@keyframes fxShake{10%,90%{translate:-1px 0}20%,80%{translate:2px 1px}30%,50%,70%{translate:-3px -1px}40%,60%{translate:3px 1px}}
+@media (prefers-reduced-motion:reduce){.fxc{display:none}.pc.fx-land,.fx-shake{animation:none}}
+:root[data-motion="none"] .fxc{display:none}
 .rk-back{text-decoration:none}
 @media (max-width:430px){.topbar .brand b{display:none}}
 :root[data-motion="none"] *,:root[data-motion="none"] *::before,:root[data-motion="none"] *::after{animation:none!important;transition:none!important}
 
 /* ---------- доски: цвета клеток, фигур и рамка (на .board и на превью в окне выбора) */
-.board .pc.w i,.board .ghost.w i,.lk-p.w i{color:var(--pc-w-in,var(--pc-fill))}
-.board .pc.w b,.board .ghost.w b,.lk-p.w b{color:var(--pc-w-out,var(--pc-line));text-shadow:var(--pc-w-glow,none)}
-.board .pc.b i,.board .ghost.b i,.lk-p.b i{color:var(--pc-b-in,var(--pc-line));text-shadow:var(--pc-b-glow,0 0 .35cqw rgba(255,255,255,.35))}
+.board .pc.w i,.board .ghost.w i,.lkp .pc.w i{color:var(--pc-w-in,var(--pc-fill))}
+.board .pc.w b,.board .ghost.w b,.lkp .pc.w b{color:var(--pc-w-out,var(--pc-line));text-shadow:var(--pc-w-glow,none)}
+.board .pc.b i,.board .ghost.b i,.lkp .pc.b i{color:var(--pc-b-in,var(--pc-line));text-shadow:var(--pc-b-glow,0 0 .35cqw rgba(255,255,255,.35))}
 .board .sq.l .cf,.board .sq.l .cr{color:var(--co-l,var(--sq-d))}
 .board .sq.d .cf,.board .sq.d .cr{color:var(--co-d,var(--sq-l))}
 
@@ -953,6 +993,500 @@ details.tbl td,details.tbl th{padding:4px 12px 4px 0;text-align:left;border-bott
 :root[data-board="ocean"] .board,.lk-b[data-b="ocean"]{--sq-l:#D6EEF2;--sq-d:#3F8FA3;--hl:rgba(255,214,102,.6);--sel:rgba(5,50,70,.38);--dot:rgba(5,40,55,.3);--pc-line:#0c2530}
 :root[data-board="ocean"] .board .sq.l,.lk-b[data-b="ocean"] .sq.l{background:linear-gradient(160deg,#e6f6f8,#c8e5eb)}
 :root[data-board="ocean"] .board .sq.d,.lk-b[data-b="ocean"] .sq.d{background:linear-gradient(160deg,#4ea4b7,#2e7d92)}
+:root[data-board="notebook"] .board,.lk-b[data-b="notebook"]{--sq-l:#FBFCFF;--sq-d:#DCE5F7;--hl:rgba(255,226,70,.5);--sel:rgba(40,70,170,.3);--dot:rgba(30,50,140,.34);--co-l:#4a63b0;--co-d:#2a3f86;--pc-line:#1b2559}
+:root[data-board="notebook"] .board .sq.l,.lk-b[data-b="notebook"] .sq.l{background:linear-gradient(rgba(96,136,214,.3) 1px,transparent 1px) 0 0/100% 25%,linear-gradient(90deg,rgba(96,136,214,.3) 1px,transparent 1px) 0 0/25% 100%,#fbfcff}
+:root[data-board="notebook"] .board .sq.d,.lk-b[data-b="notebook"] .sq.d{background:repeating-linear-gradient(-45deg,rgba(38,64,170,.42) 0 1.1px,transparent 1.1px 4px),repeating-linear-gradient(45deg,rgba(38,64,170,.16) 0 1px,transparent 1px 6px),linear-gradient(rgba(96,136,214,.3) 1px,transparent 1px) 0 0/100% 25%,linear-gradient(90deg,rgba(96,136,214,.3) 1px,transparent 1px) 0 0/25% 100%,#f3f6fe}
+:root[data-board="notebook"] .board{box-shadow:0 0 0 1px #c3d0ee,0 0 0 6px #fbfcff,0 0 0 7px #c3d0ee,0 18px 40px -22px rgba(30,40,90,.5)}
+:root[data-board="book"] .board,.lk-b[data-b="book"]{--sq-l:#FBF7EC;--sq-d:#BDB6A5;--hl:rgba(200,160,60,.42);--sel:rgba(40,35,20,.35);--dot:rgba(30,25,15,.38);--co-l:#5d5547;--co-d:#2e2a22;--pc-line:#151310}
+:root[data-board="book"] .board .sq.l,.lk-b[data-b="book"] .sq.l{background:linear-gradient(160deg,#fdfaf2,#f5efe0)}
+:root[data-board="book"] .board .sq.d,.lk-b[data-b="book"] .sq.d{background:repeating-linear-gradient(45deg,#2d2a24 0 .9px,transparent .9px 3.1px),linear-gradient(160deg,#fbf7ec,#f1eadb)}
+:root[data-board="book"] .board{box-shadow:0 0 0 1.5px #1d1b17,0 0 0 5px #fbf7ec,0 0 0 6px #1d1b17,0 18px 40px -22px rgba(0,0,0,.45)}
+.lk-b[data-b="book"]{box-shadow:0 0 0 1px #1d1b17}
+:root[data-board="malachite"] .board,.lk-b[data-b="malachite"]{--sq-l:#E3EFE8;--sq-d:#1E6A4D;--hl:rgba(255,214,110,.52);--sel:rgba(5,40,25,.4);--dot:rgba(5,35,20,.36);--co-l:#1e6a4d;--co-d:#d3ebdf;--pc-line:#0b2018}
+:root[data-board="malachite"] .board .sq.l,.lk-b[data-b="malachite"] .sq.l{background:linear-gradient(125deg,transparent 42%,rgba(60,120,95,.12) 44%,transparent 47%),linear-gradient(160deg,#f1f8f4,#d6e8de)}
+:root[data-board="malachite"] .board .sq.d,.lk-b[data-b="malachite"] .sq.d{background:repeating-radial-gradient(circle at 18% 112%,#17573f 0 2.5px,#2b8762 2.5px 4.5px,#145039 4.5px 7.5px,#24775a 7.5px 10px,#0f4431 10px 12px);background-size:180% 180%}
+:root[data-board="malachite"] .board .sq.d:nth-child(4n+1),.lk-b[data-b="malachite"] .sq.d:nth-child(4n+1){background-position:0 0}
+:root[data-board="malachite"] .board .sq.d:nth-child(4n+2),.lk-b[data-b="malachite"] .sq.d:nth-child(4n+2){background-position:100% 20%}
+:root[data-board="malachite"] .board .sq.d:nth-child(4n+3),.lk-b[data-b="malachite"] .sq.d:nth-child(4n+3){background-position:30% 100%}
+:root[data-board="malachite"] .board .sq.d:nth-child(4n),.lk-b[data-b="malachite"] .sq.d:nth-child(4n){background-position:80% 70%}
+:root[data-board="malachite"] .board{box-shadow:0 0 0 3px #c9a24a,0 0 0 5px #3d2f12,0 22px 44px -22px rgba(0,0,0,.55)}
+:root[data-board="amber"] .board,.lk-b[data-b="amber"]{--sq-l:#FCEFD2;--sq-d:#DB8A20;--hl:rgba(255,252,210,.55);--sel:rgba(90,40,0,.38);--dot:rgba(70,30,0,.34);--co-l:#a8640f;--co-d:#fff1d0;--pc-line:#2a1606}
+:root[data-board="amber"] .board .sq.l,.lk-b[data-b="amber"] .sq.l{background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.65),transparent 52%),linear-gradient(160deg,#fff6df,#f5dfae)}
+:root[data-board="amber"] .board .sq.d,.lk-b[data-b="amber"] .sq.d{background:radial-gradient(circle at 30% 24%,rgba(255,244,190,.6),transparent 42%),radial-gradient(circle at 78% 82%,rgba(120,45,0,.38),transparent 58%),linear-gradient(160deg,#f2a83c,#c56e10)}
+:root[data-board="amber"] .board{box-shadow:0 0 0 4px #6b3a0c,0 0 0 5px rgba(0,0,0,.3),0 22px 44px -20px rgba(110,50,0,.55)}
+:root[data-board="space"] .board,.lk-b[data-b="space"]{--sq-l:#4A4F8E;--sq-d:#141939;--hl:rgba(140,170,255,.36);--sel:rgba(255,255,255,.2);--dot:rgba(205,218,255,.6);--co-l:rgba(226,232,255,.8);--co-d:rgba(170,182,255,.75);--pc-w-in:#f4f6ff;--pc-w-out:#0b1030;--pc-w-glow:0 0 1cqw rgba(160,190,255,.75);--pc-b-in:#ffb84d;--pc-b-glow:0 0 .9cqw rgba(255,150,40,.8)}
+:root[data-board="space"] .board .sq.l,.lk-b[data-b="space"] .sq.l{background:radial-gradient(circle at 28% 30%,rgba(205,130,255,.38),transparent 60%),radial-gradient(circle at 82% 74%,rgba(80,180,255,.32),transparent 56%),linear-gradient(160deg,#575ca0,#3c4080)}
+:root[data-board="space"] .board .sq.d,.lk-b[data-b="space"] .sq.d{background:radial-gradient(1.2px 1.2px at 22% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 62%,rgba(255,255,255,.85),transparent),radial-gradient(1.6px 1.6px at 46% 84%,#cfe0ff,transparent),radial-gradient(1px 1px at 84% 18%,#ffe9c4,transparent),linear-gradient(160deg,#1c2252,#0d1130)}
+:root[data-board="space"] .board .sq.d:nth-child(3n),.lk-b[data-b="space"] .sq.d:nth-child(3n){background-position:6px 3px}
+:root[data-board="space"] .board .sq.d:nth-child(5n+1),.lk-b[data-b="space"] .sq.d:nth-child(5n+1){background-position:-4px 7px}
+:root[data-board="space"] .board{box-shadow:0 0 0 1px rgba(160,180,255,.5),0 0 30px -6px rgba(120,100,255,.55),0 22px 44px -22px rgba(0,0,0,.7)}
+:root[data-board="sunset"] .board,.lk-b[data-b="sunset"]{--sq-l:#FFE6CC;--sq-d:#D9707E;--hl:rgba(255,240,150,.55);--sel:rgba(90,20,60,.34);--dot:rgba(80,20,50,.34);--co-l:#b4566a;--co-d:#fff0e0;--pc-line:#2b1530;background:linear-gradient(172deg,#ffb36b 0%,#ff8a6e 34%,#e2668f 66%,#9a64c0 100%)}
+:root[data-board="sunset"] .board .sq.l,.lk-b[data-b="sunset"] .sq.l{background:rgba(255,246,232,.74)}
+:root[data-board="sunset"] .board .sq.d,.lk-b[data-b="sunset"] .sq.d{background:rgba(120,30,90,.1)}
+:root[data-board="sunset"] .board{box-shadow:0 0 0 1px rgba(150,60,110,.35),0 22px 44px -20px rgba(160,60,120,.55)}
+:root[data-board="chocolate"] .board,.lk-b[data-b="chocolate"]{--sq-l:#F2E3CB;--sq-d:#6B3E23;--hl:rgba(255,214,120,.5);--sel:rgba(40,15,0,.4);--dot:rgba(40,15,0,.36);--co-l:#7a4a2c;--co-d:#f2e3cb;--pc-line:#2a140a}
+:root[data-board="chocolate"] .board .sq.l,.lk-b[data-b="chocolate"] .sq.l{background:linear-gradient(145deg,rgba(255,255,255,.55),transparent 34%,transparent 70%,rgba(120,80,40,.16)),#f2e3cb;box-shadow:inset 2px 2px 0 rgba(255,255,255,.55),inset -2px -2px 0 rgba(140,100,60,.22)}
+:root[data-board="chocolate"] .board .sq.d,.lk-b[data-b="chocolate"] .sq.d{background:linear-gradient(145deg,rgba(255,220,190,.2),transparent 32%,transparent 70%,rgba(0,0,0,.22)),#6b3e23;box-shadow:inset 2px 2px 0 rgba(255,215,180,.2),inset -2px -2px 0 rgba(0,0,0,.28)}
+:root[data-board="chocolate"] .board{box-shadow:0 0 0 3px #d9b45a,0 0 0 5px #4a2816,0 22px 44px -20px rgba(60,25,5,.6)}
+/* ---------- наборы фигур (свои рисунки и отделки) ---------- */
+.board{--sq:12.5cqw}
+.pc i,.pc b,.ghost i,.ghost b{font-size:calc(var(--sq) * .85)}
+:root[data-pieces="gold"] .board .pc.w i,
+.lkp[data-pp="gold"] .pc.w i,
+:root[data-pieces="gold"] .board .ghost.w i,
+.lkp[data-pp="gold"] .ghost.w i{background:linear-gradient(165deg,#fff7d1 0%,#f6d36b 28%,#d39b25 52%,#ffe9a3 70%,#b8841a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+:root[data-pieces="gold"] .board .pc.w b,
+.lkp[data-pp="gold"] .pc.w b,
+:root[data-pieces="gold"] .board .ghost.w b,
+.lkp[data-pp="gold"] .ghost.w b{color:#6a4708;text-shadow:none}
+:root[data-pieces="gold"] .board .pc.b i,
+.lkp[data-pp="gold"] .pc.b i,
+:root[data-pieces="gold"] .board .ghost.b i,
+.lkp[data-pp="gold"] .ghost.b i{background:linear-gradient(165deg,#5c5f66 0%,#26282d 40%,#0b0c0e 72%,#34363c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:calc(var(--sq) * .022) #e0b54e;text-shadow:none}
+:root[data-pieces="gold"] .board .pc,
+.lkp[data-pp="gold"] .pc,
+:root[data-pieces="gold"] .board .ghost,
+.lkp[data-pp="gold"] .ghost{filter:drop-shadow(0 calc(var(--sq) * .045) calc(var(--sq) * .045) rgba(60,35,0,.45))}
+:root[data-pieces="marble"] .board .pc.w i,
+.lkp[data-pp="marble"] .pc.w i,
+:root[data-pieces="marble"] .board .ghost.w i,
+.lkp[data-pp="marble"] .ghost.w i{background:linear-gradient(118deg,transparent 38%,rgba(110,110,125,.42) 40.5%,transparent 43%),linear-gradient(38deg,transparent 56%,rgba(130,130,140,.32) 58%,transparent 61%),linear-gradient(165deg,#ffffff,#e8e6df 60%,#d6d3cb);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+:root[data-pieces="marble"] .board .pc.w b,
+.lkp[data-pp="marble"] .pc.w b,
+:root[data-pieces="marble"] .board .ghost.w b,
+.lkp[data-pp="marble"] .ghost.w b{color:#5f5a52;text-shadow:none}
+:root[data-pieces="marble"] .board .pc.b i,
+.lkp[data-pp="marble"] .pc.b i,
+:root[data-pieces="marble"] .board .ghost.b i,
+.lkp[data-pp="marble"] .ghost.b i{background:linear-gradient(118deg,transparent 34%,rgba(255,255,255,.34) 36.5%,transparent 39%),linear-gradient(52deg,transparent 57%,rgba(190,255,225,.22) 59%,transparent 62%),linear-gradient(165deg,#3f5a52,#15211e 60%,#0b1210);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:calc(var(--sq) * .018) rgba(225,240,232,.55);text-shadow:none}
+:root[data-pieces="marble"] .board .pc,
+.lkp[data-pp="marble"] .pc,
+:root[data-pieces="marble"] .board .ghost,
+.lkp[data-pp="marble"] .ghost{filter:drop-shadow(0 calc(var(--sq) * .045) calc(var(--sq) * .04) rgba(0,0,0,.4))}
+:root[data-pieces="glass"] .board .pc.w i,
+.lkp[data-pp="glass"] .pc.w i,
+:root[data-pieces="glass"] .board .ghost.w i,
+.lkp[data-pp="glass"] .ghost.w i{color:rgba(214,236,255,.34);text-shadow:0 0 calc(var(--sq) * .07) rgba(150,205,255,.7)}
+:root[data-pieces="glass"] .board .pc.w b,
+.lkp[data-pp="glass"] .pc.w b,
+:root[data-pieces="glass"] .board .ghost.w b,
+.lkp[data-pp="glass"] .ghost.w b{color:rgba(255,255,255,.96);text-shadow:0 0 calc(var(--sq) * .04) rgba(200,235,255,.9)}
+:root[data-pieces="glass"] .board .pc.b i,
+.lkp[data-pp="glass"] .pc.b i,
+:root[data-pieces="glass"] .board .ghost.b i,
+.lkp[data-pp="glass"] .ghost.b i{color:rgba(18,26,40,.6);-webkit-text-stroke:calc(var(--sq) * .02) rgba(175,205,255,.85);text-shadow:0 0 calc(var(--sq) * .06) rgba(120,160,255,.55)}
+:root[data-pieces="glass"] .board .pc,
+.lkp[data-pp="glass"] .pc,
+:root[data-pieces="glass"] .board .ghost,
+.lkp[data-pp="glass"] .ghost{filter:drop-shadow(0 calc(var(--sq) * .05) calc(var(--sq) * .05) rgba(20,40,80,.3))}
+:root[data-pieces="neon"] .board .pc.w i,
+.lkp[data-pp="neon"] .pc.w i,
+:root[data-pieces="neon"] .board .ghost.w i,
+.lkp[data-pp="neon"] .ghost.w i{color:rgba(45,226,230,.14);text-shadow:none}
+:root[data-pieces="neon"] .board .pc.w b,
+.lkp[data-pp="neon"] .pc.w b,
+:root[data-pieces="neon"] .board .ghost.w b,
+.lkp[data-pp="neon"] .ghost.w b{color:#8ff7f9;text-shadow:0 0 calc(var(--sq) * .05) #2de2e6,0 0 calc(var(--sq) * .12) rgba(45,226,230,.6)}
+:root[data-pieces="neon"] .board .pc.b i,
+.lkp[data-pp="neon"] .pc.b i,
+:root[data-pieces="neon"] .board .ghost.b i,
+.lkp[data-pp="neon"] .ghost.b i{color:#ff5cc4;text-shadow:0 0 calc(var(--sq) * .05) #ff3fb4,0 0 calc(var(--sq) * .12) rgba(255,63,180,.55)}
+:root[data-pieces="wood"] .board .pc i,
+.lkp[data-pp="wood"] .pc i,
+:root[data-pieces="wood"] .board .ghost i,
+.lkp[data-pp="wood"] .ghost i,
+:root[data-pieces="wood"] .board .pc b,
+.lkp[data-pp="wood"] .pc b,
+:root[data-pieces="wood"] .board .ghost b,
+.lkp[data-pp="wood"] .ghost b,
+:root[data-pieces="gloss"] .board .pc i,
+.lkp[data-pp="gloss"] .pc i,
+:root[data-pieces="gloss"] .board .ghost i,
+.lkp[data-pp="gloss"] .ghost i,
+:root[data-pieces="gloss"] .board .pc b,
+.lkp[data-pp="gloss"] .pc b,
+:root[data-pieces="gloss"] .board .ghost b,
+.lkp[data-pp="gloss"] .ghost b,
+:root[data-pieces="modern"] .board .pc i,
+.lkp[data-pp="modern"] .pc i,
+:root[data-pieces="modern"] .board .ghost i,
+.lkp[data-pp="modern"] .ghost i,
+:root[data-pieces="modern"] .board .pc b,
+.lkp[data-pp="modern"] .pc b,
+:root[data-pieces="modern"] .board .ghost b,
+.lkp[data-pp="modern"] .ghost b,
+:root[data-pieces="pixel"] .board .pc i,
+.lkp[data-pp="pixel"] .pc i,
+:root[data-pieces="pixel"] .board .ghost i,
+.lkp[data-pp="pixel"] .ghost i,
+:root[data-pieces="pixel"] .board .pc b,
+.lkp[data-pp="pixel"] .pc b,
+:root[data-pieces="pixel"] .board .ghost b,
+.lkp[data-pp="pixel"] .ghost b{visibility:hidden}
+:root[data-pieces="wood"] .board .pc::before,
+.lkp[data-pp="wood"] .pc::before,
+:root[data-pieces="wood"] .board .pc::after,
+.lkp[data-pp="wood"] .pc::after,
+:root[data-pieces="wood"] .board .ghost::before,
+.lkp[data-pp="wood"] .ghost::before,
+:root[data-pieces="wood"] .board .ghost::after,
+.lkp[data-pp="wood"] .ghost::after,
+:root[data-pieces="gloss"] .board .pc::before,
+.lkp[data-pp="gloss"] .pc::before,
+:root[data-pieces="gloss"] .board .pc::after,
+.lkp[data-pp="gloss"] .pc::after,
+:root[data-pieces="gloss"] .board .ghost::before,
+.lkp[data-pp="gloss"] .ghost::before,
+:root[data-pieces="gloss"] .board .ghost::after,
+.lkp[data-pp="gloss"] .ghost::after,
+:root[data-pieces="modern"] .board .pc::before,
+.lkp[data-pp="modern"] .pc::before,
+:root[data-pieces="modern"] .board .pc::after,
+.lkp[data-pp="modern"] .pc::after,
+:root[data-pieces="modern"] .board .ghost::before,
+.lkp[data-pp="modern"] .ghost::before,
+:root[data-pieces="modern"] .board .ghost::after,
+.lkp[data-pp="modern"] .ghost::after,
+:root[data-pieces="pixel"] .board .pc::before,
+.lkp[data-pp="pixel"] .pc::before,
+:root[data-pieces="pixel"] .board .pc::after,
+.lkp[data-pp="pixel"] .pc::after,
+:root[data-pieces="pixel"] .board .ghost::before,
+.lkp[data-pp="pixel"] .ghost::before,
+:root[data-pieces="pixel"] .board .ghost::after,
+.lkp[data-pp="pixel"] .ghost::after{content:"";position:absolute;inset:5%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}
+:root[data-pieces="wood"] .board .pc.t-k::before,
+.lkp[data-pp="wood"] .pc.t-k::before,
+:root[data-pieces="wood"] .board .ghost.t-k::before,
+.lkp[data-pp="wood"] .ghost.t-k::before,
+:root[data-pieces="gloss"] .board .pc.t-k::before,
+.lkp[data-pp="gloss"] .pc.t-k::before,
+:root[data-pieces="gloss"] .board .ghost.t-k::before,
+.lkp[data-pp="gloss"] .ghost.t-k::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 C28 37 36 28 50 28 C64 28 72 37 67 50 Z'/%3E%3Crect x='46.5' y='7' width='7' height='23' rx='1.6'/%3E%3Crect x='40' y='12.5' width='20' height='7' rx='1.6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 C28 37 36 28 50 28 C64 28 72 37 67 50 Z'/%3E%3Crect x='46.5' y='7' width='7' height='23' rx='1.6'/%3E%3Crect x='40' y='12.5' width='20' height='7' rx='1.6'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-k::after,
+.lkp[data-pp="wood"] .pc.t-k::after,
+:root[data-pieces="wood"] .board .ghost.t-k::after,
+.lkp[data-pp="wood"] .ghost.t-k::after,
+:root[data-pieces="gloss"] .board .pc.t-k::after,
+.lkp[data-pp="gloss"] .pc.t-k::after,
+:root[data-pieces="gloss"] .board .ghost.t-k::after,
+.lkp[data-pp="gloss"] .ghost.t-k::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 C28 37 36 28 50 28 C64 28 72 37 67 50 Z'/%3E%3Crect x='46.5' y='7' width='7' height='23' rx='1.6'/%3E%3Crect x='40' y='12.5' width='20' height='7' rx='1.6'/%3E%3Cpath d='M34.5 42 H65.5'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 C28 37 36 28 50 28 C64 28 72 37 67 50 Z'/%3E%3Crect x='46.5' y='7' width='7' height='23' rx='1.6'/%3E%3Crect x='40' y='12.5' width='20' height='7' rx='1.6'/%3E%3Cpath d='M34.5 42 H65.5'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-q::before,
+.lkp[data-pp="wood"] .pc.t-q::before,
+:root[data-pieces="wood"] .board .ghost.t-q::before,
+.lkp[data-pp="wood"] .ghost.t-q::before,
+:root[data-pieces="gloss"] .board .pc.t-q::before,
+.lkp[data-pp="gloss"] .pc.t-q::before,
+:root[data-pieces="gloss"] .board .ghost.t-q::before,
+.lkp[data-pp="gloss"] .ghost.t-q::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 L23 23 L34 37 L37 18 L44.5 35 L50 15 L55.5 35 L63 18 L66 37 L77 23 L67 50 Z'/%3E%3Ccircle cx='23' cy='21' r='4'/%3E%3Ccircle cx='37' cy='16' r='4'/%3E%3Ccircle cx='50' cy='12.5' r='4.2'/%3E%3Ccircle cx='63' cy='16' r='4'/%3E%3Ccircle cx='77' cy='21' r='4'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 L23 23 L34 37 L37 18 L44.5 35 L50 15 L55.5 35 L63 18 L66 37 L77 23 L67 50 Z'/%3E%3Ccircle cx='23' cy='21' r='4'/%3E%3Ccircle cx='37' cy='16' r='4'/%3E%3Ccircle cx='50' cy='12.5' r='4.2'/%3E%3Ccircle cx='63' cy='16' r='4'/%3E%3Ccircle cx='77' cy='21' r='4'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-q::after,
+.lkp[data-pp="wood"] .pc.t-q::after,
+:root[data-pieces="wood"] .board .ghost.t-q::after,
+.lkp[data-pp="wood"] .ghost.t-q::after,
+:root[data-pieces="gloss"] .board .pc.t-q::after,
+.lkp[data-pp="gloss"] .pc.t-q::after,
+:root[data-pieces="gloss"] .board .ghost.t-q::after,
+.lkp[data-pp="gloss"] .ghost.t-q::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 L23 23 L34 37 L37 18 L44.5 35 L50 15 L55.5 35 L63 18 L66 37 L77 23 L67 50 Z'/%3E%3Ccircle cx='23' cy='21' r='4'/%3E%3Ccircle cx='37' cy='16' r='4'/%3E%3Ccircle cx='50' cy='12.5' r='4.2'/%3E%3Ccircle cx='63' cy='16' r='4'/%3E%3Ccircle cx='77' cy='21' r='4'/%3E%3Cpath d='M34 43 H66'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 C34 65 40 58 43 54 L57 54 C60 58 66 65 69 77 Z'/%3E%3Crect x='35' y='48' width='30' height='7.5' rx='3.75'/%3E%3Cpath d='M33 50 L23 23 L34 37 L37 18 L44.5 35 L50 15 L55.5 35 L63 18 L66 37 L77 23 L67 50 Z'/%3E%3Ccircle cx='23' cy='21' r='4'/%3E%3Ccircle cx='37' cy='16' r='4'/%3E%3Ccircle cx='50' cy='12.5' r='4.2'/%3E%3Ccircle cx='63' cy='16' r='4'/%3E%3Ccircle cx='77' cy='21' r='4'/%3E%3Cpath d='M34 43 H66'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-r::before,
+.lkp[data-pp="wood"] .pc.t-r::before,
+:root[data-pieces="wood"] .board .ghost.t-r::before,
+.lkp[data-pp="wood"] .ghost.t-r::before,
+:root[data-pieces="gloss"] .board .pc.t-r::before,
+.lkp[data-pp="gloss"] .pc.t-r::before,
+:root[data-pieces="gloss"] .board .ghost.t-r::before,
+.lkp[data-pp="gloss"] .ghost.t-r::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 L34 45 L66 45 L69 77 Z'/%3E%3Cpath d='M27 47 L27 21 L37 21 L37 29 L45 29 L45 21 L55 21 L55 29 L63 29 L63 21 L73 21 L73 47 Z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 L34 45 L66 45 L69 77 Z'/%3E%3Cpath d='M27 47 L27 21 L37 21 L37 29 L45 29 L45 21 L55 21 L55 29 L63 29 L63 21 L73 21 L73 47 Z'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-r::after,
+.lkp[data-pp="wood"] .pc.t-r::after,
+:root[data-pieces="wood"] .board .ghost.t-r::after,
+.lkp[data-pp="wood"] .ghost.t-r::after,
+:root[data-pieces="gloss"] .board .pc.t-r::after,
+.lkp[data-pp="gloss"] .pc.t-r::after,
+:root[data-pieces="gloss"] .board .ghost.t-r::after,
+.lkp[data-pp="gloss"] .ghost.t-r::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 L34 45 L66 45 L69 77 Z'/%3E%3Cpath d='M27 47 L27 21 L37 21 L37 29 L45 29 L45 21 L55 21 L55 29 L63 29 L63 21 L73 21 L73 47 Z'/%3E%3Cpath d='M31 47 H69 M33.5 69 H66.5'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M31 77 L34 45 L66 45 L69 77 Z'/%3E%3Cpath d='M27 47 L27 21 L37 21 L37 29 L45 29 L45 21 L55 21 L55 29 L63 29 L63 21 L73 21 L73 47 Z'/%3E%3Cpath d='M31 47 H69 M33.5 69 H66.5'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-b::before,
+.lkp[data-pp="wood"] .pc.t-b::before,
+:root[data-pieces="wood"] .board .ghost.t-b::before,
+.lkp[data-pp="wood"] .ghost.t-b::before,
+:root[data-pieces="gloss"] .board .pc.t-b::before,
+.lkp[data-pp="gloss"] .pc.t-b::before,
+:root[data-pieces="gloss"] .board .ghost.t-b::before,
+.lkp[data-pp="gloss"] .ghost.t-b::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M34 77 C36 67 41 61 44 58 L56 58 C59 61 64 67 66 77 Z'/%3E%3Crect x='36' y='52' width='28' height='7.5' rx='3.75'/%3E%3Cpath d='M50 15 C61 24 67 35 63 45 C60 52 40 52 37 45 C33 35 39 24 50 15 Z'/%3E%3Ccircle cx='50' cy='12' r='4.6'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M34 77 C36 67 41 61 44 58 L56 58 C59 61 64 67 66 77 Z'/%3E%3Crect x='36' y='52' width='28' height='7.5' rx='3.75'/%3E%3Cpath d='M50 15 C61 24 67 35 63 45 C60 52 40 52 37 45 C33 35 39 24 50 15 Z'/%3E%3Ccircle cx='50' cy='12' r='4.6'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-b::after,
+.lkp[data-pp="wood"] .pc.t-b::after,
+:root[data-pieces="wood"] .board .ghost.t-b::after,
+.lkp[data-pp="wood"] .ghost.t-b::after,
+:root[data-pieces="gloss"] .board .pc.t-b::after,
+.lkp[data-pp="gloss"] .pc.t-b::after,
+:root[data-pieces="gloss"] .board .ghost.t-b::after,
+.lkp[data-pp="gloss"] .ghost.t-b::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M34 77 C36 67 41 61 44 58 L56 58 C59 61 64 67 66 77 Z'/%3E%3Crect x='36' y='52' width='28' height='7.5' rx='3.75'/%3E%3Cpath d='M50 15 C61 24 67 35 63 45 C60 52 40 52 37 45 C33 35 39 24 50 15 Z'/%3E%3Ccircle cx='50' cy='12' r='4.6'/%3E%3Cpath d='M56 26 L45.5 40'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M34 77 C36 67 41 61 44 58 L56 58 C59 61 64 67 66 77 Z'/%3E%3Crect x='36' y='52' width='28' height='7.5' rx='3.75'/%3E%3Cpath d='M50 15 C61 24 67 35 63 45 C60 52 40 52 37 45 C33 35 39 24 50 15 Z'/%3E%3Ccircle cx='50' cy='12' r='4.6'/%3E%3Cpath d='M56 26 L45.5 40'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-n::before,
+.lkp[data-pp="wood"] .pc.t-n::before,
+:root[data-pieces="wood"] .board .ghost.t-n::before,
+.lkp[data-pp="wood"] .ghost.t-n::before,
+:root[data-pieces="gloss"] .board .pc.t-n::before,
+.lkp[data-pp="gloss"] .pc.t-n::before,
+:root[data-pieces="gloss"] .board .ghost.t-n::before,
+.lkp[data-pp="gloss"] .ghost.t-n::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M29 77 C28 64 33 56 43 50 C37 51 29 52 23.5 48.5 C18 45 18.5 37.5 23 33.5 C30 26.5 36 21 40 16 L42 7.5 L49 14 C63.5 14 75 24.5 77 41 C78.5 55 74 67 72 77 Z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M29 77 C28 64 33 56 43 50 C37 51 29 52 23.5 48.5 C18 45 18.5 37.5 23 33.5 C30 26.5 36 21 40 16 L42 7.5 L49 14 C63.5 14 75 24.5 77 41 C78.5 55 74 67 72 77 Z'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-n::after,
+.lkp[data-pp="wood"] .pc.t-n::after,
+:root[data-pieces="wood"] .board .ghost.t-n::after,
+.lkp[data-pp="wood"] .ghost.t-n::after,
+:root[data-pieces="gloss"] .board .pc.t-n::after,
+.lkp[data-pp="gloss"] .pc.t-n::after,
+:root[data-pieces="gloss"] .board .ghost.t-n::after,
+.lkp[data-pp="gloss"] .ghost.t-n::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M29 77 C28 64 33 56 43 50 C37 51 29 52 23.5 48.5 C18 45 18.5 37.5 23 33.5 C30 26.5 36 21 40 16 L42 7.5 L49 14 C63.5 14 75 24.5 77 41 C78.5 55 74 67 72 77 Z'/%3E%3Cpath d='M52 18 C62 24 68 35 69.5 50'/%3E%3Cpath d='M27 39.5 L28.5 40'/%3E%3C/g%3E%3Ccircle cx='38.5' cy='27.5' r='2.8'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M29 77 C28 64 33 56 43 50 C37 51 29 52 23.5 48.5 C18 45 18.5 37.5 23 33.5 C30 26.5 36 21 40 16 L42 7.5 L49 14 C63.5 14 75 24.5 77 41 C78.5 55 74 67 72 77 Z'/%3E%3Cpath d='M52 18 C62 24 68 35 69.5 50'/%3E%3Cpath d='M27 39.5 L28.5 40'/%3E%3C/g%3E%3Ccircle cx='38.5' cy='27.5' r='2.8'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-p::before,
+.lkp[data-pp="wood"] .pc.t-p::before,
+:root[data-pieces="wood"] .board .ghost.t-p::before,
+.lkp[data-pp="wood"] .ghost.t-p::before,
+:root[data-pieces="gloss"] .board .pc.t-p::before,
+.lkp[data-pp="gloss"] .pc.t-p::before,
+:root[data-pieces="gloss"] .board .ghost.t-p::before,
+.lkp[data-pp="gloss"] .ghost.t-p::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M33 77 C35 66 41 59 44 56 L56 56 C59 59 65 66 67 77 Z'/%3E%3Crect x='36' y='50' width='28' height='7.5' rx='3.75'/%3E%3Ccircle cx='50' cy='36' r='14'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M33 77 C35 66 41 59 44 56 L56 56 C59 59 65 66 67 77 Z'/%3E%3Crect x='36' y='50' width='28' height='7.5' rx='3.75'/%3E%3Ccircle cx='50' cy='36' r='14'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.t-p::after,
+.lkp[data-pp="wood"] .pc.t-p::after,
+:root[data-pieces="wood"] .board .ghost.t-p::after,
+.lkp[data-pp="wood"] .ghost.t-p::after,
+:root[data-pieces="gloss"] .board .pc.t-p::after,
+.lkp[data-pp="gloss"] .pc.t-p::after,
+:root[data-pieces="gloss"] .board .ghost.t-p::after,
+.lkp[data-pp="gloss"] .ghost.t-p::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M33 77 C35 66 41 59 44 56 L56 56 C59 59 65 66 67 77 Z'/%3E%3Crect x='36' y='50' width='28' height='7.5' rx='3.75'/%3E%3Ccircle cx='50' cy='36' r='14'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.2' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='17' y='83' width='66' height='9' rx='4.5'/%3E%3Crect x='22' y='76' width='56' height='8.5' rx='4'/%3E%3Cpath d='M33 77 C35 66 41 59 44 56 L56 56 C59 59 65 66 67 77 Z'/%3E%3Crect x='36' y='50' width='28' height='7.5' rx='3.75'/%3E%3Ccircle cx='50' cy='36' r='14'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-k::before,
+.lkp[data-pp="modern"] .pc.t-k::before,
+:root[data-pieces="modern"] .board .ghost.t-k::before,
+.lkp[data-pp="modern"] .ghost.t-k::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='36' y='31' width='28' height='21' rx='5'/%3E%3Crect x='46.5' y='9' width='7' height='24' rx='1.5'/%3E%3Crect x='40' y='14.5' width='20' height='7' rx='1.5'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='36' y='31' width='28' height='21' rx='5'/%3E%3Crect x='46.5' y='9' width='7' height='24' rx='1.5'/%3E%3Crect x='40' y='14.5' width='20' height='7' rx='1.5'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-k::after,
+.lkp[data-pp="modern"] .pc.t-k::after,
+:root[data-pieces="modern"] .board .ghost.t-k::after,
+.lkp[data-pp="modern"] .ghost.t-k::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='36' y='31' width='28' height='21' rx='5'/%3E%3Crect x='46.5' y='9' width='7' height='24' rx='1.5'/%3E%3Crect x='40' y='14.5' width='20' height='7' rx='1.5'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='36' y='31' width='28' height='21' rx='5'/%3E%3Crect x='46.5' y='9' width='7' height='24' rx='1.5'/%3E%3Crect x='40' y='14.5' width='20' height='7' rx='1.5'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-q::before,
+.lkp[data-pp="modern"] .pc.t-q::before,
+:root[data-pieces="modern"] .board .ghost.t-q::before,
+.lkp[data-pp="modern"] .ghost.t-q::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='34' y='42' width='32' height='10' rx='2'/%3E%3Ccircle cx='36' cy='33' r='6.5'/%3E%3Ccircle cx='50' cy='26' r='7'/%3E%3Ccircle cx='64' cy='33' r='6.5'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='34' y='42' width='32' height='10' rx='2'/%3E%3Ccircle cx='36' cy='33' r='6.5'/%3E%3Ccircle cx='50' cy='26' r='7'/%3E%3Ccircle cx='64' cy='33' r='6.5'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-q::after,
+.lkp[data-pp="modern"] .pc.t-q::after,
+:root[data-pieces="modern"] .board .ghost.t-q::after,
+.lkp[data-pp="modern"] .ghost.t-q::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='34' y='42' width='32' height='10' rx='2'/%3E%3Ccircle cx='36' cy='33' r='6.5'/%3E%3Ccircle cx='50' cy='26' r='7'/%3E%3Ccircle cx='64' cy='33' r='6.5'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M36 80 L42 50 H58 L64 80 Z'/%3E%3Crect x='34' y='42' width='32' height='10' rx='2'/%3E%3Ccircle cx='36' cy='33' r='6.5'/%3E%3Ccircle cx='50' cy='26' r='7'/%3E%3Ccircle cx='64' cy='33' r='6.5'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-r::before,
+.lkp[data-pp="modern"] .pc.t-r::before,
+:root[data-pieces="modern"] .board .ghost.t-r::before,
+.lkp[data-pp="modern"] .ghost.t-r::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M32 80 V28 H41 V37 H46 V28 H54 V37 H59 V28 H68 V80 Z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M32 80 V28 H41 V37 H46 V28 H54 V37 H59 V28 H68 V80 Z'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-r::after,
+.lkp[data-pp="modern"] .pc.t-r::after,
+:root[data-pieces="modern"] .board .ghost.t-r::after,
+.lkp[data-pp="modern"] .ghost.t-r::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M32 80 V28 H41 V37 H46 V28 H54 V37 H59 V28 H68 V80 Z'/%3E%3Cpath d='M32 46 H68'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M32 80 V28 H41 V37 H46 V28 H54 V37 H59 V28 H68 V80 Z'/%3E%3Cpath d='M32 46 H68'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-b::before,
+.lkp[data-pp="modern"] .pc.t-b::before,
+:root[data-pieces="modern"] .board .ghost.t-b::before,
+.lkp[data-pp="modern"] .ghost.t-b::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M39 80 L44 54 H56 L61 80 Z'/%3E%3Cpath d='M50 13 L66 36 L50 54 L34 36 Z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M39 80 L44 54 H56 L61 80 Z'/%3E%3Cpath d='M50 13 L66 36 L50 54 L34 36 Z'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-b::after,
+.lkp[data-pp="modern"] .pc.t-b::after,
+:root[data-pieces="modern"] .board .ghost.t-b::after,
+.lkp[data-pp="modern"] .ghost.t-b::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M39 80 L44 54 H56 L61 80 Z'/%3E%3Cpath d='M50 13 L66 36 L50 54 L34 36 Z'/%3E%3Cpath d='M55.5 27 L45 41'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M39 80 L44 54 H56 L61 80 Z'/%3E%3Cpath d='M50 13 L66 36 L50 54 L34 36 Z'/%3E%3Cpath d='M55.5 27 L45 41'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-n::before,
+.lkp[data-pp="modern"] .pc.t-n::before,
+:root[data-pieces="modern"] .board .ghost.t-n::before,
+.lkp[data-pp="modern"] .ghost.t-n::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M35 80 L39 57 L24 52 L27 37 L44 19 L49 10 L54 18 L67 29 L69 56 L65 80 Z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M35 80 L39 57 L24 52 L27 37 L44 19 L49 10 L54 18 L67 29 L69 56 L65 80 Z'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-n::after,
+.lkp[data-pp="modern"] .pc.t-n::after,
+:root[data-pieces="modern"] .board .ghost.t-n::after,
+.lkp[data-pp="modern"] .ghost.t-n::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M35 80 L39 57 L24 52 L27 37 L44 19 L49 10 L54 18 L67 29 L69 56 L65 80 Z'/%3E%3C/g%3E%3Ccircle cx='42' cy='31' r='3'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M35 80 L39 57 L24 52 L27 37 L44 19 L49 10 L54 18 L67 29 L69 56 L65 80 Z'/%3E%3C/g%3E%3Ccircle cx='42' cy='31' r='3'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-p::before,
+.lkp[data-pp="modern"] .pc.t-p::before,
+:root[data-pieces="modern"] .board .ghost.t-p::before,
+.lkp[data-pp="modern"] .ghost.t-p::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M40 80 L44.5 52 H55.5 L60 80 Z'/%3E%3Ccircle cx='50' cy='37' r='12.5'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M40 80 L44.5 52 H55.5 L60 80 Z'/%3E%3Ccircle cx='50' cy='37' r='12.5'/%3E%3C/svg%3E")}
+:root[data-pieces="modern"] .board .pc.t-p::after,
+.lkp[data-pp="modern"] .pc.t-p::after,
+:root[data-pieces="modern"] .board .ghost.t-p::after,
+.lkp[data-pp="modern"] .ghost.t-p::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M40 80 L44.5 52 H55.5 L60 80 Z'/%3E%3Ccircle cx='50' cy='37' r='12.5'/%3E%3C/g%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%23000' stroke-width='3.4' stroke-linejoin='round' stroke-linecap='round'%3E%3Crect x='23' y='80' width='54' height='10' rx='5'/%3E%3Cpath d='M40 80 L44.5 52 H55.5 L60 80 Z'/%3E%3Ccircle cx='50' cy='37' r='12.5'/%3E%3C/g%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-k::before,
+.lkp[data-pp="pixel"] .pc.t-k::before,
+:root[data-pieces="pixel"] .board .ghost.t-k::before,
+.lkp[data-pp="pixel"] .ghost.t-k::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM5 1h6v1h-6zM5 2h6v1h-6zM7 3h2v1h-2zM4 4h8v1h-8zM3 5h10v1h-10zM3 6h10v1h-10zM3 7h10v1h-10zM4 8h8v1h-8zM4 9h8v1h-8zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM5 1h6v1h-6zM5 2h6v1h-6zM7 3h2v1h-2zM4 4h8v1h-8zM3 5h10v1h-10zM3 6h10v1h-10zM3 7h10v1h-10zM4 8h8v1h-8zM4 9h8v1h-8zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-k::after,
+.lkp[data-pp="pixel"] .pc.t-k::after,
+:root[data-pieces="pixel"] .board .ghost.t-k::after,
+.lkp[data-pp="pixel"] .ghost.t-k::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM5 1h2v1h-2zM9 1h2v1h-2zM5 2h2v1h-2zM9 2h2v1h-2zM7 3h2v1h-2zM4 4h8v1h-8zM3 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM12 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM4 9h8v1h-8zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM5 1h2v1h-2zM9 1h2v1h-2zM5 2h2v1h-2zM9 2h2v1h-2zM7 3h2v1h-2zM4 4h8v1h-8zM3 5h1v1h-1zM12 5h1v1h-1zM3 6h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM3 7h1v1h-1zM12 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM4 9h8v1h-8zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-q::before,
+.lkp[data-pp="pixel"] .pc.t-q::before,
+:root[data-pieces="pixel"] .board .ghost.t-q::before,
+.lkp[data-pp="pixel"] .ghost.t-q::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 0h1v1h-1zM7 0h2v1h-2zM13 0h1v1h-1zM1 1h3v1h-3zM6 1h4v1h-4zM12 1h3v1h-3zM2 2h12v1h-12zM2 3h12v1h-12zM3 4h10v1h-10zM4 5h8v1h-8zM5 6h6v1h-6zM5 7h6v1h-6zM4 8h8v1h-8zM4 9h8v1h-8zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 0h1v1h-1zM7 0h2v1h-2zM13 0h1v1h-1zM1 1h3v1h-3zM6 1h4v1h-4zM12 1h3v1h-3zM2 2h12v1h-12zM2 3h12v1h-12zM3 4h10v1h-10zM4 5h8v1h-8zM5 6h6v1h-6zM5 7h6v1h-6zM4 8h8v1h-8zM4 9h8v1h-8zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-q::after,
+.lkp[data-pp="pixel"] .pc.t-q::after,
+:root[data-pieces="pixel"] .board .ghost.t-q::after,
+.lkp[data-pp="pixel"] .ghost.t-q::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 0h1v1h-1zM7 0h2v1h-2zM13 0h1v1h-1zM1 1h1v1h-1zM3 1h1v1h-1zM6 1h1v1h-1zM9 1h1v1h-1zM12 1h1v1h-1zM14 1h1v1h-1zM2 2h1v1h-1zM4 2h2v1h-2zM10 2h2v1h-2zM13 2h1v1h-1zM2 3h1v1h-1zM13 3h1v1h-1zM3 4h1v1h-1zM12 4h1v1h-1zM4 5h8v1h-8zM5 6h1v1h-1zM10 6h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM4 9h8v1h-8zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 0h1v1h-1zM7 0h2v1h-2zM13 0h1v1h-1zM1 1h1v1h-1zM3 1h1v1h-1zM6 1h1v1h-1zM9 1h1v1h-1zM12 1h1v1h-1zM14 1h1v1h-1zM2 2h1v1h-1zM4 2h2v1h-2zM10 2h2v1h-2zM13 2h1v1h-1zM2 3h1v1h-1zM13 3h1v1h-1zM3 4h1v1h-1zM12 4h1v1h-1zM4 5h8v1h-8zM5 6h1v1h-1zM10 6h1v1h-1zM5 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM4 9h8v1h-8zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-r::before,
+.lkp[data-pp="pixel"] .pc.t-r::before,
+:root[data-pieces="pixel"] .board .ghost.t-r::before,
+.lkp[data-pp="pixel"] .ghost.t-r::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h3v1h-3zM7 1h2v1h-2zM10 1h3v1h-3zM3 2h3v1h-3zM7 2h2v1h-2zM10 2h3v1h-3zM3 3h10v1h-10zM3 4h10v1h-10zM4 5h8v1h-8zM4 6h8v1h-8zM4 7h8v1h-8zM4 8h8v1h-8zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h3v1h-3zM7 1h2v1h-2zM10 1h3v1h-3zM3 2h3v1h-3zM7 2h2v1h-2zM10 2h3v1h-3zM3 3h10v1h-10zM3 4h10v1h-10zM4 5h8v1h-8zM4 6h8v1h-8zM4 7h8v1h-8zM4 8h8v1h-8zM4 9h8v1h-8zM4 10h8v1h-8zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-r::after,
+.lkp[data-pp="pixel"] .pc.t-r::after,
+:root[data-pieces="pixel"] .board .ghost.t-r::after,
+.lkp[data-pp="pixel"] .ghost.t-r::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h3v1h-3zM7 1h2v1h-2zM10 1h3v1h-3zM3 2h1v1h-1zM5 2h1v1h-1zM7 2h2v1h-2zM10 2h1v1h-1zM12 2h1v1h-1zM3 3h1v1h-1zM5 3h2v1h-2zM9 3h2v1h-2zM12 3h1v1h-1zM3 4h1v1h-1zM12 4h1v1h-1zM4 5h8v1h-8zM4 6h1v1h-1zM11 6h1v1h-1zM4 7h1v1h-1zM11 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM4 9h1v1h-1zM11 9h1v1h-1zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h3v1h-3zM7 1h2v1h-2zM10 1h3v1h-3zM3 2h1v1h-1zM5 2h1v1h-1zM7 2h2v1h-2zM10 2h1v1h-1zM12 2h1v1h-1zM3 3h1v1h-1zM5 3h2v1h-2zM9 3h2v1h-2zM12 3h1v1h-1zM3 4h1v1h-1zM12 4h1v1h-1zM4 5h8v1h-8zM4 6h1v1h-1zM11 6h1v1h-1zM4 7h1v1h-1zM11 7h1v1h-1zM4 8h1v1h-1zM11 8h1v1h-1zM4 9h1v1h-1zM11 9h1v1h-1zM4 10h8v1h-8zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-b::before,
+.lkp[data-pp="pixel"] .pc.t-b::before,
+:root[data-pieces="pixel"] .board .ghost.t-b::before,
+.lkp[data-pp="pixel"] .ghost.t-b::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM6 1h4v1h-4zM5 2h6v1h-6zM5 3h6v1h-6zM5 4h6v1h-6zM5 5h6v1h-6zM6 6h4v1h-4zM5 7h6v1h-6zM6 8h4v1h-4zM5 9h6v1h-6zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM6 1h4v1h-4zM5 2h6v1h-6zM5 3h6v1h-6zM5 4h6v1h-6zM5 5h6v1h-6zM6 6h4v1h-4zM5 7h6v1h-6zM6 8h4v1h-4zM5 9h6v1h-6zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-b::after,
+.lkp[data-pp="pixel"] .pc.t-b::after,
+:root[data-pieces="pixel"] .board .ghost.t-b::after,
+.lkp[data-pp="pixel"] .ghost.t-b::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM6 1h1v1h-1zM9 1h1v1h-1zM5 2h1v1h-1zM9 2h2v1h-2zM5 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM5 4h1v1h-1zM7 4h1v1h-1zM10 4h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM6 6h1v1h-1zM9 6h1v1h-1zM5 7h6v1h-6zM6 8h1v1h-1zM9 8h1v1h-1zM5 9h1v1h-1zM10 9h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 0h2v1h-2zM6 1h1v1h-1zM9 1h1v1h-1zM5 2h1v1h-1zM9 2h2v1h-2zM5 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM5 4h1v1h-1zM7 4h1v1h-1zM10 4h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM6 6h1v1h-1zM9 6h1v1h-1zM5 7h6v1h-6zM6 8h1v1h-1zM9 8h1v1h-1zM5 9h1v1h-1zM10 9h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-n::before,
+.lkp[data-pp="pixel"] .pc.t-n::before,
+:root[data-pieces="pixel"] .board .ghost.t-n::before,
+.lkp[data-pp="pixel"] .ghost.t-n::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 1h2v1h-2zM5 2h6v1h-6zM4 3h9v1h-9zM3 4h11v1h-11zM2 5h13v1h-13zM2 6h13v1h-13zM3 7h2v1h-2zM7 7h8v1h-8zM6 8h9v1h-9zM5 9h10v1h-10zM4 10h11v1h-11zM4 11h11v1h-11zM4 12h10v1h-10zM3 13h12v1h-12zM3 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 1h2v1h-2zM5 2h6v1h-6zM4 3h9v1h-9zM3 4h11v1h-11zM2 5h13v1h-13zM2 6h13v1h-13zM3 7h2v1h-2zM7 7h8v1h-8zM6 8h9v1h-9zM5 9h10v1h-10zM4 10h11v1h-11zM4 11h11v1h-11zM4 12h10v1h-10zM3 13h12v1h-12zM3 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-n::after,
+.lkp[data-pp="pixel"] .pc.t-n::after,
+:root[data-pieces="pixel"] .board .ghost.t-n::after,
+.lkp[data-pp="pixel"] .ghost.t-n::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 1h2v1h-2zM5 2h1v1h-1zM7 2h4v1h-4zM4 3h1v1h-1zM11 3h2v1h-2zM3 4h1v1h-1zM5 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h2v1h-2zM14 6h1v1h-1zM3 7h2v1h-2zM7 7h1v1h-1zM14 7h1v1h-1zM6 8h1v1h-1zM14 8h1v1h-1zM5 9h1v1h-1zM14 9h1v1h-1zM4 10h1v1h-1zM14 10h1v1h-1zM4 11h11v1h-11zM4 12h1v1h-1zM13 12h1v1h-1zM3 13h1v1h-1zM14 13h1v1h-1zM3 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 1h2v1h-2zM5 2h1v1h-1zM7 2h4v1h-4zM4 3h1v1h-1zM11 3h2v1h-2zM3 4h1v1h-1zM5 4h1v1h-1zM13 4h1v1h-1zM2 5h1v1h-1zM14 5h1v1h-1zM2 6h1v1h-1zM5 6h2v1h-2zM14 6h1v1h-1zM3 7h2v1h-2zM7 7h1v1h-1zM14 7h1v1h-1zM6 8h1v1h-1zM14 8h1v1h-1zM5 9h1v1h-1zM14 9h1v1h-1zM4 10h1v1h-1zM14 10h1v1h-1zM4 11h11v1h-11zM4 12h1v1h-1zM13 12h1v1h-1zM3 13h1v1h-1zM14 13h1v1h-1zM3 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-p::before,
+.lkp[data-pp="pixel"] .pc.t-p::before,
+:root[data-pieces="pixel"] .board .ghost.t-p::before,
+.lkp[data-pp="pixel"] .ghost.t-p::before{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 3h2v1h-2zM6 4h4v1h-4zM5 5h6v1h-6zM5 6h6v1h-6zM6 7h4v1h-4zM5 8h6v1h-6zM6 9h4v1h-4zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 3h2v1h-2zM6 4h4v1h-4zM5 5h6v1h-6zM5 6h6v1h-6zM6 7h4v1h-4zM5 8h6v1h-6zM6 9h4v1h-4zM5 10h6v1h-6zM4 11h8v1h-8zM3 12h10v1h-10zM2 13h12v1h-12zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="pixel"] .board .pc.t-p::after,
+.lkp[data-pp="pixel"] .pc.t-p::after,
+:root[data-pieces="pixel"] .board .ghost.t-p::after,
+.lkp[data-pp="pixel"] .ghost.t-p::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 3h2v1h-2zM6 4h1v1h-1zM9 4h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM5 8h6v1h-6zM6 9h1v1h-1zM9 9h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M7 3h2v1h-2zM6 4h1v1h-1zM9 4h1v1h-1zM5 5h1v1h-1zM10 5h1v1h-1zM5 6h1v1h-1zM10 6h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM5 8h6v1h-6zM6 9h1v1h-1zM9 9h1v1h-1zM5 10h1v1h-1zM10 10h1v1h-1zM4 11h1v1h-1zM11 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM2 14h12v1h-12z'/%3E%3C/svg%3E")}
+:root[data-pieces="wood"] .board .pc.w::before,
+.lkp[data-pp="wood"] .pc.w::before,
+:root[data-pieces="wood"] .board .ghost.w::before,
+.lkp[data-pp="wood"] .ghost.w::before{background:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.38) 47%,rgba(255,255,255,0) 62%),repeating-linear-gradient(97deg,#f3d6a0 0 1.6px,#e7c286 1.6px 3.4px,#f7e2b8 3.4px 5.6px,#ecca91 5.6px 7px)}
+:root[data-pieces="wood"] .board .pc.w::after,
+.lkp[data-pp="wood"] .pc.w::after,
+:root[data-pieces="wood"] .board .ghost.w::after,
+.lkp[data-pp="wood"] .ghost.w::after{background:#5b3414}
+:root[data-pieces="wood"] .board .pc.b::before,
+.lkp[data-pp="wood"] .pc.b::before,
+:root[data-pieces="wood"] .board .ghost.b::before,
+.lkp[data-pp="wood"] .ghost.b::before{background:linear-gradient(100deg,rgba(255,255,255,0) 30%,rgba(255,220,180,.2) 47%,rgba(255,255,255,0) 62%),repeating-linear-gradient(97deg,#5a2c14 0 1.6px,#47210e 1.6px 3.4px,#6a3a1e 3.4px 5.6px,#4f2611 5.6px 7px)}
+:root[data-pieces="wood"] .board .pc.b::after,
+.lkp[data-pp="wood"] .pc.b::after,
+:root[data-pieces="wood"] .board .ghost.b::after,
+.lkp[data-pp="wood"] .ghost.b::after{background:#1b0b03}
+:root[data-pieces="wood"] .board .pc,
+.lkp[data-pp="wood"] .pc,
+:root[data-pieces="wood"] .board .ghost,
+.lkp[data-pp="wood"] .ghost{filter:drop-shadow(0 calc(var(--sq) * .05) calc(var(--sq) * .04) rgba(40,20,0,.45))}
+:root[data-pieces="gloss"] .board .pc.w::before,
+.lkp[data-pp="gloss"] .pc.w::before,
+:root[data-pieces="gloss"] .board .ghost.w::before,
+.lkp[data-pp="gloss"] .ghost.w::before{background:radial-gradient(circle at 34% 24%,#ffffff 0 7%,#f6f3ec 18%,#ddd8cd 55%,#b9b2a5 100%)}
+:root[data-pieces="gloss"] .board .pc.w::after,
+.lkp[data-pp="gloss"] .pc.w::after,
+:root[data-pieces="gloss"] .board .ghost.w::after,
+.lkp[data-pp="gloss"] .ghost.w::after{background:#6b655c}
+:root[data-pieces="gloss"] .board .pc.b::before,
+.lkp[data-pp="gloss"] .pc.b::before,
+:root[data-pieces="gloss"] .board .ghost.b::before,
+.lkp[data-pp="gloss"] .ghost.b::before{background:radial-gradient(circle at 34% 24%,#a4abb7 0 5%,#4a4f59 16%,#1c1f24 52%,#060708 100%)}
+:root[data-pieces="gloss"] .board .pc.b::after,
+.lkp[data-pp="gloss"] .pc.b::after,
+:root[data-pieces="gloss"] .board .ghost.b::after,
+.lkp[data-pp="gloss"] .ghost.b::after{background:#000}
+:root[data-pieces="gloss"] .board .pc,
+.lkp[data-pp="gloss"] .pc,
+:root[data-pieces="gloss"] .board .ghost,
+.lkp[data-pp="gloss"] .ghost{filter:drop-shadow(0 calc(var(--sq) * .06) calc(var(--sq) * .05) rgba(0,0,0,.45))}
+:root[data-pieces="modern"] .board .pc.w::before,
+.lkp[data-pp="modern"] .pc.w::before,
+:root[data-pieces="modern"] .board .ghost.w::before,
+.lkp[data-pp="modern"] .ghost.w::before{background:#fbfbfa}
+:root[data-pieces="modern"] .board .pc.w::after,
+.lkp[data-pp="modern"] .pc.w::after,
+:root[data-pieces="modern"] .board .ghost.w::after,
+.lkp[data-pp="modern"] .ghost.w::after{background:#121314}
+:root[data-pieces="modern"] .board .pc.b::before,
+.lkp[data-pp="modern"] .pc.b::before,
+:root[data-pieces="modern"] .board .ghost.b::before,
+.lkp[data-pp="modern"] .ghost.b::before{background:#16171a}
+:root[data-pieces="modern"] .board .pc.b::after,
+.lkp[data-pp="modern"] .pc.b::after,
+:root[data-pieces="modern"] .board .ghost.b::after,
+.lkp[data-pp="modern"] .ghost.b::after{background:#eceef0}
+:root[data-pieces="modern"] .board .pc,
+.lkp[data-pp="modern"] .pc,
+:root[data-pieces="modern"] .board .ghost,
+.lkp[data-pp="modern"] .ghost{filter:drop-shadow(0 calc(var(--sq) * .03) calc(var(--sq) * .03) rgba(0,0,0,.25))}
+:root[data-pieces="pixel"] .board .pc.w::before,
+.lkp[data-pp="pixel"] .pc.w::before,
+:root[data-pieces="pixel"] .board .ghost.w::before,
+.lkp[data-pp="pixel"] .ghost.w::before{background:#ffffff}
+:root[data-pieces="pixel"] .board .pc.w::after,
+.lkp[data-pp="pixel"] .pc.w::after,
+:root[data-pieces="pixel"] .board .ghost.w::after,
+.lkp[data-pp="pixel"] .ghost.w::after{background:#101010}
+:root[data-pieces="pixel"] .board .pc.b::before,
+.lkp[data-pp="pixel"] .pc.b::before,
+:root[data-pieces="pixel"] .board .ghost.b::before,
+.lkp[data-pp="pixel"] .ghost.b::before{background:#26262b}
+:root[data-pieces="pixel"] .board .pc.b::after,
+.lkp[data-pp="pixel"] .pc.b::after,
+:root[data-pieces="pixel"] .board .ghost.b::after,
+.lkp[data-pp="pixel"] .ghost.b::after{background:#f2f2f2}
+:root[data-pieces="pixel"] .board .pc,
+.lkp[data-pp="pixel"] .pc,
+:root[data-pieces="pixel"] .board .ghost,
+.lkp[data-pp="pixel"] .ghost{filter:none}
+:root[data-pieces="letters"] .board .pc i,
+.lkp[data-pp="letters"] .pc i,
+:root[data-pieces="letters"] .board .ghost i,
+.lkp[data-pp="letters"] .ghost i,
+:root[data-pieces="letters"] .board .pc b,
+.lkp[data-pp="letters"] .pc b,
+:root[data-pieces="letters"] .board .ghost b,
+.lkp[data-pp="letters"] .ghost b{visibility:hidden}
+:root[data-pieces="letters"] .board .pc::before,
+.lkp[data-pp="letters"] .pc::before,
+:root[data-pieces="letters"] .board .ghost::before,
+.lkp[data-pp="letters"] .ghost::before{content:"";position:absolute;inset:11%;border-radius:50%}
+:root[data-pieces="letters"] .board .pc::after,
+.lkp[data-pp="letters"] .pc::after,
+:root[data-pieces="letters"] .board .ghost::after,
+.lkp[data-pp="letters"] .ghost::after{position:absolute;inset:0;display:grid;place-items:center;font:750 calc(var(--sq) * .3)/1 -apple-system,"SF Pro Display",system-ui,"Segoe UI",Roboto,sans-serif;letter-spacing:-.02em}
+:root[data-pieces="letters"] .board .pc.t-k::after,
+.lkp[data-pp="letters"] .pc.t-k::after,
+:root[data-pieces="letters"] .board .ghost.t-k::after,
+.lkp[data-pp="letters"] .ghost.t-k::after{content:"Кр"}
+:root[data-pieces="letters"] .board .pc.t-q::after,
+.lkp[data-pp="letters"] .pc.t-q::after,
+:root[data-pieces="letters"] .board .ghost.t-q::after,
+.lkp[data-pp="letters"] .ghost.t-q::after{content:"Ф"}
+:root[data-pieces="letters"] .board .pc.t-r::after,
+.lkp[data-pp="letters"] .pc.t-r::after,
+:root[data-pieces="letters"] .board .ghost.t-r::after,
+.lkp[data-pp="letters"] .ghost.t-r::after{content:"Л"}
+:root[data-pieces="letters"] .board .pc.t-b::after,
+.lkp[data-pp="letters"] .pc.t-b::after,
+:root[data-pieces="letters"] .board .ghost.t-b::after,
+.lkp[data-pp="letters"] .ghost.t-b::after{content:"С"}
+:root[data-pieces="letters"] .board .pc.t-n::after,
+.lkp[data-pp="letters"] .pc.t-n::after,
+:root[data-pieces="letters"] .board .ghost.t-n::after,
+.lkp[data-pp="letters"] .ghost.t-n::after{content:"К"}
+:root[data-pieces="letters"] .board .pc.t-p::after,
+.lkp[data-pp="letters"] .pc.t-p::after,
+:root[data-pieces="letters"] .board .ghost.t-p::after,
+.lkp[data-pp="letters"] .ghost.t-p::after{content:"п"}
+:root[data-pieces="letters"] .board .pc.t-p::after,
+.lkp[data-pp="letters"] .pc.t-p::after,
+:root[data-pieces="letters"] .board .ghost.t-p::after,
+.lkp[data-pp="letters"] .ghost.t-p::after{font-size:calc(var(--sq) * .36);padding-bottom:calc(var(--sq) * .05)}
+:root[data-pieces="letters"] .board .pc.w::before,
+.lkp[data-pp="letters"] .pc.w::before,
+:root[data-pieces="letters"] .board .ghost.w::before,
+.lkp[data-pp="letters"] .ghost.w::before{background:radial-gradient(circle at 36% 30%,#fffef9,#f1e8d4 58%,#d9cdb1);box-shadow:inset 0 0 0 calc(var(--sq) * .03) #8b7a58,inset 0 0 0 calc(var(--sq) * .065) #fffaf0,inset 0 0 0 calc(var(--sq) * .08) rgba(139,122,88,.5),0 calc(var(--sq) * .04) calc(var(--sq) * .07) rgba(0,0,0,.35)}
+:root[data-pieces="letters"] .board .pc.w::after,
+.lkp[data-pp="letters"] .pc.w::after,
+:root[data-pieces="letters"] .board .ghost.w::after,
+.lkp[data-pp="letters"] .ghost.w::after{color:#3a2d18}
+:root[data-pieces="letters"] .board .pc.b::before,
+.lkp[data-pp="letters"] .pc.b::before,
+:root[data-pieces="letters"] .board .ghost.b::before,
+.lkp[data-pp="letters"] .ghost.b::before{background:radial-gradient(circle at 36% 30%,#555b66,#262a31 58%,#111317);box-shadow:inset 0 0 0 calc(var(--sq) * .03) #a7b0bd,inset 0 0 0 calc(var(--sq) * .065) #262a31,inset 0 0 0 calc(var(--sq) * .08) rgba(167,176,189,.45),0 calc(var(--sq) * .04) calc(var(--sq) * .07) rgba(0,0,0,.45)}
+:root[data-pieces="letters"] .board .pc.b::after,
+.lkp[data-pp="letters"] .pc.b::after,
+:root[data-pieces="letters"] .board .ghost.b::after,
+.lkp[data-pp="letters"] .ghost.b::after{color:#f3ece0}
 </style>
 
 <div class="app">
@@ -964,7 +1498,7 @@ details.tbl td,details.tbl th{padding:4px 12px 4px 0;text-align:left;border-bott
   <div style="min-width:0">
     <header class="topbar">
       <div class="brand"><a class="vc icon rk-back" href="../../#fun" aria-label="Назад в «Рамки»"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><div class="brand-mark" aria-hidden="true">&#9822;&#xFE0E;</div><b>Дебютная тетрадь</b></div>
-      <div class="top-r"><button class="vc icon" data-act="lookOpen" id="lookBtnTop" aria-label="Стиль и доска"></button><button class="vc icon" data-act="memOpen" id="memBtnTop" aria-label="Память"></button><button class="vc icon" data-act="sndToggle" id="sndBtnTop" aria-label="Звук"></button><button class="vc icon" data-act="fullScreen" id="fsBtnTop" aria-label="На весь экран"></button><div class="top-streak" id="topStreak"></div></div>
+      <div class="top-r"><button class="vc icon" data-act="lookOpen" id="lookBtnTop" aria-label="Вид: доска, фигуры, эффекты, звук"></button><button class="vc icon" data-act="memOpen" id="memBtnTop" aria-label="Память"></button><button class="vc icon" data-act="sndToggle" id="sndBtnTop" aria-label="Звук"></button><button class="vc icon" data-act="fullScreen" id="fsBtnTop" aria-label="На весь экран"></button><div class="top-streak" id="topStreak"></div></div>
     </header>
     <main><div class="view" id="view"></div></main>
   </div>
@@ -1092,7 +1626,7 @@ class Board {
       const d = this.sqs[sq]; d.classList.remove('last', 'sel', 'dest', 'cap', 'check');
       const old = d.querySelector('.pc'); if (old) old.remove();
       const p = this.pos.get(sq);
-      if (p) d.insertAdjacentHTML('beforeend', `<span class="pc ${p.color}"><i>${FILL[p.type]}${VS}</i>${p.color === 'w' ? `<b>${LINE[p.type]}${VS}</b>` : ''}</span>`);
+      if (p) d.insertAdjacentHTML('beforeend', `<span class="pc ${p.color} t-${p.type}"><i>${FILL[p.type]}${VS}</i>${p.color === 'w' ? `<b>${LINE[p.type]}${VS}</b>` : ''}</span>`);
       if (this.last && (sq === this.last.from || sq === this.last.to)) d.classList.add('last');
       if (sq === kingSq) d.classList.add('check');
     }
@@ -1102,6 +1636,7 @@ class Board {
       const dr = this.dragged; const dragged = dr && dr.from === this.last.from && dr.to === this.last.to && performance.now() - dr.at < 1500;
       if (!dragged) { this.animate(this.last.from, this.last.to); if (mv.rook) this.animate(mv.rook[0], mv.rook[1]); }
       if (mv.cap) this.fadeOut(mv.capSq, mv.cap);
+      if (!o.silent && typeof moveFx === 'function') moveFx(this, mv, dragged);
     } else if (o.anim && this.last && !reduced && !mv) this.animate(this.last.from, this.last.to);
     if (mv && !o.silent && typeof sfx === 'function') sfx(this.pos.in_checkmate() ? 'mate' : this.pos.in_check() ? 'check' : mv.rook ? 'castle' : mv.cap ? 'capture' : 'move');
     this.dragged = null;
@@ -1114,7 +1649,7 @@ class Board {
     let rook = null; if (p.type === 'k' && Math.abs(FILES.indexOf(last.from[0]) - FILES.indexOf(last.to[0])) === 2) { const r = last.from[1]; rook = last.to[0] === 'g' ? ['h' + r, 'f' + r] : ['a' + r, 'd' + r]; }
     return { p, cap, capSq, rook };
   }
-  fadeOut(sq, pc) { const d = this.sqs[sq]; if (!d) return; d.insertAdjacentHTML('beforeend', `<span class="pc ${pc.color} gone"><i>${FILL[pc.type]}${VS}</i>${pc.color === 'w' ? `<b>${LINE[pc.type]}${VS}</b>` : ''}</span>`); const el = d.lastElementChild; setTimeout(() => el.remove(), 340); }
+  fadeOut(sq, pc) { const d = this.sqs[sq]; if (!d) return; d.insertAdjacentHTML('beforeend', `<span class="pc ${pc.color} t-${pc.type} gone"><i>${FILL[pc.type]}${VS}</i>${pc.color === 'w' ? `<b>${LINE[pc.type]}${VS}</b>` : ''}</span>`); const el = d.lastElementChild; setTimeout(() => el.remove(), 340); }
   pick(sq, cls) { const d = this.sqs[sq]; if (!d) return; d.classList.remove('pick', 'ok', 'no', 'miss'); if (cls) d.classList.add('pick', ...cls.split(' ').filter(Boolean)); }
   clearPicks() { for (const sq in this.sqs) this.sqs[sq].classList.remove('pick', 'ok', 'no', 'miss'); }
   findKing(color) { for (const sq in this.sqs) { const p = this.pos.get(sq); if (p && p.type === 'k' && p.color === color) return sq; } return null; }
@@ -1144,7 +1679,7 @@ class Board {
       const d = this.drag; if (!d) return;
       if (!d.on && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 5) {
         d.on = true; const pc = this.sqs[d.sq].querySelector('.pc'); if (!pc) return;
-        pc.classList.add('lift'); d.pc = pc; const g = document.createElement('div'); g.className = 'ghost ' + (pc.classList.contains('w') ? 'w' : 'b'); g.innerHTML = pc.innerHTML; this.el.appendChild(g); d.ghost = g;
+        pc.classList.add('lift'); d.pc = pc; const g = document.createElement('div'); g.className = 'ghost ' + (pc.classList.contains('w') ? 'w' : 'b') + ' ' + ([...pc.classList].find(c => c.startsWith('t-')) || ''); g.innerHTML = pc.innerHTML; this.el.appendChild(g); d.ghost = g;
       }
       if (d.on && d.ghost) { const r = this.el.getBoundingClientRect(), s = r.width / 8; Object.assign(d.ghost.style, { width: s + 'px', height: s + 'px', left: (e.clientX - r.left - s / 2) + 'px', top: (e.clientY - r.top - s / 2) + 'px' }); }
     });
@@ -3821,7 +4356,7 @@ EXTRA_VIEWS.memory = vMemory; TAB_OF.memory = 'today';
 cloudInit();
 
 
-/* ================= перенос в «Рамки»: стиль приложения, доска, прогресс из Claude ================= */
+/* ================= перенос в «Рамки»: вид (стиль, доска, фигуры, эффекты ходов, звук) и прогресс из Claude ================= */
 const LOOK_KEY = 'debut-notebook.look';
 const STYLES = [
   ['spiral', 'Спираль', 'Как весь сайт: стекло, дымка, тонкий шрифт'],
@@ -3829,46 +4364,415 @@ const STYLES = [
   ['neon', 'Неон', 'Ночная аркада: сетка до горизонта и неон'],
   ['gold', 'Золото', 'Как было в Claude: золото на чёрном'],
 ];
-const BOARDS = [['classic', 'Классика'], ['green', 'Турнир'], ['ice', 'Лёд'], ['walnut', 'Орех'], ['marble', 'Мрамор'], ['sakura', 'Сакура'], ['graphite', 'Графит'], ['neon', 'Неон'], ['ocean', 'Океан']];
+const BOARDS = [['classic', 'Классика'], ['green', 'Турнир'], ['ice', 'Лёд'], ['walnut', 'Орех'], ['marble', 'Мрамор'], ['sakura', 'Сакура'], ['graphite', 'Графит'], ['neon', 'Неон'], ['ocean', 'Океан'],
+  ['notebook', 'Тетрадь'], ['book', 'Книга'], ['malachite', 'Малахит'], ['amber', 'Янтарь'], ['space', 'Космос'], ['sunset', 'Закат'], ['chocolate', 'Шоколад']];
+const PIECE_SETS = [["classic", "Классика", "Как в книгах: чёткий рисунок, под цвет доски"], ["gold", "Золото", "Белые — золото, чёрные — оникс с золотым кантом"], ["marble", "Мрамор", "Белый и зелёно-чёрный камень с прожилками"], ["glass", "Стекло", "Прозрачные, со светящимся краем"], ["neon", "Неон", "Светящиеся трубки: бирюза и малиновый"], ["wood", "Дерево", "Самшит и палисандр, видно волокна"], ["gloss", "Глянец", "Лакированные, с бликом, как в магазине"], ["modern", "Модерн", "Геометрия: плоские формы, чистые линии"], ["pixel", "Пиксель", "Восемь бит, как в старой игре"], ["letters", "Буквы", "Фишки с русскими буквами: Кр, Ф, Л, С, К, п"]];
+const FX_SETS = [
+  ['none', 'Без эффектов', 'Только плавный ход'],
+  ['ripple', 'Волна', 'Круги от клетки хода'],
+  ['sparks', 'Искры', 'Взятие — золотые искры'],
+  ['comet', 'Комета', 'Светящийся хвост за фигурой'],
+  ['flash', 'Вспышка', 'Вспышка, доска вздрагивает'],
+  ['shatter', 'Осколки', 'Взятая фигура — на куски'],
+  ['fire', 'Пламя', 'Огонь при взятии, угольки'],
+  ['stars', 'Звёзды', 'Звёздная пыль и блёстки'],
+];
+const SND_SETS = [
+  ['wood', 'Дерево', 'Стук фигур, как было'],
+  ['stone', 'Камень', 'Тяжёлые каменные фигуры'],
+  ['glass', 'Стекло', 'Звонкие хрустальные ноты'],
+  ['soft', 'Мягкий', 'Тихо, как по сукну'],
+  ['retro', '8-бит', 'Как в старой приставке'],
+  ['space', 'Космос', 'Синтезатор с эхом'],
+  ['arena', 'Арена', 'Удары с басом'],
+];
+const LOOK_OPTS = { style: STYLES, board: BOARDS, pieces: PIECE_SETS, fx: FX_SETS, snd: SND_SETS };
+const LOOK_DEF = { style: 'spiral', board: 'classic', pieces: 'classic', fx: 'ripple', snd: 'wood' };
 function lookGet() {
   let l = {}; try { l = JSON.parse(localStorage.getItem(LOOK_KEY) || '{}') || {}; } catch (e) {}
-  return { style: STYLES.some(s => s[0] === l.style) ? l.style : 'spiral', board: BOARDS.some(b => b[0] === l.board) ? l.board : 'classic' };
+  const o = {}; for (const k in LOOK_DEF) o[k] = LOOK_OPTS[k].some(x => x[0] === l[k]) ? l[k] : LOOK_DEF[k];
+  return o;
 }
+let LOOK = lookGet();
+const lookName = (k, id = LOOK[k]) => (LOOK_OPTS[k].find(x => x[0] === id) || [])[1] || '';
 function lookSet(k, v) {
-  const l = lookGet(); l[k] = v;
-  try { localStorage.setItem(LOOK_KEY, JSON.stringify(l)); } catch (e) {}
-  document.documentElement.dataset.style = l.style; document.documentElement.dataset.board = l.board;
+  if (!LOOK_OPTS[k] || !LOOK_OPTS[k].some(x => x[0] === v)) return;
+  LOOK[k] = v; try { localStorage.setItem(LOOK_KEY, JSON.stringify(LOOK)); } catch (e) {}
+  const r = document.documentElement.dataset; r.style = LOOK.style; r.board = LOOK.board; r.pieces = LOOK.pieces;
   paintLook();
 }
+
+/* ---------- значки */
 const LOOK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4-4-7.4-9-7.4z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7.2" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>';
-function lookMini(id) {
-  let h = '';
-  for (let i = 0; i < 16; i++) h += `<i class="sq ${((i >> 2) + (i & 3)) % 2 ? 'd' : 'l'}"></i>`;
-  return `<span class="lk-b" data-b="${id}" aria-hidden="true">${h}<span class="lk-p w"><i>${FILL.n}${VS}</i><b>${LINE.n}${VS}</b></span><span class="lk-p b"><i>${FILL.q}${VS}</i></span></span>`;
+const LK_SVG = b => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+const FX_IC = {
+  none: '<circle cx="12" cy="12" r="8"/><path d="M6.4 17.6L17.6 6.4"/>',
+  ripple: '<circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="5.8" opacity=".75"/><circle cx="12" cy="12" r="9.4" opacity=".45"/>',
+  sparks: '<path d="M12 3v3.5M12 17.5V21M3 12h3.5M17.5 12H21M5.6 5.6l2.5 2.5M15.9 15.9l2.5 2.5M5.6 18.4l2.5-2.5M15.9 8.1l2.5-2.5"/><circle cx="12" cy="12" r="1.6"/>',
+  comet: '<circle cx="17" cy="7" r="3"/><path d="M14.8 9.2L4 20M13.2 6.2L7 12.4M17.8 10.8L11.6 17"/>',
+  flash: '<path d="M12 2.8l1.8 5.6 5.8-1.7-3.9 4.3 3.9 4.3-5.8-1.7L12 21.2l-1.8-5.6-5.8 1.7 3.9-4.3-3.9-4.3 5.8 1.7z"/>',
+  shatter: '<path d="M3.5 13.5l5-5.5 1.8 7z"/><path d="M13.5 3.5l6.5 3-4.2 4.2z"/><path d="M11.5 20.5l2.3-6.3 5.2 3.2z"/>',
+  fire: '<path d="M12 21c-3.9 0-6.4-2.6-6.4-6.1 0-3.6 2.9-5.4 3.5-9.4 2.4 1.6 3.7 3.7 3.9 6.3 1-.8 1.6-2 1.7-3.4 2.3 1.9 3.8 4.3 3.8 6.5 0 3.5-2.6 6.1-6.5 6.1z"/>',
+  stars: '<path d="M9 3l1.4 4.1 4.1 1.4-4.1 1.4L9 14l-1.4-4.1L3.5 8.5l4.1-1.4z"/><path d="M17 12.5l.9 2.6 2.6.9-2.6.9L17 19.5l-.9-2.6-2.6-.9 2.6-.9z"/>',
+};
+const SND_IC = {
+  wood: '<path d="M12 21v-7.5"/><path d="M12 3c3.4 0 6 2.5 6 5.5S15.4 14 12 14s-6-2.5-6-5.5S8.6 3 12 3z"/><path d="M8 21h8"/>',
+  stone: '<path d="M4 16.5l2.8-6.8 5-3.4 6 1.8 2.2 6.6-4 4.3H8.2z"/><path d="M9 11l3 2 4-1"/>',
+  glass: '<path d="M7 3h10l-1 6.5a4 4 0 0 1-8 0z"/><path d="M12 13.6V20M8.5 20.5h7"/>',
+  soft: '<path d="M7 18.5a4 4 0 0 1-.6-7.9 5.6 5.6 0 0 1 10.8-1.7 4.8 4.8 0 0 1 .3 9.6z"/>',
+  retro: '<rect x="3" y="7" width="18" height="10" rx="3"/><path d="M7 10.2v3.6M5.2 12h3.6"/><circle cx="15.5" cy="11" r=".6"/><circle cx="17.8" cy="13.2" r=".6"/>',
+  space: '<circle cx="12" cy="12" r="4.6"/><path d="M4.2 15.7C2.6 13.4 7 9.6 12.3 7.6s9.6-2 8.6.8"/>',
+  arena: '<path d="M13 2.5L5 13.2h6l-1 8.3 8-10.7h-6z"/>',
+};
+
+/* ---------- эффекты ходов: частицы на холсте поверх доски (и на превью в окне «Вид») */
+const fxOff = () => reduced || document.documentElement.dataset.motion === 'none';
+const FX_HOSTS = new WeakMap(), FX_TAU = Math.PI * 2;
+const fxR = (a, b) => a + Math.random() * (b - a), fxPick = a => a[Math.random() * a.length | 0];
+function fxHost(host) {
+  const w = host.clientWidth, h = host.clientHeight; if (!w || !h) return null;
+  let e = FX_HOSTS.get(host);
+  if (!e) {
+    const cv = document.createElement('canvas'); cv.className = 'fxc'; cv.setAttribute('aria-hidden', 'true');
+    const ctx = cv.getContext('2d'); if (!ctx) return null;
+    e = { cv, ctx, ps: [], run: false, w: 0, h: 0, d: 1 }; FX_HOSTS.set(host, e);
+  }
+  if (e.cv.parentNode !== host) host.appendChild(e.cv);
+  if (e.w !== w || e.h !== h) { e.d = Math.min(2, window.devicePixelRatio || 1); e.cv.width = Math.round(w * e.d); e.cv.height = Math.round(h * e.d); e.w = w; e.h = h; }
+  return e;
 }
-function lookSheet() {
-  const l = lookGet();
-  return `<div class="lk-in" role="dialog" aria-modal="true" aria-labelledby="lkT">
-    <div class="lk-head"><h2 id="lkT">Стиль и доска</h2><button class="btn quiet" data-act="lookClose">Готово</button></div>
-    <p class="eyebrow">Стиль приложения</p>
-    <div class="lk-styles">${STYLES.map(([id, nm, d]) => `<button class="lk-st" data-act="lookStyle" data-id="${id}" aria-pressed="${l.style === id}"><span class="lk-sw" data-s="${id}"><i></i><i></i><i></i></span><b>${nm}</b><span>${d}</span></button>`).join('')}</div>
-    <p class="eyebrow">Доска</p>
-    <div class="lk-boards">${BOARDS.map(([id, nm]) => `<button class="lk-bd" data-act="lookBoard" data-id="${id}" aria-pressed="${l.board === id}">${lookMini(id)}<span>${nm}</span></button>`).join('')}</div>
-    <p class="lk-now">Стиль и доска выбираются отдельно: любую доску можно поставить к любому стилю. Сохраняется на этом устройстве.</p></div>`;
+function fxRun(e) {
+  if (e.run) return; e.run = true; let prev = performance.now();
+  const step = now => {
+    const dt = Math.max(0, Math.min(50, now - prev)); prev = now;
+    const c = e.ctx; c.setTransform(e.d, 0, 0, e.d, 0, 0); c.clearRect(0, 0, e.w, e.h);
+    const live = [];
+    for (const p of e.ps) {
+      p.age += dt;
+      if (p.age < p.wait) { live.push(p); continue; }
+      const k = (p.age - p.wait) / p.life; if (k >= 1) continue; live.push(p);
+      if (p.vx !== undefined) { const s = dt / 1000, f = Math.max(0, 1 - (p.drag || 0) * s); p.vx *= f; p.vy = p.vy * f + (p.g || 0) * s; p.x += p.vx * s; p.y += p.vy * s; p.rot = (p.rot || 0) + (p.vr || 0) * s; }
+      c.save(); FX_DRAW[p.t](c, p, k); c.restore();
+    }
+    e.ps = live;
+    if (live.length) requestAnimationFrame(step); else { e.run = false; c.clearRect(0, 0, e.w, e.h); }
+  };
+  requestAnimationFrame(step);
+}
+function fxGrad(cs, k) { const f = Math.min(.999, k) * (cs.length - 1), i = f | 0, u = f - i, a = cs[i], b = cs[i + 1]; return `rgb(${a[0] + (b[0] - a[0]) * u | 0},${a[1] + (b[1] - a[1]) * u | 0},${a[2] + (b[2] - a[2]) * u | 0})`; }
+const FX_DRAW = {
+  dot(c, p, k) { // светящаяся точка; streak — чёрточка по скорости (искра)
+    const a = (p.a == null ? 1 : p.a) * (1 - k * k), r = Math.max(.2, p.r * (1 - k * (p.shrink == null ? .5 : p.shrink)));
+    c.globalCompositeOperation = p.add ? 'lighter' : 'source-over'; c.fillStyle = c.strokeStyle = p.cols ? fxGrad(p.cols, k) : p.col;
+    if (p.streak) { c.globalAlpha = a; c.lineWidth = r * 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * .04, p.y - p.vy * .04); c.stroke(); return; }
+    c.globalAlpha = a * .28; c.beginPath(); c.arc(p.x, p.y, r * 2.3, 0, FX_TAU); c.fill();
+    c.globalAlpha = a; c.beginPath(); c.arc(p.x, p.y, r, 0, FX_TAU); c.fill();
+  },
+  ring(c, p, k) {
+    const r = p.r0 + (p.r1 - p.r0) * (1 - Math.pow(1 - k, 3)), lw = Math.max(.6, p.lw * (1 - k * .7));
+    c.globalAlpha = (p.a == null ? 1 : p.a) * (1 - k);
+    if (p.edge) { c.strokeStyle = p.edge; c.lineWidth = lw + 2.5; c.beginPath(); c.arc(p.x, p.y, r, 0, FX_TAU); c.stroke(); }
+    c.strokeStyle = p.col; c.lineWidth = lw; c.beginPath(); c.arc(p.x, p.y, r, 0, FX_TAU); c.stroke();
+  },
+  bloom(c, p, k) {
+    const r = Math.max(1, p.r0 + (p.r1 - p.r0) * (1 - (1 - k) * (1 - k))), a = (p.a == null ? 1 : p.a) * (1 - k) * (1 - k);
+    const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(${p.rgb},${a})`); g.addColorStop(.45, `rgba(${p.rgb},${a * .45})`); g.addColorStop(1, `rgba(${p.rgb},0)`);
+    c.globalCompositeOperation = p.add ? 'lighter' : 'source-over'; c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, r, 0, FX_TAU); c.fill();
+  },
+  shard(c, p, k) {
+    c.globalAlpha = k < .7 ? 1 : (1 - k) / .3; c.translate(p.x, p.y); c.rotate(p.rot);
+    c.beginPath(); p.poly.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath();
+    c.fillStyle = p.col; c.fill(); c.lineWidth = Math.max(.7, p.sz * .09); c.strokeStyle = p.edge; c.stroke();
+  },
+  star(c, p, k) {
+    const tw = .6 + .4 * Math.sin(p.age / 1000 * p.tw + p.ph), r = p.r * tw * (1 - k * .4);
+    c.globalCompositeOperation = 'lighter'; c.globalAlpha = (p.a == null ? 1 : p.a) * (k < .6 ? 1 : (1 - k) / .4); c.fillStyle = p.col;
+    c.translate(p.x, p.y); c.rotate(p.rot); c.beginPath();
+    for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .3 : r, an = i * Math.PI / 4; c.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); }
+    c.closePath(); c.fill(); c.globalAlpha *= .3; c.beginPath(); c.arc(0, 0, r * .85, 0, FX_TAU); c.fill();
+  },
+  rays(c, p, k) { // лучи вспышки: светлые с тёмным краем — видно и на светлых клетках
+    const a = (p.a == null ? 1 : p.a) * (1 - k), r0 = p.r0 + p.r1 * .45 * k, len = p.r1 * (.4 + .6 * (1 - (1 - k) * (1 - k)));
+    c.translate(p.x, p.y); c.rotate(p.rot); c.lineCap = 'round';
+    for (let pass = 0; pass < 2; pass++) {
+      c.globalAlpha = a * (pass ? 1 : .4); c.strokeStyle = pass ? p.col : p.edge; c.lineWidth = Math.max(.6, p.lw * (1 - k * .6) * (pass ? 1 : 2.4));
+      c.beginPath();
+      for (let i = 0; i < p.n; i++) { const an = i / p.n * FX_TAU, L = i % 2 ? .55 : 1; c.moveTo(Math.cos(an) * r0, Math.sin(an) * r0); c.lineTo(Math.cos(an) * (r0 + len * L), Math.sin(an) * (r0 + len * L)); }
+      c.stroke();
+    }
+  },
+  smoke(c, p, k) {
+    const r = p.r + (p.r1 - p.r) * k, a = (p.a == null ? .3 : p.a) * (1 - k);
+    const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, r); g.addColorStop(0, `rgba(${p.rgb},${a})`); g.addColorStop(1, `rgba(${p.rgb},0)`);
+    c.fillStyle = g; c.beginPath(); c.arc(p.x, p.y, r, 0, FX_TAU); c.fill();
+  },
+};
+function fxRing(e, P, o) { e.ps.push(Object.assign({ t: 'ring', x: P[0], y: P[1], r0: 4, r1: 40, lw: 3, col: '#fff', life: 520, wait: 0, age: 0 }, o)); }
+function fxBloom(e, P, o) { e.ps.push(Object.assign({ t: 'bloom', x: P[0], y: P[1], r0: 2, r1: 40, rgb: '255,255,255', a: 1, life: 300, wait: 0, age: 0 }, o)); }
+function fxBurst(e, P, n, o) { // n частиц из точки P; скорости и размеры — в долях клетки s
+  const s = o.s, sp = o.sp || .08;
+  for (let i = 0; i < n; i++) {
+    const an = fxR(0, FX_TAU), v = fxR(o.v[0], o.v[1]) * s;
+    e.ps.push({ t: o.t || 'dot', x: P[0] + fxR(-sp, sp) * s, y: P[1] + fxR(-sp, sp) * s, vx: Math.cos(an) * v, vy: Math.sin(an) * v, g: (o.g || 0) * s, drag: o.drag || 0,
+      life: fxR(o.life[0], o.life[1]), r: fxR(o.r[0], o.r[1]) * s, col: fxPick(o.cols), add: o.add !== false, streak: !!o.streak, shrink: o.shrink, a: o.a,
+      wait: (o.wait || 0) + fxR(0, o.jit || 0), age: 0, rot: fxR(0, FX_TAU), vr: fxR(-2, 2), tw: fxR(9, 16), ph: fxR(0, FX_TAU) });
+  }
+}
+function fxShake(el, wait) { setTimeout(() => { el.classList.remove('fx-shake'); void el.offsetWidth; el.classList.add('fx-shake'); setTimeout(() => el.classList.remove('fx-shake'), 380); }, Math.max(0, wait)); }
+function fxLand(el, wait) { if (el) setTimeout(() => { el.classList.remove('fx-land'); void el.offsetWidth; el.classList.add('fx-land'); setTimeout(() => el.classList.remove('fx-land'), 340); }, Math.max(0, wait)); }
+// цвета взятой фигуры для «Осколков» — под выбранный набор: [белые тело, белые край, чёрные тело, чёрные край]
+const FX_TONES = { classic: ['#fcfcf9', '#141826', '#141826', '#e8e8e8'], gold: ['#f2c94c', '#6a4708', '#26282d', '#e0b54e'], marble: ['#f2f0ea', '#77726a', '#1f3530', '#bfd9cc'],
+  glass: ['rgba(214,236,255,.75)', '#ffffff', 'rgba(30,40,60,.8)', '#afc8ff'], neon: ['#8ff7f9', '#2de2e6', '#ff5cc4', '#ffc2ec'], wood: ['#efcf95', '#5b3414', '#5a2c14', '#1b0b03'],
+  gloss: ['#f3f0e8', '#6b655c', '#202328', '#000000'], modern: ['#fbfbfa', '#121314', '#16171a', '#eceef0'], pixel: ['#ffffff', '#101010', '#26262b', '#f2f2f2'], letters: ['#f1e8d4', '#8b7a58', '#262a31', '#a7b0bd'] };
+const fxTone = c => { const t = FX_TONES[LOOK.pieces] || FX_TONES.classic; return c === 'w' ? [t[0], t[1]] : [t[2], t[3]]; };
+// m: s — клетка в px; F/T — откуда/куда; C — взятие; rook — ладья при рокировке; K — король под шахом; slide — когда фигура доедет
+const FX_FX = {
+  ripple(e, m) {
+    const s = m.s, w = m.slide, ring = (P, o) => fxRing(e, P, Object.assign({ r0: .18 * s, r1: .85 * s, lw: .075 * s, col: 'rgba(255,255,255,.95)', edge: 'rgba(0,0,0,.16)', life: 540, wait: w }, o));
+    ring(m.T);
+    if (m.rook) ring(m.rook[1], { wait: w + 50 });
+    if (m.C) { ring(m.C, { r1: 1.55 * s, lw: .1 * s, col: 'rgba(255,200,80,.95)', life: 640 }); ring(m.C, { r1: 2.4 * s, wait: w + 120, life: 760, a: .75 }); }
+    if (m.K) [0, 260].forEach(d => ring(m.K, { col: 'rgba(255,72,72,.95)', edge: 'rgba(90,0,0,.22)', r1: 1.15 * s, wait: w + 60 + d, life: 560 }));
+    if (m.mate) [0, 170, 340].forEach((d, i) => ring(m.K, { col: i ? 'rgba(255,200,80,.9)' : 'rgba(255,72,72,.95)', r1: 7 * s, lw: .13 * s, wait: w + 160 + d, life: 1150 }));
+  },
+  sparks(e, m) {
+    const s = m.s, w = m.slide, GOLD = ['#fff7d6', '#ffd257', '#ffae2b', '#ff8a1e'];
+    fxBurst(e, m.T, 9, { s, v: [.7, 1.8], g: 3, drag: 1, life: [240, 420], r: [.022, .04], cols: GOLD.slice(0, 3), wait: w, streak: true });
+    if (m.rook) fxBurst(e, m.rook[1], 7, { s, v: [.7, 1.6], g: 3, life: [240, 400], r: [.022, .038], cols: GOLD, wait: w + 40, streak: true });
+    if (m.C) { fxBloom(e, m.C, { r0: .2 * s, r1: 1.1 * s, rgb: '255,210,110', a: .85, life: 320, wait: w }); fxBurst(e, m.C, 34, { s, v: [2, 5.6], g: 5, drag: 1.2, life: [500, 950], r: [.026, .055], cols: GOLD, wait: w, streak: true }); }
+    if (m.K) fxBurst(e, m.K, 18, { s, v: [.8, 2.4], g: 2, drag: 1, life: [380, 640], r: [.024, .045], cols: ['#ff4d4d', '#ff9a8a', '#ffe0d8'], wait: w + 70, streak: true });
+    if (m.mate) [0, 230, 460, 690].forEach((d, i) => fxBurst(e, i ? [fxR(.15, .85) * e.w, fxR(.15, .7) * e.h] : m.K, 42, { s, v: [1.6, 4.8], g: 4, drag: 1.1, life: [620, 1150], r: [.03, .06], cols: i % 2 ? ['#8fd3ff', '#ffffff', '#c6a7ff'] : GOLD, wait: w + 160 + d, streak: true }));
+  },
+  comet(e, m) {
+    const s = m.s, w = m.slide, pal = m.K ? ['#ff5a5a', '#ffd2c8'] : m.mover === 'w' ? ['#7fdcff', '#ffffff'] : ['#c69bff', '#ff8fd6'], arrive = Math.max(w, 140);
+    const tail = (A, B, d0, cols, dur) => { const n = 20; for (let i = 0; i <= n; i++) { const k = i / n; e.ps.push({ t: 'dot', x: A[0] + (B[0] - A[0]) * k + fxR(-.035, .035) * s, y: A[1] + (B[1] - A[1]) * k + fxR(-.035, .035) * s, vx: fxR(-.12, .12) * s, vy: fxR(-.12, .12) * s, life: 260 + k * 200, r: (.045 + .075 * k) * s, col: cols[i % 2], add: true, shrink: .9, wait: d0 + k * dur, age: 0 }); } };
+    tail(m.F, m.T, 0, pal, arrive);
+    if (m.rook) tail(m.rook[0], m.rook[1], 0, pal, arrive);
+    fxBloom(e, m.T, { r0: .15 * s, r1: .85 * s, rgb: m.K ? '255,90,90' : m.mover === 'w' ? '150,225,255' : '205,160,255', a: .85, life: 380, wait: arrive, add: true });
+    if (m.C) fxBurst(e, m.C, 18, { s, v: [1, 3.2], g: 1.4, drag: 2, life: [380, 720], r: [.028, .05], cols: pal, wait: arrive, streak: true });
+    if (m.K) fxRing(e, m.K, { r0: .2 * s, r1: 1.1 * s, lw: .08 * s, col: 'rgba(255,80,80,.95)', edge: 'rgba(90,0,0,.2)', life: 560, wait: w + 80 });
+    if (m.mate) for (let i = 0; i < 7; i++) { const x = fxR(-.1, .8) * e.w; tail([x, -.5 * s], [x + .4 * e.h, .78 * e.h], 220 + i * 120, ['#ffd257', '#ffffff'], 320); }
+  },
+  flash(e, m) {
+    const s = m.s, w = m.slide, rays = (P, o) => e.ps.push(Object.assign({ t: 'rays', x: P[0], y: P[1], n: 8, r0: .32 * s, r1: .5 * s, lw: .045 * s, col: '#fffdf0', edge: 'rgba(60,40,0,.55)', rot: fxR(0, 1), life: 340, wait: w, age: 0 }, o));
+    fxBloom(e, m.T, { r0: .25 * s, r1: 1 * s, rgb: '255,226,120', a: .9, life: 400, wait: w }); rays(m.T);
+    if (m.rook) { fxBloom(e, m.rook[1], { r0: .25 * s, r1: .9 * s, rgb: '255,226,120', a: .85, life: 380, wait: w + 40 }); rays(m.rook[1], { wait: w + 40 }); }
+    if (m.C) {
+      fxBloom(e, m.C, { r0: .4 * s, r1: 2.3 * s, rgb: '255,214,96', a: 1, life: 600, wait: w }); fxBloom(e, m.C, { r0: .2 * s, r1: 1.1 * s, rgb: '255,255,255', a: .95, life: 320, wait: w });
+      rays(m.C, { n: 12, r0: .38 * s, r1: 1.15 * s, lw: .055 * s, life: 520 });
+      fxRing(e, m.C, { r0: .3 * s, r1: 1.8 * s, lw: .06 * s, col: 'rgba(255,255,255,.95)', edge: 'rgba(0,0,0,.18)', life: 560, wait: w }); fxShake(m.host, w);
+    }
+    if (m.K) [0, 260].forEach(d => { fxBloom(e, m.K, { r0: .3 * s, r1: 1.2 * s, rgb: '255,60,60', a: .9, life: 360, wait: w + 70 + d }); rays(m.K, { col: '#ffd6d6', edge: 'rgba(120,0,0,.6)', wait: w + 70 + d }); });
+    if (m.mate) { fxBloom(e, m.K, { r0: s, r1: Math.max(e.w, e.h) * 1.2, rgb: '255,246,220', a: .9, life: 800, wait: w + 220 }); rays(m.K, { n: 16, r0: .5 * s, r1: 3.2 * s, lw: .08 * s, life: 760, wait: w + 220 }); fxShake(m.host, w + 220); }
+  },
+  shatter(e, m) {
+    const s = m.s, w = m.slide;
+    for (let i = 0; i < 7; i++) e.ps.push({ t: 'smoke', x: m.T[0] + fxR(-.25, .25) * s, y: m.T[1] + .34 * s, vx: fxR(-.9, .9) * s, vy: fxR(-.3, 0) * s, drag: 3, r: .05 * s, r1: .2 * s, rgb: '140,128,112', a: .5, life: fxR(380, 560), wait: w, age: 0 });
+    const boom = (P, n, fill, edge, wt, pw = 1) => { for (let i = 0; i < n; i++) { const sz = fxR(.08, .17) * s, an = fxR(0, FX_TAU), v = fxR(1.2, 3.4) * pw * s; e.ps.push({ t: 'shard', x: P[0] + fxR(-.15, .15) * s, y: P[1] + fxR(-.2, .2) * s, vx: Math.cos(an) * v, vy: Math.sin(an) * v - 1.6 * s, g: 7 * s, drag: .6, rot: fxR(0, FX_TAU), vr: fxR(-9, 9), sz, poly: [[fxR(-1, -.25) * sz, fxR(-1, -.2) * sz], [fxR(.2, 1) * sz, fxR(-.8, .2) * sz], [fxR(-.4, .6) * sz, fxR(.35, 1) * sz]], col: fill, edge, life: fxR(560, 920), wait: wt, age: 0 }); } };
+    if (m.C) { const [f, ed] = fxTone(m.capCol), wt = Math.max(0, w - 40); boom(m.C, 14, f, ed, wt); fxBloom(e, m.C, { r0: .2 * s, r1: .9 * s, rgb: '255,255,255', a: .55, life: 220, wait: wt }); }
+    if (m.K) fxRing(e, m.K, { r0: .2 * s, r1: 1.1 * s, lw: .08 * s, col: 'rgba(255,72,72,.95)', edge: 'rgba(90,0,0,.2)', life: 560, wait: w + 70 });
+    if (m.mate) { boom(m.K, 26, '#ff5a5a', '#5a0000', w + 200, 1.4); boom(m.K, 16, '#ffd257', '#5a3a00', w + 260, 1.2); }
+  },
+  fire(e, m) {
+    const s = m.s, w = m.slide, FIRE = [[255, 232, 140], [255, 168, 48], [242, 92, 26], [160, 38, 20], [64, 30, 28]];
+    const flame = (P, n, o) => { for (let i = 0; i < n; i++) e.ps.push({ t: 'dot', x: P[0] + fxR(-o.wd, o.wd) * s, y: P[1] + fxR(-.05, .28) * s, vx: fxR(-.35, .35) * s, vy: -fxR(o.v[0], o.v[1]) * s, g: -1.3 * s, drag: .8, r: fxR(o.r[0], o.r[1]) * s, cols: FIRE, add: false, a: .88, shrink: .7, life: fxR(o.life[0], o.life[1]), wait: (o.wait || 0) + fxR(0, o.jit || 0), age: 0 }); };
+    flame(m.T, 7, { wd: .22, v: [.3, .9], r: [.028, .05], life: [380, 640], wait: w, jit: 140 });
+    if (m.rook) flame(m.rook[1], 5, { wd: .2, v: [.3, .8], r: [.028, .05], life: [380, 600], wait: w + 40, jit: 120 });
+    if (m.C) {
+      fxBloom(e, m.C, { r0: .3 * s, r1: 1.25 * s, rgb: '255,150,50', a: .75, life: 420, wait: w });
+      flame(m.C, 34, { wd: .3, v: [.7, 2], r: [.05, .11], life: [420, 820], wait: Math.max(0, w - 30), jit: 220 });
+      fxBurst(e, m.C, 14, { s, v: [.9, 2.4], g: -2, drag: 1.4, life: [380, 760], r: [.014, .028], cols: ['#ffe08a', '#ffae2b', '#ff7a1a'], wait: w, streak: true });
+      for (let i = 0; i < 6; i++) e.ps.push({ t: 'smoke', x: m.C[0] + fxR(-.2, .2) * s, y: m.C[1] - fxR(.1, .4) * s, vx: fxR(-.2, .2) * s, vy: -fxR(.4, .8) * s, drag: .5, r: .1 * s, r1: .38 * s, rgb: '60,52,50', a: .35, life: fxR(700, 1000), wait: w + 260 + i * 40, age: 0 });
+    }
+    if (m.K) for (let i = 0; i < 20; i++) { const an = i / 20 * FX_TAU; flame([m.K[0] + Math.cos(an) * .42 * s, m.K[1] + Math.sin(an) * .42 * s - .1 * s], 1, { wd: .02, v: [.4, .9], r: [.04, .07], life: [380, 620], wait: w + 60, jit: 160 }); }
+    if (m.mate) flame(m.K, 90, { wd: .55, v: [1, 3], r: [.08, .18], life: [600, 1200], wait: w + 160, jit: 420 });
+  },
+  stars(e, m) {
+    const s = m.s, w = m.slide, C = ['#ffc928', '#ffffff', '#4db5ff', '#ff5fb8'];
+    const tw = (P, n, o) => fxBurst(e, P, n, Object.assign({ s, t: 'star', drag: 2, cols: C }, o));
+    tw(m.T, 7, { sp: .4, v: [.1, .5], r: [.07, .13], life: [520, 820], wait: Math.max(0, w - 40), jit: 160 });
+    if (m.rook) tw(m.rook[1], 5, { sp: .35, v: [.1, .4], r: [.06, .11], life: [500, 760], wait: w, jit: 140 });
+    if (m.C) { tw(m.C, 22, { sp: .12, v: [.8, 2.4], r: [.07, .15], life: [620, 1050], wait: w, jit: 90 }); fxRing(e, m.C, { r0: .2 * s, r1: 1.3 * s, lw: .05 * s, col: 'rgba(255,214,90,.9)', life: 560, wait: w }); }
+    if (m.K) tw(m.K, 12, { sp: .5, v: [.1, .4], r: [.06, .11], life: [520, 820], cols: ['#ff4d6d', '#ffb0c0', '#ffffff'], wait: w + 60, jit: 200 });
+    if (m.mate) for (let i = 0; i < 70; i++) e.ps.push({ t: 'star', x: fxR(0, e.w), y: fxR(-.15, .6) * e.h, vx: fxR(-.1, .1) * s, vy: fxR(.6, 1.6) * s, g: 0, drag: 0, r: fxR(.06, .14) * s, col: fxPick(C), life: fxR(900, 1500), wait: w + 150 + fxR(0, 700), age: 0, rot: fxR(0, 1), vr: fxR(-2, 2), tw: fxR(9, 16), ph: fxR(0, FX_TAU) });
+  },
+};
+// вызывается из Board.set, когда ход анимируется (мини-доски, тихая перемотка и «меньше движения» — без эффектов)
+function moveFx(board, mv, dragged) {
+  const id = LOOK.fx; if (id === 'none' || !FX_FX[id] || fxOff() || !board.last) return;
+  const e = fxHost(board.el); if (!e) return;
+  const s = e.w / 8, at = sq => { const [x, y] = board.xy(sq); return [(x + .5) * s, (y + .5) * s]; };
+  const pos = board.pos, ks = pos.in_check() ? board.findKing(pos.turn()) : null, slide = dragged ? 0 : 180;
+  try {
+    FX_FX[id](e, { s, F: at(board.last.from), T: at(board.last.to), C: mv.cap ? at(mv.capSq) : null, mover: mv.p.color, capCol: mv.cap ? mv.cap.color : null,
+      rook: mv.rook ? [at(mv.rook[0]), at(mv.rook[1])] : null, K: ks ? at(ks) : null, mate: pos.in_checkmate(), slide, host: board.el });
+    fxRun(e);
+  } catch (err) {}
+  const d = board.sqs[board.last.to]; fxLand(d && d.querySelector('.pc:not(.gone)'), slide);
+}
+
+/* ---------- звуковые наборы: «Дерево» — исходный звук, остальные синтезируются здесь же */
+let SND_VOL = 1; // громкость набора (SND_LEVEL), чтобы наборы звучали примерно одинаково
+const SND_LEVEL = { stone: .85, glass: 2.6, soft: 1, retro: 3.2, space: 3, arena: .68 };
+function sTone(c, t, f, dur, o = {}) {
+  const os = c.createOscillator(), g = c.createGain(), v = (o.gain || .08) * SND_VOL, a = o.att || .005;
+  os.type = o.type || 'sine'; os.frequency.setValueAtTime(f, t); if (o.to) os.frequency.exponentialRampToValueAtTime(o.to, t + (o.glide || dur));
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  os.connect(g); g.connect(o.out || c.destination); os.start(t); os.stop(t + dur + .03);
+}
+function sNoise(c, t, dur, o = {}) {
+  const len = Math.max(1, Math.floor(c.sampleRate * dur)), buf = c.createBuffer(1, len, c.sampleRate), ch = buf.getChannelData(0), pw = o.pow || 4;
+  for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, pw);
+  const src = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = buf; fl.type = o.type || 'bandpass'; fl.frequency.setValueAtTime(o.f || 1000, t); if (o.to) fl.frequency.exponentialRampToValueAtTime(o.to, t + dur); fl.Q.value = o.q || 1; g.gain.value = (o.gain || .3) * SND_VOL;
+  src.connect(fl); fl.connect(g); g.connect(o.out || c.destination); src.start(t); src.stop(t + dur + .01);
+}
+function sBell(c, t, f, v, dur = .5, out) { sTone(c, t, f, dur, { gain: v, att: .002, out }); sTone(c, t, f * 2.76, dur * .5, { gain: v * .42, att: .002, out }); sTone(c, t, f * 5.4, dur * .25, { gain: v * .18, att: .002, out }); }
+function sEcho(c) { // общая линия эха на контекст
+  if (c.lkEcho) return c.lkEcho;
+  const inp = c.createGain(), d = c.createDelay(1), fb = c.createGain(), wet = c.createGain(), lp = c.createBiquadFilter();
+  d.delayTime.value = .17; fb.gain.value = .36; wet.gain.value = .45; lp.type = 'lowpass'; lp.frequency.value = 2600;
+  inp.connect(c.destination); inp.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(wet); wet.connect(c.destination);
+  return (c.lkEcho = inp);
+}
+const SND_PACKS = {
+  stone: {
+    move(c, t) { sNoise(c, t, .12, { type: 'lowpass', f: 950, q: 3.5, gain: .75, pow: 6 }); sTone(c, t, 150, .15, { gain: .16, to: 75, att: .002 }); },
+    capture(c, t) { sNoise(c, t, .15, { type: 'lowpass', f: 760, q: 4.5, gain: .85, pow: 6 }); sTone(c, t, 125, .18, { gain: .2, to: 58, att: .002 }); sNoise(c, t + .055, .09, { type: 'bandpass', f: 1700, q: 2, gain: .4, pow: 5 }); },
+    castle(c, t) { this.move(c, t); this.move(c, t + .13); },
+    check(c, t) { this.move(c, t); sTone(c, t + .02, 392, .5, { type: 'triangle', gain: .05 }); sTone(c, t + .02, 587, .45, { gain: .03 }); },
+    mate(c, t) { this.capture(c, t); [196, 247, 294, 392].forEach((f, i) => sTone(c, t + .08 + i * .09, f, .8, { type: 'triangle', gain: .06 })); },
+  },
+  glass: {
+    move(c, t) { sBell(c, t, 1760, .05, .4); sNoise(c, t, .02, { type: 'highpass', f: 6000, gain: .08, pow: 3 }); },
+    capture(c, t) { sBell(c, t, 1568, .05, .5); sBell(c, t + .06, 2349, .04, .45); sNoise(c, t, .06, { type: 'highpass', f: 5000, gain: .14, pow: 2.5 }); },
+    castle(c, t) { sBell(c, t, 1760, .045, .35); sBell(c, t + .12, 1319, .045, .4); },
+    check(c, t) { sBell(c, t, 2349, .05, .4); sBell(c, t + .13, 2349, .04, .45); },
+    mate(c, t) { const e = sEcho(c); [2637, 2093, 1760, 1319].forEach((f, i) => sBell(c, t + i * .11, f, .045, .9, e)); },
+  },
+  soft: {
+    move(c, t) { sNoise(c, t, .08, { type: 'lowpass', f: 450, q: .7, gain: .9, pow: 3 }); sTone(c, t, 170, .09, { gain: .06, to: 110 }); },
+    capture(c, t) { this.move(c, t); sNoise(c, t + .06, .09, { type: 'lowpass', f: 330, q: .7, gain: .8, pow: 3 }); },
+    castle(c, t) { this.move(c, t); this.move(c, t + .14); },
+    check(c, t) { this.move(c, t); sTone(c, t + .03, 523, .45, { gain: .03 }); sTone(c, t + .03, 659, .45, { gain: .02 }); },
+    mate(c, t) { this.move(c, t); [392, 494, 587, 784].forEach((f, i) => sTone(c, t + .05 + i * .1, f, 1, { gain: .028, att: .02 })); },
+  },
+  retro: {
+    move(c, t) { sTone(c, t, 440, .06, { type: 'square', gain: .035, to: 660, glide: .04, att: .001 }); },
+    capture(c, t) { sNoise(c, t, .1, { type: 'lowpass', f: 3200, gain: .09, pow: 1.3 }); sTone(c, t, 330, .14, { type: 'square', gain: .035, to: 90, att: .001 }); },
+    castle(c, t) { sTone(c, t, 440, .05, { type: 'square', gain: .032, att: .001 }); sTone(c, t + .07, 587, .07, { type: 'square', gain: .032, att: .001 }); },
+    check(c, t) { sTone(c, t, 988, .07, { type: 'square', gain: .03, att: .001 }); sTone(c, t + .09, 740, .1, { type: 'square', gain: .03, att: .001 }); },
+    mate(c, t) { [523, 659, 784, 1047].forEach((f, i) => sTone(c, t + i * .09, f, i === 3 ? .4 : .08, { type: 'square', gain: .03, att: .001 })); },
+  },
+  space: {
+    move(c, t) { sTone(c, t, 1100, .16, { gain: .06, to: 420, att: .002, out: sEcho(c) }); },
+    capture(c, t) { const e = sEcho(c); sTone(c, t, 1500, .22, { type: 'triangle', gain: .06, to: 120, att: .002, out: e }); sNoise(c, t, .14, { type: 'bandpass', f: 1400, to: 300, q: .9, gain: .3, pow: 2, out: e }); },
+    castle(c, t) { const e = sEcho(c); sTone(c, t, 320, .14, { gain: .05, to: 900, out: e }); sTone(c, t + .13, 320, .14, { gain: .05, to: 900, out: e }); },
+    check(c, t) { const e = sEcho(c); sTone(c, t, 440, .45, { type: 'triangle', gain: .045, out: e }); sTone(c, t, 466, .45, { gain: .035, out: e }); },
+    mate(c, t) { const e = sEcho(c); sTone(c, t, 180, .7, { type: 'triangle', gain: .06, to: 1400, glide: .6, out: e }); [523, 784, 1047].forEach(f => sTone(c, t + .55, f, .9, { gain: .03, out: e })); },
+  },
+  arena: {
+    move(c, t) { sTone(c, t, 170, .13, { gain: .32, to: 48, glide: .1, att: .002 }); sNoise(c, t, .025, { type: 'highpass', f: 2500, gain: .14, pow: 2 }); },
+    capture(c, t) { sTone(c, t, 150, .2, { gain: .4, to: 40, glide: .15, att: .002 }); sNoise(c, t, .17, { type: 'bandpass', f: 1800, q: .6, gain: .5, pow: 2.2 }); sNoise(c, t, .05, { type: 'highpass', f: 4000, gain: .2, pow: 2 }); },
+    castle(c, t) { this.move(c, t); this.move(c, t + .12); },
+    check(c, t) { sNoise(c, t, .2, { type: 'bandpass', f: 400, to: 2600, q: .8, gain: .35, pow: 1 }); sTone(c, t + .16, 165, .15, { gain: .34, to: 45, att: .002 }); sTone(c, t + .16, 740, .12, { type: 'sawtooth', gain: .02 }); },
+    mate(c, t) { sTone(c, t, 90, .9, { gain: .45, to: 28, glide: .7, att: .002 }); sNoise(c, t, .7, { type: 'lowpass', f: 500, gain: .5, pow: 2 }); [262, 330, 392].forEach(f => sTone(c, t + .1, f, .9, { type: 'sawtooth', gain: .015, att: .02 })); },
+  },
+};
+const SFX_WOOD = sfx;
+sfx = function (kind) {
+  const pk = SND_PACKS[LOOK.snd];
+  if (!pk || !pk[kind]) return SFX_WOOD(kind); // «Дерево» и звуки успеха/ошибки — как были
+  const c = audioCtx(); if (!c) return;
+  const now = performance.now(); if (now - lastSfx < 35) return; lastSfx = now;
+  SND_VOL = SND_LEVEL[LOOK.snd] || 1;
+  try { pk[kind](c, c.currentTime + .004); } catch (e) {} finally { SND_VOL = 1; }
+};
+
+/* ---------- окно «Вид»: живое превью сверху, вкладки, варианты */
+const LK_TABS = [['style', 'Стиль'], ['board', 'Доска'], ['pieces', 'Фигуры'], ['fx', 'Эффекты'], ['snd', 'Звук']];
+let LK_TAB = 'board';
+const lkPc = (c, t) => `<span class="pc ${c} t-${t}"><i>${FILL[t]}${VS}</i>${c === 'w' ? `<b>${LINE[t]}${VS}</b>` : ''}</span>`;
+function lkGrid(cols, rows, at) {
+  let h = '';
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) { const p = at(x, y); h += `<span class="sq ${(x + y) % 2 ? 'd' : 'l'}" data-xy="${x}${y}">${p ? lkPc(p[0], p[1]) : ''}</span>`; }
+  return h;
+}
+const LK_STAGE = { '00': 'br', '20': 'bb', '40': 'bk', '31': 'bp', '02': 'wq', '12': 'wn', '32': 'wp', '52': 'wk' };
+const lkStageGrid = () => lkGrid(6, 3, (x, y) => { const p = LK_STAGE['' + x + y]; return p && [p[0], p[1]]; });
+const lookMini = id => `<span class="lk-b lkp" data-b="${id}" data-pp="${LOOK.pieces}" aria-hidden="true">${lkGrid(4, 4, (x, y) => x === 1 && y === 2 ? ['w', 'n'] : x === 2 && y === 1 ? ['b', 'q'] : null)}</span>`;
+const LK_STRIP = ['wk', 'wq', 'wn', 'wp', 'br', 'bb', 'bn', 'bp'];
+const lookStrip = id => `<span class="lk-b lkp lk-strip" data-b="${LOOK.board}" data-pp="${id}" aria-hidden="true">${lkGrid(4, 2, (x, y) => { const p = LK_STRIP[y * 4 + x]; return [p[0], p[1]]; })}</span>`;
+function lookBody() {
+  const l = LOOK, on = !!S.ui.sound;
+  const opt = (k, id, inner, cls) => `<button class="${cls}" data-act="look_${k}" data-id="${id}" aria-pressed="${l[k] === id}">${inner}</button>`;
+  let panel;
+  if (LK_TAB === 'style') panel = `<div class="lk-styles">${STYLES.map(([id, nm, d]) => opt('style', id, `<span class="lk-sw" data-s="${id}"><i></i><i></i><i></i></span><b>${nm}</b><span>${d}</span>`, 'lk-st')).join('')}</div>
+      <p class="lk-now">Стиль меняет всё приложение: фон, карточки, шрифты. Доску, фигуры, эффекты и звук можно ставить к любому стилю. Всё сохраняется на этом устройстве.</p>`;
+  else if (LK_TAB === 'board') panel = `<div class="lk-boards">${BOARDS.map(([id, nm]) => opt('board', id, `${lookMini(id)}<span>${nm}</span>`, 'lk-bd')).join('')}</div>`;
+  else if (LK_TAB === 'pieces') panel = `<div class="lk-sets">${PIECE_SETS.map(([id, nm, d]) => opt('pieces', id, `${lookStrip(id)}<b>${nm}</b><span>${d}</span>`, 'lk-set')).join('')}</div>`;
+  else if (LK_TAB === 'fx') panel = `<div class="lk-opts">${FX_SETS.map(([id, nm, d]) => opt('fx', id, `${LK_SVG(FX_IC[id])}<b>${nm}</b><span>${d}</span>`, 'lk-op')).join('')}</div>
+      <p class="lk-now">${fxOff() ? 'Сейчас анимация выключена (в системе или в «Рамках» → «Меньше движения») — эффекты не показываются.' : 'Обычный ход — эффект потише, взятие, шах и мат — ярче. Нажми на вариант, чтобы посмотреть.'}</p>`;
+  else panel = `<button class="lk-snd-on" data-act="lookSound" aria-pressed="${on}">${on ? I.sound : I.mute}<span><b>Звук ходов</b>${on ? 'включён' : 'выключен — выбери набор, и он включится'}</span><i class="lk-tg" aria-hidden="true"></i></button>
+      <div class="lk-opts">${SND_SETS.map(([id, nm, d]) => opt('snd', id, `${LK_SVG(SND_IC[id])}<b>${nm}</b><span>${d}</span>`, 'lk-op')).join('')}</div>
+      <p class="lk-now">Нажми на набор — прозвучат ход, взятие, шах и мат.</p>`;
+  return `<div class="lk-top">
+      <div class="lk-head"><h2 id="lkT">Вид</h2><button class="btn quiet" data-act="lookClose">Готово</button></div>
+      <div class="lk-show"><div class="lk-b lkp lk-stage" id="lkStage" data-act="lookDemo" data-b="${l.board}" data-pp="${l.pieces}" aria-hidden="true">${lkStageGrid()}</div>
+        <div class="lk-cap"><span>Доска <b>${lookName('board')}</b></span><span>Фигуры <b>${lookName('pieces')}</b></span><span>Эффект <b>${lookName('fx')}</b></span><span>Звук <b>${on ? lookName('snd') : 'выкл'}</b></span>
+          <button class="lk-play" data-act="lookDemo">${LK_SVG('<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>')}Показать ход</button></div></div>
+      <div class="lk-tabs" role="tablist" aria-label="Что настроить">${LK_TABS.map(([id, nm]) => `<button role="tab" data-act="lookTab" data-id="${id}" aria-selected="${LK_TAB === id}">${nm}</button>`).join('')}</div>
+    </div>
+    <div class="lk-panel" role="tabpanel" aria-label="${LK_TABS.find(t => t[0] === LK_TAB)[1]}">${panel}</div>`;
 }
 function paintLook() {
-  const o = $('#look'); if (o && !o.hidden) o.innerHTML = lookSheet();
-  for (const id of ['lookBtn', 'lookBtnTop']) { const b = $('#' + id); if (b) b.innerHTML = LOOK_IC + (id === 'lookBtn' ? '<span>Стиль и доска</span>' : ''); }
+  const o = $('#look'), box = o && !o.hidden && o.querySelector('.lk-in');
+  if (box) { // перерисовка без прыжка: та же прокрутка и тот же фокус
+    const f = document.activeElement, key = f && box.contains(f) && f.dataset.act ? f.dataset.act + '|' + (f.dataset.id || '') : '';
+    const y = box.scrollTop; box.innerHTML = lookBody(); box.scrollTop = y;
+    if (key) { const n = [...box.querySelectorAll('[data-act]')].find(x => x.dataset.act + '|' + (x.dataset.id || '') === key); if (n) n.focus({ preventScroll: true }); }
+  }
+  for (const id of ['lookBtn', 'lookBtnTop']) { const b = $('#' + id); if (b) b.innerHTML = LOOK_IC + (id === 'lookBtn' ? '<span>Вид</span>' : ''); }
+}
+// превью: белый конь бьёт пешку — с выбранными доской, фигурами, эффектом и звуком
+let LK_T = [];
+const lkLater = (fn, ms) => LK_T.push(setTimeout(fn, ms));
+function lkStop() { LK_T.forEach(clearTimeout); LK_T = []; }
+function lookDemo() {
+  lkStop();
+  const st = $('#lkStage'); if (!st) return;
+  st.innerHTML = lkStageGrid();
+  const from = st.querySelector('[data-xy="12"]'), to = st.querySelector('[data-xy="31"]'), kn = from.querySelector('.pc'), vic = to.querySelector('.pc');
+  sfx('capture');
+  lkLater(() => { if (st.isConnected) st.innerHTML = lkStageGrid(); }, 1900);
+  const land = () => { to.appendChild(kn); kn.style.transition = 'none'; kn.style.transform = ''; from.style.zIndex = ''; };
+  if (fxOff()) { vic.remove(); land(); return; }
+  from.style.zIndex = 4; vic.classList.add('gone');
+  kn.style.transition = 'transform .2s cubic-bezier(.3,.7,.3,1)'; kn.getBoundingClientRect(); kn.style.transform = 'translate(200%,-100%)';
+  lkLater(() => { land(); if (LOOK.fx !== 'none') fxLand(kn, 0); }, 210);
+  lkLater(() => vic.remove(), 360);
+  const e = LOOK.fx !== 'none' && FX_FX[LOOK.fx] ? fxHost(st) : null;
+  if (e) { const s = e.w / 6, at = (x, y) => [(x + .5) * s, (y + .5) * s]; FX_FX[LOOK.fx](e, { s, F: at(1, 2), T: at(3, 1), C: at(3, 1), mover: 'w', capCol: 'b', rook: null, K: null, mate: false, slide: 190, host: st }); fxRun(e); }
+}
+function lookAudition() { // ход → взятие (с превью) → шах → мат
+  lkStop(); sfx('move');
+  LK_T.push(setTimeout(() => { lookDemo(); lkLater(() => sfx('check'), 560); lkLater(() => sfx('mate'), 1100); }, 400));
 }
 ACT.lookOpen = () => {
   let o = $('#look');
   if (!o) { o = document.createElement('div'); o.id = 'look'; o.className = 'look'; o.hidden = true; o.addEventListener('click', e => { if (e.target === o) ACT.lookClose(); }); document.body.appendChild(o); }
-  o.hidden = false; o.innerHTML = lookSheet(); requestAnimationFrame(() => o.classList.add('on'));
-  const b = o.querySelector('[aria-pressed="true"]'); if (b) b.focus({ preventScroll: true });
+  o.hidden = false; o.innerHTML = `<div class="lk-in" role="dialog" aria-modal="true" aria-labelledby="lkT">${lookBody()}</div>`; requestAnimationFrame(() => o.classList.add('on'));
+  const b = o.querySelector('.lk-tabs [aria-selected="true"]'); if (b) b.focus({ preventScroll: true });
 };
-ACT.lookClose = () => { const o = $('#look'); if (!o || o.hidden) return; o.classList.remove('on'); setTimeout(() => { o.hidden = true; }, 220); };
-ACT.lookStyle = d => lookSet('style', d.id);
-ACT.lookBoard = d => lookSet('board', d.id);
+ACT.lookClose = () => { const o = $('#look'); if (!o || o.hidden) return; lkStop(); o.classList.remove('on'); setTimeout(() => { o.hidden = true; }, 220); };
+ACT.lookTab = d => { LK_TAB = d.id; paintLook(); const box = $('#look .lk-in'); if (box) box.scrollTop = 0; };
+ACT.look_style = d => lookSet('style', d.id);
+ACT.look_board = d => lookSet('board', d.id);
+ACT.look_pieces = d => lookSet('pieces', d.id);
+ACT.look_fx = d => { lookSet('fx', d.id); lookDemo(); };
+ACT.look_snd = d => { if (!S.ui.sound) { S.ui.sound = true; save(); sndUi(); } lookSet('snd', d.id); lookAudition(); };
+ACT.lookSound = () => { ACT.sndToggle(); paintLook(); };
+ACT.lookDemo = () => lookDemo();
 document.addEventListener('keydown', e => { if (e.key === 'Escape') ACT.lookClose(); });
 paintLook();
 

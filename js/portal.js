@@ -7,7 +7,7 @@
 
 /** Перенесённые на сайт приложения: открываются здесь же, без входа в Claude, прогресс хранится на устройстве. */
 export const SITE_APPS = [
-  { id: 'chess', area: 'chess', icon: 'game', title: 'Дебютная тетрадь', about: 'Шахматы: дебюты, спарринг с тренером, задачи из твоих ошибок, партии чемпионов. 3 стиля и 9 досок.', href: 'modules/chess/index.html', storageKey: 'debut-notebook-v1' },
+  { id: 'chess', area: 'chess', icon: 'game', title: 'Дебютная тетрадь', about: 'Шахматы: дебюты, спарринг с тренером, задачи из твоих ошибок, партии чемпионов. Свой вид: 16 досок, 10 наборов фигур, эффекты ходов и звуки.', href: 'modules/chess/index.html', storageKey: 'debut-notebook-v1' },
   { id: 'podhod', area: 'project', icon: 'dumbbell', title: 'Подход', about: 'Тренировки и питание: план на 3 или 4 дня, подходы с подсказкой веса, рекорды, вес тела, калории и вода. Работает без интернета.', href: 'modules/podhod/index.html', storageKey: 'podkhod:profile' },
 ];
 

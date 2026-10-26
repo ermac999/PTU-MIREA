@@ -374,7 +374,7 @@ test('главная: артефакты разложены по раздела�
   for (const f of ['js/portal.js', 'js/views/home.js']) assert.ok(sw.includes(`'${f}'`), `${f} в кэше`);
 });
 
-test('шахматы на сайте: страница, своя chess.js, база чемпионов, прогресс из Claude, 3 стиля и 9 досок', async () => {
+test('шахматы на сайте: страница, своя chess.js, база чемпионов, прогресс из Claude; вид: 16 досок, 10 наборов фигур, эффекты, звуки', async () => {
   const { SITE_APPS } = await import('../js/portal.js');
   const app = SITE_APPS.find((a) => a.id === 'chess');
   assert.equal(app.href, 'modules/chess/index.html');
@@ -383,7 +383,17 @@ test('шахматы на сайте: страница, своя chess.js, ба�
   assert.ok(html.includes('<script src="chess.min.js"></script>'), 'chess.js своя, без CDN');
   for (const st of ['spiral', 'club', 'neon']) assert.ok(html.includes(`:root[data-style="${st}"]`), `стиль ${st}`);
   const boards = [...html.matchAll(/:root\[data-board="([a-z]+)"\] \.board,\.lk-b\[data-b="\1"\]\{--sq-l/g)].map((m) => m[1]);
-  assert.equal(new Set(boards).size, 9, 'девять досок');
+  assert.equal(new Set(boards).size, 16, 'шестнадцать досок');
+  const sets = new Set([...html.matchAll(/:root\[data-pieces="([a-z]+)"\] \.board /g)].map((m) => m[1]));
+  for (const id of ['gold', 'marble', 'glass', 'neon', 'wood', 'gloss', 'modern', 'pixel', 'letters']) assert.ok(sets.has(id), `набор фигур ${id}`);
+  const PIECES = JSON.parse(html.match(/const PIECE_SETS = (\[.*?\]);/)[1]);
+  assert.equal(PIECES.length, 10, 'десять наборов фигур в окне «Вид»');
+  assert.ok(PIECES.every(([id]) => id === 'classic' || sets.has(id)), 'у каждого набора есть стили');
+  assert.ok(html.includes('<span class="pc ${p.color} t-${p.type}">'), 'фигура знает свой тип — для рисованных наборов');
+  assert.ok(html.includes("if (!o.silent && typeof moveFx === 'function') moveFx(this, mv, dragged);"), 'эффект хода — из Board.set');
+  for (const fx of ['ripple', 'sparks', 'comet', 'flash', 'shatter', 'fire', 'stars']) assert.ok(html.includes(`  ${fx}(e, m) {`), `эффект ${fx}`);
+  for (const snd of ['stone', 'glass', 'soft', 'retro', 'space', 'arena']) assert.ok(html.includes(`  ${snd}: {\n    move(c, t)`), `звук ${snd}`);
+  assert.ok(html.includes("r.dataset.pieces=l.pieces||'classic'"), 'набор фигур ставится до отрисовки');
   const pros = [...html.matchAll(/fetch\('pro\/' \+ id \+ '\.json'\)/g)];
   assert.equal(pros.length, 1);
   const seed = JSON.parse(readFileSync(file('modules/chess/seed.json'), 'utf8'));
