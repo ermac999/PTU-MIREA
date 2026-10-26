@@ -902,6 +902,25 @@ details.tbl td,details.tbl th{padding:4px 12px 4px 0;text-align:left;border-bott
 .board .pc.b i,.board .ghost.b i,.lk-p.b i{color:var(--pc-b-in,var(--pc-line));text-shadow:var(--pc-b-glow,0 0 .35cqw rgba(255,255,255,.35))}
 .board .sq.l .cf,.board .sq.l .cr{color:var(--co-l,var(--sq-d))}
 .board .sq.d .cf,.board .sq.d .cr{color:var(--co-d,var(--sq-l))}
+
+/* ---------- планшеты (iPad): в окне 881–1099 меню сворачивается в узкую полосу, чтобы доска и подсказки стояли рядом ---------- */
+@media (min-width:881px) and (max-width:1099px){
+  html .app{grid-template-columns:78px minmax(0,1fr)}
+  html .rail{padding-inline:12px;align-items:center}
+  html .rail .brand>div:not(.brand-mark),html .nav button span,html .vc span,html .chip-streak span{display:none}
+  html .nav button,html .vc{justify-content:center;padding:11px}
+  html .chip-streak{flex-direction:column;gap:4px;padding:10px 6px;text-align:center}
+  html .chip-streak b{font-size:16px}
+  html .view-ctl,html .rail-foot{align-items:center}
+  html #railBtn{display:none}
+  .play{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}
+}
+/* в портрете: панели дня в две колонки, а не одна растянутая лента */
+@media (min-width:700px) and (max-width:880px){
+  .hero{grid-template-columns:1.25fr 1fr}
+  .cta-row{grid-template-columns:1.4fr 1fr}
+  .cta-row.three,.duo{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 :root[data-board="classic"] .board,.lk-b[data-b="classic"]{--sq-l:#F0D9B5;--sq-d:#B58863;--hl:rgba(205,210,106,.75);--sel:rgba(20,85,30,.38);--dot:rgba(20,30,10,.28)}
 :root[data-board="green"] .board,.lk-b[data-b="green"]{--sq-l:#EEEED2;--sq-d:#769656;--hl:rgba(246,246,105,.72);--sel:rgba(20,70,20,.38);--dot:rgba(10,30,10,.26)}
 :root[data-board="ice"] .board,.lk-b[data-b="ice"]{--sq-l:#E9F0F4;--sq-d:#8FA9BA;--hl:rgba(120,200,255,.5);--sel:rgba(30,80,140,.35);--dot:rgba(20,40,70,.26)}

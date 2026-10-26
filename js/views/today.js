@@ -251,6 +251,7 @@ export function renderToday() {
     ${backupDue() ? `<div class="note"><b>Раз в неделю: копия данных.</b> Отправь файл себе в Telegram «Избранное» — если браузер что-то сотрёт, всё восстановится.
       <div class="row"><button class="btn small" type="button" data-act="backup-share">${icon('share', 's')}Сохранить копию</button><button class="btn small ghost" type="button" data-act="backup-snooze">Завтра</button></div></div>` : ''}
 
+    <div class="cols"><div class="col w2">
     ${checkinCard(t, plan)}
 
     <div class="grid2">
@@ -274,7 +275,7 @@ export function renderToday() {
           <span class="box">${s === 'done' ? icon('check', 's') : ''}</span><span><b>${esc(b.title)}</b><br><span class="small muted">${fmtTime(b.start)} · ${fmtDur(b.end - b.start)}</span></span></button>`;
       }).join('')}</div>
     </section>` : ''}
-
+    </div><div class="col">
     ${gym ? `<p class="note">${icon('dumbbell', 's')}<span>Зал ${fmtTime(gym.start)}–${fmtTime(gym.end)}. Тренировка и питание — в приложении <a href="modules/podhod/index.html">«Подход»</a>.</span></p>` : ''}
 
     ${game ? `<p class="note">${icon('game', 's')} Counter-Strike ${fmtTime(game.start)}–${fmtTime(game.end)}. ${pendingStudy ? `Сначала ${pendingStudy} ${plural(pendingStudy, 'учебный блок', 'учебных блока', 'учебных блоков')} — потом игра как награда.` : game.reward ? 'Блоки сделаны — игра заслужена.' : 'Свободное время.'} Закончить за ${CONFIG.game.endBeforeSleepMin} минут до отбоя (${fmtTime(plan.info.bed)}).</p>` : ''}
@@ -300,6 +301,7 @@ export function renderToday() {
           <span class="row"><button class="btn small ${a === 'present' ? '' : 'ghost'}" type="button" data-act="att" data-k="${esc(k)}" data-v="present" aria-pressed="${a === 'present'}">Был</button></span></li>`;
       }).join('')}</ul>
     </section>` : ''}
+    </div></div>
 
     ${bank.error ? `<p class="small muted">${esc(bank.error)}</p>` : ''}
     <button class="btn ghost block" type="button" data-act="go" data-to="day/${t}">Весь день по часам</button>`;

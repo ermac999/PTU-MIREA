@@ -607,6 +607,22 @@ html[data-vt="back"]::view-transition-new(main){animation:.55s var(--ease-out) b
 @keyframes pulse{50%{opacity:.35}}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
+/* ---------- планшеты (iPad): шире колонка, три предмета в ряд, тренировка — узкой колонкой ---------- */
+@media (min-width:700px){
+  .app{max-width:860px;padding-inline:max(28px,env(safe-area-inset-left,0px)) max(28px,env(safe-area-inset-right,0px));gap:20px}
+  .app.in-session{max-width:660px}
+  .tabbar{max-width:560px}
+  .top h1{font-size:32px}
+  .hero h2{font-size:52px}
+  .hero-s{font-size:16px}
+  .ocards{grid-template-columns:repeat(3,1fr)}
+  .tiles{grid-template-columns:repeat(4,1fr)}
+  .mini{width:160px}
+  .btn.big{min-height:62px}
+  .num{height:52px}
+  .ok{height:52px}
+  .kring{width:min(40vw,260px)}
+}
 .backsite{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin:0 0 6px -4px;padding:5px 12px 5px 8px;border-radius:999px;background:var(--field);border:1px solid var(--line);color:var(--muted);font-size:13px;font-weight:700;text-decoration:none}
 .backsite svg{width:15px;height:15px}
 .backsite:active{transform:scale(.96)}
@@ -3365,6 +3381,7 @@ function render(mode = 'none') {
   CHARTS.clear();
   const app = $('#app');
   const fig = $('#bgfig');
+  app.classList.toggle('in-session', !!(S.ready && !S.loadError && S.profile && S.active && S.tab === 'today'));
   if (fig) fig.className = 'bgfig pos-' + (!S.ready || S.loadError || !S.profile ? 'onb' : S.active && S.tab === 'today' ? 'session' : S.tab);
   if (!S.ready) app.innerHTML = viewSplash();
   else if (S.loadError) app.innerHTML = viewLoadError();

@@ -731,6 +731,21 @@ code, pre, pre.code, pre.cols, .codelines, .opt.mono .ot, .gbox code, .wg-ch cod
 .stars.big i.on { animation: soft-on .5s ease-out both; }
 @keyframes soft-on { from { opacity: 0; transform: scale(.6); } }
 :root[data-motion="none"] *, :root[data-motion="none"] *::before, :root[data-motion="none"] *::after { animation: none !important; transition: none !important; }
+
+/* ---------- планшеты (iPad): крупнее шрифт и шире колонка ---------- */
+@media (min-width: 700px) {
+  html { font-size: 17.5px; }
+  #app { max-width: 780px; }
+  .page { padding-inline: 24px; gap: 16px; }
+  .stage { padding-inline: 24px; }
+  .dock { padding-inline: 24px; }
+  .keys button { min-height: 58px; }
+  .keys.hex button { min-height: 52px; }
+  .mods { gap: 10px; }
+}
+@media (min-width: 1000px) {
+  #app { max-width: 860px; }
+}
 </style>
 <div id="app"></div>
 <div id="sheet" hidden></div>

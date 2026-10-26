@@ -742,3 +742,163 @@ pre.code { border-radius: 12px; }
 .world-empty .btn { justify-self: start; }
 
 .note a { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* =====================================================================
+   Планшеты: iPad в портрете и ландшафте
+   Колонка: телефон 600 → планшет 900 → ландшафт 1120. --side — боковое поле,
+   с которым колонка стоит по центру; сцена главной выходит за него на всю ширину.
+   Меню: до 700 — нижняя лента, 700–1023 — плавающая панель, от 1024 — боковая полоса.
+   ===================================================================== */
+:root {
+  --page-w: 600px; --rail-w: 0px;
+  --side: max(var(--gutter), calc((100vw - var(--rail-w) - var(--page-w)) / 2 + var(--gutter)));
+  --side-r: max(var(--gutter-r), calc((100vw - var(--rail-w) - var(--page-w)) / 2 + var(--gutter-r)));
+}
+html { min-height: 100%; }
+body { padding-left: var(--rail-w); min-height: 100vh; min-height: 100dvh; }
+.strip-in { max-width: none; margin: 0; padding-left: var(--side); padding-right: var(--side-r); }
+.app { max-width: none; margin: 0; padding-left: var(--side); padding-right: var(--side-r); }
+.scene { margin-left: calc(-1 * var(--side)); margin-right: calc(-1 * var(--side-r)); }
+.scene { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 64px); mask-image: linear-gradient(180deg, transparent 0, #000 64px); }
+.sc-back { left: var(--side); }
+
+/* две колонки: на телефоне колонки «растворяются», порядок блоков тот же */
+.cols, .col { display: contents; }
+.cards-grid { display: grid; gap: 14px; }
+
+@media (min-width: 640px) {
+  .view > .scene:first-child { margin-top: -32px; }
+}
+
+@media (min-width: 700px) {
+  :root {
+    --page-w: 900px; --nav-h: 100px;
+    --gutter: max(28px, env(safe-area-inset-left, 0px)); --gutter-r: max(28px, env(safe-area-inset-right, 0px));
+  }
+  .view { gap: 34px; }
+  .display { font-size: clamp(52px, 7.2vw, 76px); }
+  .display.m { font-size: clamp(38px, 5.2vw, 54px); }
+  .eyebrow { font-size: 12px; }
+  .sec { font-size: 13px; }
+  .card { padding: 22px; }
+  .li { min-height: 64px; }
+  .li .t { font-size: 17px; }
+  .li .m { font-size: 14px; }
+  .btn { min-height: 56px; }
+  .btn.small { min-height: 48px; font-size: 12px; }
+  .inp { min-height: 52px; }
+  .md { font-size: 17px; line-height: 1.6; }
+  .md .md-h { font-size: 23px; }
+  .md p { max-width: 68ch; }
+  .md pre.md-code { font-size: 14.5px; }
+  .md-table { font-size: 15px; }
+  .task-body .t { font-size: 24px; }
+  .q { font-size: 28px; }
+  .flash { min-height: 320px; padding: 36px 32px; }
+  .flash .fq { font-size: 30px; }
+  .flash .fa { font-size: 20px; }
+  .opt { min-height: 60px; font-size: 17px; padding: 14px 18px; }
+  .cal-nav .m { font-size: 28px; }
+
+  /* меню: плавающая стеклянная панель по центру */
+  .nav {
+    left: 50%; right: auto; transform: translateX(-50%);
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(640px, calc(100% - 2 * var(--gutter)));
+    padding: 6px; border: 1px solid var(--glass-line); border-radius: 30px;
+    box-shadow: var(--soft-shadow), 0 20px 50px rgba(0, 0, 0, .18);
+  }
+  .nav-in { max-width: none; }
+  .nav a { min-height: 58px; border-radius: 24px; font-size: 10.5px; }
+  .nav a svg.i { width: 24px; height: 24px; }
+  .nav a[aria-current="page"] { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .nav a[aria-current="page"]::before { display: none; }
+
+  /* шторка — окно по центру, а не лента снизу */
+  .sheet {
+    inset: 0; margin: auto; height: fit-content; max-height: min(86vh, 920px); width: min(680px, calc(100% - 64px));
+    border: 1px solid var(--glass-line); border-radius: 28px; padding-bottom: 24px; box-shadow: 0 30px 90px rgba(0, 0, 0, .35);
+  }
+  .toast { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); }
+
+  /* главная */
+  .scene { height: min(74vh, 780px); min-height: 540px; }
+  .sc-num { width: min(44vw, 460px); }
+  .sc-cap { font-size: 12px; }
+  .sc-node-t { font-size: 15px; }
+  .sc-node-m { font-size: 12.5px; }
+  .sc-helix { top: 56%; height: 24%; }
+  .h-strand, .h-stripe { stroke-width: 7px; }
+  .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .tile { min-height: 170px; padding: 18px; }
+  .tile-t { font-size: 24px; }
+  .tile-m { font-size: 14px; }
+  .tile.wide { min-height: 110px; }
+
+  /* «Спираль» */
+  .scene.sc-game, .scene.sc-world { height: 440px; min-height: 0; }
+  .sc-title { font-size: clamp(64px, 9vw, 96px); }
+  .sc-num.small { width: min(34vw, 300px); }
+  .world { width: 56%; height: 124px; padding: 14px 20px; }
+  .w-orb { width: 54px; height: 54px; }
+  .w-t { font-size: 26px; }
+  .worlds { gap: 26px; }
+  .world-game, .world-empty { padding: 20px 22px; }
+
+  /* сетка карточек: игры, проекты, развлечения */
+  .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+  .cards-grid > .mod, .cards-grid > .world-game { height: 100%; align-content: start; }
+
+  /* списки предметов и тем — карточки в две колонки */
+  .list.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 0; background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .list.cards > li { display: grid; }
+  .list.cards .li {
+    height: 100%; padding: 16px 18px; border: 1px solid var(--glass-line); border-radius: var(--radius); background: var(--glass);
+    box-shadow: var(--soft-shadow); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+  .list.cards .li:last-child { border-bottom: 1px solid var(--glass-line); }
+
+  /* практика и карточки: узкая колонка по центру, чтобы вопрос читался */
+  .view[data-route="practice"], .view[data-route="cards"], .view[data-route="drill"], .view[data-route="import"] { max-width: 720px; margin-inline: auto; width: 100%; }
+}
+
+/* два столбца: основное слева, всё остальное справа */
+@media (min-width: 800px) {
+  .cols { display: flex; align-items: flex-start; gap: 34px; }
+  .col { display: grid; gap: 34px; min-width: 0; flex: 1 1 0; }
+  .col.w2 { flex-grow: 1.4; }
+  .col:empty { display: none; }
+  .col.sticky { position: sticky; top: calc(20px + env(safe-area-inset-top, 0px)); align-self: flex-start; }
+  .cols .sec-row { flex-wrap: wrap; }
+  .cols .seg button { letter-spacing: .03em; font-size: 11.5px; padding: 0 3px; }
+  .cols .btn.quiet { white-space: nowrap; }
+  .cols .band { margin-left: 0; margin-right: 0; }
+  .cols .grid2 { gap: 12px; }
+}
+
+/* ландшафт: боковая полоса меню вместо нижней панели */
+@media (min-width: 1024px) {
+  :root {
+    --page-w: 1120px; --nav-h: 0px; --rail-w: calc(108px + env(safe-area-inset-left, 0px));
+    --gutter: max(44px, env(safe-area-inset-left, 0px)); --gutter-r: max(44px, env(safe-area-inset-right, 0px));
+  }
+  .nav {
+    top: 0; bottom: 0; left: 0; right: auto; transform: none; width: var(--rail-w);
+    padding: calc(30px + env(safe-area-inset-top, 0px)) 12px 24px calc(12px + env(safe-area-inset-left, 0px));
+    border: 0; border-right: 1px solid var(--glass-line); border-radius: 0; box-shadow: none;
+  }
+  .nav-in { grid-template-columns: 1fr; gap: 8px; align-content: start; }
+  .nav a { min-height: 78px; border-radius: 20px; font-size: 10.5px; }
+  .nav a svg.i { width: 26px; height: 26px; }
+  .toast { bottom: 24px; left: calc(50% + var(--rail-w) / 2); }
+  .sheet-back { left: 0; }
+  .scene { min-height: 560px; }
+}
+
+/* телефон в ландшафте попадает под «планшетные» ширины, но экран низкий: меню и сцена ниже */
+@media (min-width: 700px) and (max-height: 520px) {
+  :root { --nav-h: 84px; }
+  .nav a { min-height: 48px; gap: 2px; }
+  .nav a svg.i { width: 22px; height: 22px; }
+  .scene { min-height: 0; height: 100vh; height: 100dvh; max-height: 560px; }
+  .sheet { max-height: 92vh; }
+}

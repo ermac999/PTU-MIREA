@@ -193,6 +193,6 @@ export function renderProjects() {
       <span class="eyebrow">Для себя, не для учёбы</span>
       <h1 class="display m">Проекты</h1>
     </header>
-    <section>${apps.map(appCard).join('')}${links.map(linkCard).join('')}</section>
+    <section class="cards-grid">${apps.map(appCard).join('')}${links.map(linkCard).join('')}</section>
     <p class="small muted" style="margin:0">Карточки «приложение» уже внутри сайта: открываются сразу и работают без интернета. Остальные пока по ссылке в Claude (нужен вход), перенесём их по очереди. Игры по предметам — в «Спирали»: ${esc(MODULES.map((m) => m.title).join(', '))}.</p>`;
 }

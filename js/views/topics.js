@@ -114,7 +114,7 @@ export function renderTopics() {
       <span class="eyebrow">Теория · задачи · игры</span>
       <h1 class="display">Предметы</h1>
     </header>
-    <ul class="list">${subjects.map((s) => subjectRow(st, s)).join('')}</ul>
+    <ul class="list cards">${subjects.map((s) => subjectRow(st, s)).join('')}</ul>
     <section>
       <div class="grid2">
         <button class="btn" type="button" data-act="go" data-to="practice/weak">${icon('target', 's')}Отработка</button>
@@ -141,10 +141,10 @@ export function renderSubject([id]) {
       <h1 class="display m">${esc(s.short)}</h1>
     </header>
     ${catchUpLine(st, s)}
-    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2><button class="btn quiet small" type="button" data-act="go" data-to="spiral/${esc(id)}">В «Спираль» →</button></div>${mods.map((m) => moduleCard(m)).join('')}</section>` : ''}
+    ${mods.length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2><button class="btn quiet small" type="button" data-act="go" data-to="spiral/${esc(id)}">В «Спираль» →</button></div><div class="cards-grid">${mods.map((m) => moduleCard(m)).join('')}</div></section>` : ''}
     <section>
       <div class="sec-row"><h2 class="sec">Темы</h2>${ts.length ? `<span class="small muted">закрыто ${ts.filter(isClosedTopic).length} из ${ts.length}</span>` : ''}</div>
-      ${ts.length ? `<ul class="list">${ts.map((t) => topicRow(t, tasks)).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}
+      ${ts.length ? `<ul class="list cards">${ts.map((t) => topicRow(t, tasks)).join('')}</ul>` : '<p class="small muted" style="margin:0">Тем пока нет.</p>'}
       <button class="btn quiet small" type="button" data-act="topic-add" data-subject="${esc(id)}">${icon('plus', 's')}Тема</button>
     </section>
     <div class="grid2">
@@ -171,9 +171,11 @@ export function renderTopic([id]) {
       ${topic.example ? '<span class="small muted">Примерная тема — переименуй под свою программу или удали.</span>' : ''}
     </header>
 
+    <div class="cols"><div class="col w2">
     ${theorySection(st, topic)}
 
-    ${modulesFor({ topic: id }).length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div>${modulesFor({ topic: id }).map((m) => moduleCard(m, id)).join('')}</section>` : ''}
+    ${modulesFor({ topic: id }).length ? `<section><div class="sec-row"><h2 class="sec">Игры и тренажёры</h2></div><div class="cards-grid">${modulesFor({ topic: id }).map((m) => moduleCard(m, id)).join('')}</div></section>` : ''}
+    </div><div class="col">
 
     <section>
       <span class="eyebrow">Статус — меняется сам по результатам, можно поправить</span>
@@ -206,7 +208,8 @@ export function renderTopic([id]) {
     <div class="row">
       <button class="btn quiet small" type="button" data-act="topic-rename" data-id="${esc(id)}">${icon('edit', 's')}Переименовать</button>
       <button class="btn quiet small" type="button" data-act="topic-del" data-id="${esc(id)}">${icon('trash', 's')}Удалить тему</button>
-    </div>`;
+    </div>
+    </div></div>`;
 }
 
 /* ---------- Отработка ---------- */

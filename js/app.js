@@ -146,6 +146,7 @@ function render() {
       route.params = [];
     }
     const def = ROUTES[route.name];
+    view.dataset.route = route.name;
     view.innerHTML = (['home', 'calendar', 'today'].includes(route.name) ? introNote() : '') + def.render(route.params || []);
     renderStrip();
     renderNav(def.tab);

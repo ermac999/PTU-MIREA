@@ -41,6 +41,7 @@ export function renderSettings() {
       <h1 class="display">Настройки</h1>
     </header>
 
+    <div class="cols"><div class="col">
     <section><div class="sec-row"><h2 class="sec">Режим</h2></div><ul class="list">
       ${row('set-week', 'Шаблон недели', 'Подъём, выход, пары, дом, отбой — по дням')}
       ${row('set-sleep', 'Сон', `минимум ${String(s.minSleepHours).replace('.', ',')} ч${s.fridayException ? ' · ночь Пт→Сб — 6 ч + дневной сон' : ''}`)}
@@ -53,6 +54,7 @@ export function renderSettings() {
       ${row('go', 'Посещаемость', 'пропуски по предметам и лимиты', 'data-to="attendance"')}
     </ul></section>
 
+    </div><div class="col">
     <section><div class="sec-row"><h2 class="sec">Контроль</h2></div><ul class="list">
       ${row('set-control', 'Строгость и договорённость', `${{ soft: 'мягко', medium: 'средне', strict: 'строго' }[s.strictness]}${s.agreement ? ' · утром договорились, вечером отчёт' : ''}`)}
       ${row('set-habits', 'Игра и привычки', `${s.gameMinutes ? `Counter-Strike ${s.gameMinutes} мин после учёбы` : 'без игры'}${s.duolingo ? ' · Duolingo' : ''}${s.sport ? ' · зарядка' : ''}${s.gym ? ' · зал' : ''}`)}
@@ -68,6 +70,7 @@ export function renderSettings() {
       ${row('set-look', 'Внешний вид', `${{ auto: 'как на iPhone', light: 'светлая', dark: 'тёмная' }[s.theme]} · ${s.motion === 'none' ? 'без анимаций' : 'лёгкие анимации'}`)}
       ${row('set-ai', 'Честно про ИИ', 'что приложение умеет само, а что — нет')}
     </ul></section>
+    </div></div>
     <p class="tiny muted">Версия данных ${CONFIG.dataVersion}. Работает без интернета после первого открытия.</p>`;
 }
 

@@ -56,6 +56,7 @@ export function renderCalendar() {
       <h1 class="display">Календарь</h1>
     </header>
 
+    <div class="cols"><div class="col w2">
     <section aria-label="Месяц">
       <div class="cal-nav">
         <button class="ibtn" type="button" data-act="cal-move" data-d="-1" aria-label="Предыдущий месяц">${icon('back')}</button>
@@ -72,7 +73,7 @@ export function renderCalendar() {
       </div>
       ${shown !== t.slice(0, 7) ? `<button class="btn quiet small" type="button" data-act="cal-today">К сегодняшнему месяцу</button>` : ''}
     </section>
-
+    </div><div class="col">
     <section>
       <div class="sec-row"><h2 class="sec">Ближайшее</h2><button class="btn quiet small" type="button" data-act="go" data-to="day/${t}">Сегодня по часам →</button></div>
       ${next.length ? `<div>${next.map((e) => eventRow(e)).join('')}</div>` : '<p class="lead">В ближайшие полтора месяца дедлайнов нет. Добавь, когда узнаешь.</p>'}
@@ -80,7 +81,8 @@ export function renderCalendar() {
         <button class="btn" type="button" data-act="event-new" data-date="${t}">${icon('plus', 's')}Дедлайн</button>
         <button class="btn ghost" type="button" data-act="deadlines-paste">${icon('paste', 's')}Вставить текстом</button>
       </div>
-    </section>`;
+    </section>
+    </div></div>`;
 }
 
 export const calendarActions = {

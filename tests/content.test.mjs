@@ -434,3 +434,20 @@ test('«Подход» на сайте: своё хранилище вместо
   const shared = readFileSync(file('js/views/shared.js'), 'utf8');
   assert.ok(shared.includes("b.type === 'gym'") && shared.includes('modules/podhod/index.html'), 'в блоке зала есть ссылка на «Подход»');
 });
+
+test('iPad: колонка шире, меню плавающее и боковое, шторка окном, экраны в две колонки; игры подстроены под планшет', () => {
+  const css = readFileSync(file('css/app.css'), 'utf8');
+  for (const q of ['(min-width: 700px)', '(min-width: 800px)', '(min-width: 1024px)']) assert.ok(css.includes(`@media ${q}`), `брейкпоинт ${q}`);
+  assert.ok(/--rail-w: calc\(108px/.test(css), 'боковая полоса меню от 1024');
+  assert.ok(css.includes('.list.cards') && css.includes('.cols') && css.includes('.cards-grid'), 'сетки и колонки');
+  assert.ok(css.includes('height: fit-content'), 'шторка на планшете — окно по центру');
+  for (const f of ['today', 'calendar', 'day', 'settings', 'topics']) {
+    assert.ok(readFileSync(file(`js/views/${f}.js`), 'utf8').includes('class="cols"'), `${f}: две колонки`);
+  }
+  assert.ok(readFileSync(file('js/app.js'), 'utf8').includes('view.dataset.route'), 'экран помечен маршрутом для вёрстки');
+  for (const [f, mark] of [['kinematics', 'mapcols'], ['bits', 'font-size: 17.5px'], ['podhod', 'in-session'], ['chess', 'min-width:881px) and (max-width:1099px']]) {
+    assert.ok(readFileSync(file(`modules/${f}/index.html`), 'utf8').includes(mark), `${f}: планшетная вёрстка`);
+  }
+  const manifest = JSON.parse(readFileSync(file('manifest.webmanifest'), 'utf8'));
+  assert.ok(!manifest.orientation, 'ориентацию не фиксируем: iPad крутят');
+});

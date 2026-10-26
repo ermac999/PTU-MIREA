@@ -361,6 +361,30 @@ body::before{content:"";display:block;position:fixed;left:50%;top:-14vh;bottom:a
 .toast{background:var(--glass-strong);color:var(--ink);border:1px solid var(--glass-line);box-shadow:var(--soft-shadow);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-radius:999px}
 .danger{border:1px solid color-mix(in srgb,var(--pen) 55%,transparent);border-radius:16px}
 
+
+/* ---------- планшеты (iPad): карта на две колонки, задания — узкой колонкой по центру ---------- */
+.mapcols,.mapl,.mapr{display:contents}
+@media (min-width:760px){
+  .wrap{max-width:900px;padding-inline:max(28px,env(safe-area-inset-left,0px)) max(28px,env(safe-area-inset-right,0px))}
+  .top .in,.tabbar{max-width:900px;padding-inline:28px}
+  .tabbar{padding-inline:28px}
+  main[data-v="task"],main[data-v="intro"],main[data-v="result"],main[data-v="drill"]{max-width:760px}
+  .q{font-size:22px}
+  .opt{font-size:18px;min-height:58px}
+  .numrow input{font-size:28px}
+  .btn{min-height:52px}
+}
+@media (min-width:980px){
+  .wrap{max-width:1120px}
+  .top .in,.tabbar{max-width:1120px}
+  main[data-v="map"] .mapcols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:34px;align-items:start}
+  main[data-v="map"] .mapl{display:block;position:sticky;top:132px}
+  main[data-v="map"] .mapr{display:block}
+  main[data-v="map"] .mapr .chapter:first-child{margin-top:16px}
+  main[data-v="map"] .hero{margin-top:16px}
+  .kscene .kstage{height:230px}
+  .knum{width:min(26vw,300px)}
+}
 @media (prefers-reduced-motion:reduce){.traj-b{display:none}}
 :root[data-motion="none"] .traj-b{display:none}
 :root[data-motion="none"] *,:root[data-motion="none"] *::before,:root[data-motion="none"] *::after{animation:none!important;transition:none!important}
@@ -898,12 +922,12 @@ function renderMap() {
   else { h1 = stars === MAXSTARS ? 'Кинематика сдана на «5»' : 'Всё пройдено'; p = stars === MAXSTARS ? `Все ${MAXSTARS} звёзд собраны.` : `Можно добрать звёзды: осталось ${MAXSTARS - stars}. Уровни с одной звездой отмечены «повторить».`; btn = null; }
   const pct = Math.round(done / LEVELS.length * 100);
   const chapters = [['Часть 1', 'Школа', 0, 7], ['Часть 2', 'Вуз', 8, 14], ['Финал', 'Контрольная', 15, 15]];
-  main.innerHTML = `<section class="hero kscene">${sceneHTML(stars, done)}<p class="eyebrow">Кинематика · ${LEVELS.length} уровней</p><h1>${esc(h1)}</h1><p>${p}</p>
+  main.innerHTML = `<div class="mapcols"><div class="mapl"><section class="hero kscene">${sceneHTML(stars, done)}<p class="eyebrow">Кинематика · ${LEVELS.length} уровней</p><h1>${esc(h1)}</h1><p>${p}</p>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${LEVELS.length}" aria-valuenow="${done}" aria-label="Пройдено уровней"><i style="width:${pct}%"></i></div>
     <div class="meta"><span>пройдено ${done} из ${LEVELS.length}</span><span>звёзд ${stars} из ${MAXSTARS}</span></div>
     ${btn ? `<div class="actions"><button class="btn primary" data-act="continue">${btn}</button></div>` : ''}</section>
-    ${weakHTML()}
-    ${chapters.map(([e, tt, a, b]) => `<section class="chapter"><p class="eyebrow">${e}</p><h2>${tt}</h2><ol class="track">${LEVELS.slice(a, b + 1).map((L, k) => rowHTML(a + k)).join('')}</ol></section>`).join('')}`;
+    ${weakHTML()}</div><div class="mapr">
+    ${chapters.map(([e, tt, a, b]) => `<section class="chapter"><p class="eyebrow">${e}</p><h2>${tt}</h2><ol class="track">${LEVELS.slice(a, b + 1).map((L, k) => rowHTML(a + k)).join('')}</ol></section>`).join('')}</div></div>`;
 }
 // Сцена: большая мягкая цифра звёзд и мяч, летящий по параболе (медленнее у вершины — как в жизни)
 function sceneHTML(stars, done) {
@@ -1174,6 +1198,7 @@ function enterIfNew() {
   screenKey = k; main.classList.remove('enter'); void main.offsetWidth; main.classList.add('enter');
 }
 function render() {
+  main.dataset.v = tab === 'drill' ? 'drill' : (view === 'map' || !run ? 'map' : view);
   queueMicrotask(enterIfNew);
   document.querySelectorAll('[data-act="tab"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
   if (tab === 'drill') { renderDrill(); updateTop(); return; }

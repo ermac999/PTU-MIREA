@@ -94,7 +94,7 @@ function renderWorld(w) {
     </div>
     <p class="lead small">${esc(w.about)}</p>
     ${games.length
-      ? `<section>${games.map((m) => gameCard(m, w)).join('')}</section>`
+      ? `<section class="cards-grid">${games.map((m) => gameCard(m, w)).join('')}</section>`
       : `<section class="world-empty" style="--wc:${w.color}">
           <span class="w-t">Мир строится</span>
           <span class="w-m">Здесь будет игра по ${esc(w.title.toLowerCase() === 'история' ? 'истории' : `предмету «${w.title}»`)} в общем стиле «Спирали». Пока — теория и задачи на странице предмета.</span>

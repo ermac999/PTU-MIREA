@@ -34,6 +34,7 @@ export function renderDay([keyParam]) {
       <h1 class="display m">${humanDate(key)}</h1>
     </header>
 
+    <div class="cols"><div class="col sticky">
     <div class="daysum">
       <div><span class="v">${durShort(info.nightMin)}</span><span class="k">сон ночью${info.isException ? ' · исключ.' : ''}</span></div>
       <div><span class="v">${studyMin ? durShort(studyMin) : '—'}</span><span class="k">учёба по плану</span></div>
@@ -57,6 +58,7 @@ export function renderDay([keyParam]) {
       <button class="btn ghost" type="button" data-act="day-edit" data-key="${key}">${icon('edit', 's')}Править день</button>
     </div>` : ''}
 
+    </div><div class="col w2">
     <section aria-label="Лента дня">
       ${renderTimeline(key, plan)}
     </section>
@@ -64,7 +66,8 @@ export function renderDay([keyParam]) {
     <div class="row">
       <button class="btn quiet small" type="button" data-act="go" data-to="day/${addDays(key, -1)}">${icon('back', 's')}Пред. день</button>
       <button class="btn quiet small" type="button" data-act="go" data-to="day/${addDays(key, 1)}">След. день${icon('chev', 's')}</button>
-    </div>`;
+    </div>
+    </div></div>`;
 }
 
 /** Три коротких вопроса перед сборкой дня. */
