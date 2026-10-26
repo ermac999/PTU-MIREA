@@ -365,13 +365,32 @@ test('главная: артефакты разложены по раздела�
   for (const a of ARTIFACTS) {
     assert.ok(!ids.has(a.id), a.id);
     ids.add(a.id);
-    assert.ok(['chess', 'project'].includes(a.area), a.id);
+    assert.equal(a.area, 'project', a.id);
     assert.match(a.url, /^https:\/\/claude\.ai\/artifact\/[A-Za-z0-9]+$/);
     assert.ok(!MODULES.some((m) => m.title === a.title), `${a.title} уже перенесён в предметы`);
   }
-  assert.deepEqual(artifactsIn('chess').map((a) => a.title), ['Дебютная тетрадь']);
+  assert.deepEqual(artifactsIn('chess'), [], 'шахматы перенесены на сайт — ссылки на Claude больше нет');
   const sw = readFileSync(file('sw.js'), 'utf8');
   for (const f of ['js/portal.js', 'js/views/home.js']) assert.ok(sw.includes(`'${f}'`), `${f} в кэше`);
+});
+
+test('шахматы на сайте: страница, своя chess.js, база чемпионов, прогресс из Claude, 3 стиля и 9 досок', async () => {
+  const { FUN_APPS } = await import('../js/portal.js');
+  const app = FUN_APPS.find((a) => a.id === 'chess');
+  assert.equal(app.href, 'modules/chess/index.html');
+  const html = readFileSync(file(app.href), 'utf8');
+  assert.ok(html.includes('href="../../#fun"'), 'из шахмат — назад в «Развлечения»');
+  assert.ok(html.includes('<script src="chess.min.js"></script>'), 'chess.js своя, без CDN');
+  for (const st of ['spiral', 'club', 'neon']) assert.ok(html.includes(`:root[data-style="${st}"]`), `стиль ${st}`);
+  const boards = [...html.matchAll(/:root\[data-board="([a-z]+)"\] \.board,\.lk-b\[data-b="\1"\]\{--sq-l/g)].map((m) => m[1]);
+  assert.equal(new Set(boards).size, 9, 'девять досок');
+  const pros = [...html.matchAll(/fetch\('pro\/' \+ id \+ '\.json'\)/g)];
+  assert.equal(pros.length, 1);
+  const seed = JSON.parse(readFileSync(file('modules/chess/seed.json'), 'utf8'));
+  assert.ok(Array.isArray(seed.games) && seed.games.every((g) => g.id), 'партии из Claude с id');
+  assert.ok(Array.isArray(seed.myPuz), 'задачи из ошибок');
+  const sw = readFileSync(file('sw.js'), 'utf8');
+  for (const f of ['modules/chess/index.html', 'modules/chess/seed.json', 'modules/chess/chess.min.js']) assert.ok(sw.includes(`'${f}'`), `${f} в кэше`);
 });
 
 test('«Спираль»: миры — предметы, игры физики и информатики внутри, история пока пустая', async () => {

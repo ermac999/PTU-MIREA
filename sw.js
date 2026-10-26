@@ -1,7 +1,7 @@
 /* Service worker: приложение открывается и работает без интернета (в электричке).
    При обновлении сайта поменяйте VERSION — старый кэш удалится. */
 
-const VERSION = 'ramki-v21';
+const VERSION = 'ramki-v22';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/config.js', 'js/util.js', 'js/schedule.js', 'js/planner.js', 'js/practice.js',
@@ -10,6 +10,7 @@ const SHELL = [
   'js/views/today.js', 'js/views/topics.js', 'js/views/settings.js', 'js/views/home.js', 'js/views/game.js',
   'data/bank.json', 'data/theory.json',
   'modules/kinematics/index.html', 'modules/kinematics/seed.json', 'modules/bits/index.html', 'modules/bits/seed.json',
+  'modules/chess/index.html', 'modules/chess/seed.json', 'modules/chess/chess.min.js',
   'fonts/playfair-display-cyrillic-400-normal.woff2', 'fonts/playfair-display-latin-400-normal.woff2',
   'fonts/playfair-display-cyrillic-600-normal.woff2', 'fonts/playfair-display-latin-600-normal.woff2',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',

@@ -9,7 +9,7 @@ import { catchUpDone, catchUpTotal } from '../planner.js';
 import { daysBetween, esc, plural, relDays } from '../util.js';
 import { icon } from '../ui.js';
 import { MODULES } from '../modules.js';
-import { ARTIFACTS, artifactsIn } from '../portal.js';
+import { ARTIFACTS, FUN_APPS, artifactsIn } from '../portal.js';
 import { GAME_TITLE, WORLDS, gameTotals } from '../game.js';
 import { eventTitle, today, upcoming } from './shared.js';
 
@@ -24,6 +24,13 @@ const linkCard = (a) => `<a class="mod" href="${esc(a.url)}" target="_blank" rel
     <span class="t">${esc(a.title)}</span>
     ${a.about ? `<span class="m">${esc(a.about)}</span>` : ''}
     <span class="mod-go">Открыть в Claude →</span>
+  </a>`;
+
+const appCard = (a) => `<a class="mod" href="${esc(a.href)}">
+    <span class="mod-k">${icon('game', 's')}приложение</span>
+    <span class="t">${esc(a.title)}</span>
+    ${a.about ? `<span class="m">${esc(a.about)}</span>` : ''}
+    <span class="mod-go">Открыть →</span>
   </a>`;
 
 /* ---------- Сцена главной: дымка, лучи, пыль, спираль с разделами (по мотивам INRA 70 ans) ---------- */
@@ -169,7 +176,7 @@ export function renderFun() {
     </header>
     <section>
       <div class="sec-row"><h2 class="sec">Шахматы</h2></div>
-      ${artifactsIn('chess').map(linkCard).join('')}
+      ${FUN_APPS.filter((a) => a.area === 'chess').map(appCard).join('')}
     </section>
     <section>
       <div class="sec-row"><h2 class="sec">Counter-Strike</h2></div>
