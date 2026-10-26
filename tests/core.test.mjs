@@ -15,6 +15,9 @@ import { buildIcs, fold } from '../js/ics.js';
 import { defaultState, migrate, parseBackup } from '../js/store.js';
 
 const TODAY = '2026-10-17'; // суббота
+// Состояние «как на 17.10» (опрос): без событий, о которых сказали позже, — иначе они сдвигают расчёты, привязанные к этой дате.
+const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2']);
+const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); return st; };
 const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
 
 /* ---------- util ---------- */
@@ -142,7 +145,7 @@ test('КР по линалу: готовимся в воскресенье, ра
 });
 
 test('отставание: физика и информатика — больше всех, история — с нуля, всё влезает до срока', () => {
-  const st = defaultState();
+  const st = surveyState();
   const total = Object.fromEntries(st.subjects.map((s) => [s.id, catchUpTotal(st, s)]));
   assert.equal(total.phys, 265);
   assert.equal(total.inf, 265);
@@ -159,7 +162,7 @@ test('отставание: физика и информатика — боль�
   assert.ok(sim.shortages.every((s) => s.eventId), 'догоняние не выдаётся за нехватку по событию');
   assert.ok(!sim.items.some((i) => i.maint && total[i.subject] > 0), 'кого догоняем — без двойной «поддержки»');
   assert.ok(!sim.shortages.some((s) => s.options.some((o) => o.kind === 'pause')), 'все слабые на догонянии — «пауза поддержки» ничего не даст и не предлагается');
-  const st2 = defaultState();
+  const st2 = surveyState();
   st2.progress['c:phys:heavy'] = total.phys; // физику догнал — она снова на поддержке
   const pause = simulate(st2, TODAY, 7 * 60, 21).shortages.flatMap((s) => s.options).find((o) => o.kind === 'pause');
   assert.deepEqual(pause?.subjects, ['Физика']);
@@ -313,7 +316,7 @@ test('пересборка дня во время блока дома: след�
 });
 
 test('история: темы докладов по очереди, без повторов, все 30 — до 11 декабря, по неделям ровно', () => {
-  const st = defaultState();
+  const st = surveyState();
   const sim = simulate(st, TODAY, 7 * 60, 70);
   const days = Object.keys(sim.plans).sort();
   const blocks = days.flatMap((k) => sim.plans[k].blocks.filter((b) => b.catchUp && b.subject === 'hist').map((b) => ({ ...b, day: k })));
@@ -331,7 +334,7 @@ test('история: темы докладов по очереди, без по
   assert.ok(blocks.every((b) => b.title.startsWith('История: «')));
 
   // как в жизни: план строится каждый день заново, блоки отмечены «готово» — очередь идёт дальше
-  const st2 = defaultState();
+  const st2 = surveyState();
   const seen = [];
   for (let d = 0, key = TODAY; d < 14; d++, key = addDays(key, 1)) {
     st2.plans[key] = buildTodayPlan(st2, key, 5 * 60);
@@ -732,4 +735,27 @@ test('версия 14: сессия с 22 декабря переезжает н
   mine.events.find((e) => e.id === 'ev-session').date = '2027-01-15';
   mine.settings.sessionStart = '2027-01-15';
   assert.equal(migrate(mine).events.find((e) => e.id === 'ev-session').date, '2027-01-15');
+});
+
+test('версия 15: контрольные по матлогике и матану в четверг 29.10 добавляются один раз', () => {
+  const v14 = defaultState();
+  v14.version = 14;
+  v14.settings.updateSeen = 11;
+  v14.events = v14.events.filter((e) => !LATER_EVENTS.has(e.id));
+  const m = migrate(JSON.parse(JSON.stringify(v14)));
+  const krs = m.events.filter((e) => e.date === '2026-10-29' && e.type === 'kr');
+  assert.deepEqual(krs.map((e) => e.subject).sort(), ['matan', 'matlog']);
+  assert.deepEqual(krs.map((e) => e.time).sort(), ['14:20', '18:00'], 'время — по практикам четверга');
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
+  assert.equal(migrate(m).events.filter((e) => e.date === '2026-10-29').length, 2, 'повторный запуск не дублирует');
+  // уже добавил сам — не дублируем
+  const mine = JSON.parse(JSON.stringify(v14));
+  mine.events.push({ id: 'my-matan', subject: 'matan', type: 'kr', title: 'КР', date: '2026-10-29', time: '17:00', confirmed: true });
+  const m2 = migrate(mine);
+  assert.equal(m2.events.filter((e) => e.subject === 'matan' && e.date === '2026-10-29').length, 1);
+  assert.equal(m2.events.filter((e) => e.subject === 'matlog' && e.date === '2026-10-29').length, 1);
+  // на чистой установке контрольные уже есть, а заметки нет
+  const fresh = defaultState();
+  assert.equal(fresh.events.filter((e) => e.date === '2026-10-29' && e.type === 'kr').length, 2);
+  assert.ok(fresh.settings.updateSeen >= CONFIG.noteVersion);
 });

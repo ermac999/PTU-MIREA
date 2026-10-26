@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 14,
-  noteVersion: 11,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 15,
+  noteVersion: 12,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -264,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 11,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 12,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -330,6 +330,10 @@ export const DEFAULT_DATA = {
       format: 'на бумаге', phone: 'no', confirmed: true, note: '' },
     { id: 'ev-inf-kr', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-23', time: '16:20', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Тему и формат — уточнить. Время — по первой паре; если КР на второй, поправь на 18:00.' },
+    { id: 'ev-matlog-kr-2', subject: 'matlog', type: 'kr', title: 'Контрольная', date: '2026-10-29', time: '14:20', timeAssumed: true,
+      format: '', phone: '?', confirmed: true, note: 'Со слов 26.10. Темы и формат — уточнить. Время — по практике; если КР на лекции, поправь на 16:20.' },
+    { id: 'ev-matan-kr-2', subject: 'matan', type: 'kr', title: 'Контрольная', date: '2026-10-29', time: '18:00', timeAssumed: true,
+      format: '', phone: '?', confirmed: true, note: 'Со слов 26.10. Темы и формат — уточнить.' },
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab3', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-12-15', time: '12:40',

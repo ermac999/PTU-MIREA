@@ -74,6 +74,7 @@ export function migrate(raw) {
   if (from < 11) upgradeTo11(st);
   if (from < 13) upgradeTo13(st);
   if (from < 14) upgradeTo14(st);
+  if (from < 15) upgradeTo15(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -127,6 +128,15 @@ function upgradeTo3(st) {
     ev.note = evNew.note;
   }
   if (st.settings.sessionStart === '2026-12-01' && st.settings.sessionApprox !== false) st.settings.sessionStart = d.settings.sessionStart;
+}
+
+/** Версия 15 (26.10): контрольные по матлогике и матану в четверг 29.10 (со слов). Уже есть такое событие — не дублируем. */
+function upgradeTo15(st) {
+  for (const id of ['ev-matlog-kr-2', 'ev-matan-kr-2']) {
+    const fresh = DEFAULT_DATA.events.find((e) => e.id === id);
+    const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
+    if (!has) st.events.push(clone(fresh));
+  }
 }
 
 /** Версия 14 (25.10): сессия в начале января, а не 22 декабря. Если дату поправили сами — не трогаем. */
