@@ -375,8 +375,8 @@ test('главная: артефакты разложены по раздела�
 });
 
 test('шахматы на сайте: страница, своя chess.js, база чемпионов, прогресс из Claude, 3 стиля и 9 досок', async () => {
-  const { FUN_APPS } = await import('../js/portal.js');
-  const app = FUN_APPS.find((a) => a.id === 'chess');
+  const { SITE_APPS } = await import('../js/portal.js');
+  const app = SITE_APPS.find((a) => a.id === 'chess');
   assert.equal(app.href, 'modules/chess/index.html');
   const html = readFileSync(file(app.href), 'utf8');
   assert.ok(html.includes('href="../../#fun"'), 'из шахмат — назад в «Развлечения»');
@@ -409,4 +409,28 @@ test('«Спираль»: миры — предметы, игры физики �
     assert.equal(t.maxStars, 48 + 156);
     assert.equal(t.rank, 'Ученик');
   });
+});
+
+test('«Подход» на сайте: своё хранилище вместо облака Claude, шрифт рядом, данные из Claude в seed, ссылка из зала', async () => {
+  const { SITE_APPS, appsIn, ARTIFACTS } = await import('../js/portal.js');
+  const app = SITE_APPS.find((a) => a.id === 'podhod');
+  assert.equal(app.area, 'project');
+  assert.equal(app.href, 'modules/podhod/index.html');
+  assert.ok(!ARTIFACTS.some((a) => a.id === 'podhod'), 'ссылка на артефакт убрана — приложение внутри сайта');
+  assert.deepEqual(appsIn('project').map((a) => a.id), ['podhod']);
+  const html = readFileSync(file(app.href), 'utf8');
+  assert.ok(html.includes('href="../../#projects"'), 'из «Подхода» — назад в «Проекты»');
+  assert.ok(!/TelegramAdapter|ClaudeAdapter/.test(html), 'нет входа через Telegram и облако Claude');
+  assert.ok(html.includes('const ADAPTERS = [LocalAdapter];'), 'данные — в памяти устройства');
+  assert.ok(!html.includes('fonts.googleapis.com'), 'шрифт свой, без интернета');
+  for (const f of ['onest-cyrillic', 'onest-latin']) assert.ok(existsSync(file(`modules/podhod/fonts/${f}.woff2`)), f);
+  const seed = JSON.parse(readFileSync(file('modules/podhod/seed.json'), 'utf8'));
+  assert.equal(seed.profile.mode, 4);
+  assert.equal(seed.profile.height, 183, 'рост — как сказал сам, а не значение по умолчанию');
+  assert.deepEqual(Object.keys(seed.plans).sort(), ['3', '4']);
+  assert.ok(Array.isArray(seed.body) && seed.body[0].w === 68);
+  const sw = readFileSync(file('sw.js'), 'utf8');
+  for (const f of ['modules/podhod/index.html', 'modules/podhod/seed.json', 'modules/podhod/fonts/onest-cyrillic.woff2', 'modules/podhod/fonts/onest-latin.woff2']) assert.ok(sw.includes(`'${f}'`), `${f} в кэше`);
+  const shared = readFileSync(file('js/views/shared.js'), 'utf8');
+  assert.ok(shared.includes("b.type === 'gym'") && shared.includes('modules/podhod/index.html'), 'в блоке зала есть ссылка на «Подход»');
 });

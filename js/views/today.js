@@ -233,6 +233,7 @@ export function renderToday() {
   const tasks = plan.blocks.filter((b) => b.type === 'study').slice(0, CONFIG.maxTasksPerDay);
   const habits = plan.blocks.filter((b) => ['habit', 'review', 'plan'].includes(b.type));
   const game = plan.blocks.find((b) => b.type === 'game');
+  const gym = (plan.fixed || []).find((b) => b.type === 'gym');
   const streak = streakInfo(st, t);
   const next = upcoming(14).filter((e) => e.type !== 'session').slice(0, 3);
   const importantClasses = plan.info.classes.filter((c) => c.kind === 'lab' || subjectOf(st, c.subject)?.marked
@@ -273,6 +274,8 @@ export function renderToday() {
           <span class="box">${s === 'done' ? icon('check', 's') : ''}</span><span><b>${esc(b.title)}</b><br><span class="small muted">${fmtTime(b.start)} · ${fmtDur(b.end - b.start)}</span></span></button>`;
       }).join('')}</div>
     </section>` : ''}
+
+    ${gym ? `<p class="note">${icon('dumbbell', 's')}<span>Зал ${fmtTime(gym.start)}–${fmtTime(gym.end)}. Тренировка и питание — в приложении <a href="modules/podhod/index.html">«Подход»</a>.</span></p>` : ''}
 
     ${game ? `<p class="note">${icon('game', 's')} Counter-Strike ${fmtTime(game.start)}–${fmtTime(game.end)}. ${pendingStudy ? `Сначала ${pendingStudy} ${plural(pendingStudy, 'учебный блок', 'учебных блока', 'учебных блоков')} — потом игра как награда.` : game.reward ? 'Блоки сделаны — игра заслужена.' : 'Свободное время.'} Закончить за ${CONFIG.game.endBeforeSleepMin} минут до отбоя (${fmtTime(plan.info.bed)}).</p>` : ''}
 

@@ -9,7 +9,7 @@ import { catchUpDone, catchUpTotal } from '../planner.js';
 import { daysBetween, esc, plural, relDays } from '../util.js';
 import { icon } from '../ui.js';
 import { MODULES } from '../modules.js';
-import { ARTIFACTS, FUN_APPS, artifactsIn } from '../portal.js';
+import { appsIn, artifactsIn } from '../portal.js';
 import { GAME_TITLE, WORLDS, gameTotals } from '../game.js';
 import { eventTitle, today, upcoming } from './shared.js';
 
@@ -27,7 +27,7 @@ const linkCard = (a) => `<a class="mod" href="${esc(a.url)}" target="_blank" rel
   </a>`;
 
 const appCard = (a) => `<a class="mod" href="${esc(a.href)}">
-    <span class="mod-k">${icon('game', 's')}приложение</span>
+    <span class="mod-k">${icon(a.icon || 'game', 's')}приложение</span>
     <span class="t">${esc(a.title)}</span>
     ${a.about ? `<span class="m">${esc(a.about)}</span>` : ''}
     <span class="mod-go">Открыть →</span>
@@ -73,7 +73,7 @@ export function renderHome() {
   const left = session ? Math.max(0, daysBetween(t, session.date)) : null;
   const subjects = st.subjects.filter((s) => !s.noStudy);
   const behind = subjects.filter((s) => catchUpTotal(st, s) > catchUpDone(st, s)).length;
-  const projects = artifactsIn('project').length;
+  const projects = appsIn('project').length + artifactsIn('project').length;
   return `
     <div class="scene" id="scene">
       <div class="sc-rays" aria-hidden="true"></div>
@@ -176,7 +176,7 @@ export function renderFun() {
     </header>
     <section>
       <div class="sec-row"><h2 class="sec">Шахматы</h2></div>
-      ${FUN_APPS.filter((a) => a.area === 'chess').map(appCard).join('')}
+      ${appsIn('chess').map(appCard).join('')}
     </section>
     <section>
       <div class="sec-row"><h2 class="sec">Counter-Strike</h2></div>
@@ -185,13 +185,14 @@ export function renderFun() {
 }
 
 export function renderProjects() {
-  const list = artifactsIn('project');
+  const apps = appsIn('project');
+  const links = artifactsIn('project');
   return `
     <header class="head">
       <button class="back" type="button" data-act="go" data-to="home">${icon('back', 's')}Главная</button>
-      <span class="eyebrow">Что я сделал в Claude</span>
+      <span class="eyebrow">Для себя, не для учёбы</span>
       <h1 class="display m">Проекты</h1>
     </header>
-    <section>${list.map(linkCard).join('')}</section>
-    <p class="small muted" style="margin:0">Пока открываются в Claude (нужен вход). Потом перенесём внутрь сайта и уберём лишнее. Игры по предметам — в «Предметах»: ${esc(MODULES.map((m) => m.title).join(', '))}. Всего артефактов в разделах: ${ARTIFACTS.length}.</p>`;
+    <section>${apps.map(appCard).join('')}${links.map(linkCard).join('')}</section>
+    <p class="small muted" style="margin:0">Карточки «приложение» уже внутри сайта: открываются сразу и работают без интернета. Остальные пока по ссылке в Claude (нужен вход), перенесём их по очереди. Игры по предметам — в «Спирали»: ${esc(MODULES.map((m) => m.title).join(', '))}.</p>`;
 }

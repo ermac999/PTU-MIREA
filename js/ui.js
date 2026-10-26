@@ -23,6 +23,7 @@ const PATHS = {
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   train: '<rect x="5.5" y="3.5" width="13" height="14" rx="2"/><path d="M5.5 11h13M9 21l1.5-3.5M15 21l-1.5-3.5"/>',
   home: '<path d="M4 11l8-6.5 8 6.5"/><path d="M6 9.5V20h12V9.5"/>',
+  dumbbell: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/>',
   game: '<rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 11v4M6 13h4M15 12h.01M17.5 14.5h.01"/>',
   bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5h4"/>',
   download: '<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>',

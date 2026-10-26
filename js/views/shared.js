@@ -177,6 +177,9 @@ function blockActions(key, b, ctx, status) {
   if (b.type === 'commute' && b.toggle && !ctx.isPast) {
     return `<div class="blk-acts"><button class="btn small ghost" type="button" data-act="morning-study" data-key="${key}">Сделать учебной</button></div>`;
   }
+  if (b.type === 'gym' && ctx.isToday) {
+    return `<div class="blk-acts"><a class="btn small quiet" href="modules/podhod/index.html">${icon('dumbbell', 's')}Подход →</a></div>`;
+  }
   if (!MARKABLE.has(b.type) || !(ctx.isToday || ctx.isPast)) return '';
   const id = esc(b.id);
   if (status) {
