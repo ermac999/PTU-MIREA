@@ -5,9 +5,7 @@
    «Рамки» могут его показать (и подложить перенесённый прогресс заранее).
    ===================================================================== */
 
-const isPreview = () => !!globalThis.__RAMKI_PREVIEW__; // как в ui.js; свой, чтобы модуль грузился и в тестах
 
-const SITE = 'https://ermac999.github.io/PTU-MIREA/';
 
 function readJson(key) {
   try {
@@ -82,15 +80,14 @@ export function startedTopics(state) {
   return state.topics.filter((t) => ids.has(t.id) && t.status === 'new').map((t) => t.id);
 }
 
-/** Ссылка на модуль: на сайте — относительная, в превью (артефакт) — на сайт в новой вкладке. */
-export const moduleHref = (m) => (isPreview() ? SITE + m.href : m.href);
+/** Ссылка на модуль — относительная: и на сайте, и в артефакте игры лежат рядом со страницей. */
+export const moduleHref = (m) => m.href;
 
 /**
  * Перенесённый прогресс: если на этом устройстве модуль ещё не открывали,
  * кладём сохранённый прогресс заранее — «Рамки» сразу покажут звёзды, а игра продолжит с того же места.
  */
 export async function seedModules() {
-  if (isPreview()) return;
   for (const m of MODULES) {
     if (!m.seed || !m.storageKey || readJson(m.storageKey)) continue;
     try {

@@ -1,5 +1,6 @@
-// Сборка одностраничного превью «Рамок»: весь код, стили, шрифты, банк заданий и теория —
-// в одном HTML-фрагменте (без service worker). Основная версия — обычная папка для GitHub Pages.
+// Сборка «Рамок» для артефакта Claude: весь код, стили, шрифты, банк заданий и теория —
+// в одном HTML-фрагменте (без service worker). Игры (modules/) публикуются рядом файлами —
+// список выводит сборка. Основная версия — обычная папка для GitHub Pages.
 // Запуск: npm run build:preview [путь/к/файлу.html]
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -39,3 +40,7 @@ const html = `<title>Рамки</title>
 mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, html);
 console.log(`Превью: ${out} (${Math.round(html.length / 1024)} КБ)`);
+
+// Файлы игр, которые публикуются рядом со страницей (пути — как на сайте).
+const modFiles = execFileSync('git', ['ls-files', 'modules'], { cwd: root, encoding: 'utf8' }).split('\n').filter(Boolean);
+console.log(JSON.stringify(Object.fromEntries(modFiles.map((f) => [f, f]))));

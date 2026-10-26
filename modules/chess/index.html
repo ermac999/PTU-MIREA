@@ -3784,6 +3784,7 @@ ACT.memExport = async () => {
   try { const dl = await claude.use('downloads'); if (!dl) throw 0; await dl.save({ filename: name, data: new Blob([body], { type: 'application/json' }) }); toast('Копия готова'); }
   catch (e) {
     if (e && e.code === 'declined') return;
+    if (typeof claude !== 'undefined') { toast('В артефакте файлы не скачиваются — скачай копию на сайте'); return; }
     try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast('Копия скачана'); }
     catch (e2) { toast('Скачивание здесь недоступно'); }
   }
