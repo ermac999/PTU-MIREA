@@ -394,6 +394,7 @@ test('шахматы на сайте: страница, своя chess.js, ба�
   for (const fx of ['ripple', 'sparks', 'comet', 'flash', 'shatter', 'fire', 'stars']) assert.ok(html.includes(`  ${fx}(e, m) {`), `эффект ${fx}`);
   for (const snd of ['stone', 'glass', 'soft', 'retro', 'space', 'arena']) assert.ok(html.includes(`  ${snd}: {\n    move(c, t)`), `звук ${snd}`);
   assert.ok(html.includes("r.dataset.pieces=l.pieces||'classic'"), 'набор фигур ставится до отрисовки');
+  assert.ok(html.includes('function favAliases(k)'), 'избранное общее для «Тренировки» и «Все дебюты»');
   const pros = [...html.matchAll(/fetch\('pro\/' \+ id \+ '\.json'\)/g)];
   assert.equal(pros.length, 1);
   const seed = JSON.parse(readFileSync(file('modules/chess/seed.json'), 'utf8'));
