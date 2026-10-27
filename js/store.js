@@ -75,6 +75,7 @@ export function migrate(raw) {
   if (from < 13) upgradeTo13(st);
   if (from < 14) upgradeTo14(st);
   if (from < 15) upgradeTo15(st);
+  if (from < 16) upgradeTo16(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -130,13 +131,26 @@ function upgradeTo3(st) {
   if (st.settings.sessionStart === '2026-12-01' && st.settings.sessionApprox !== false) st.settings.sessionStart = d.settings.sessionStart;
 }
 
-/** Версия 15 (26.10): контрольные по матлогике и матану в четверг 29.10 (со слов). Уже есть такое событие — не дублируем. */
-function upgradeTo15(st) {
-  for (const id of ['ev-matlog-kr-2', 'ev-matan-kr-2']) {
+/** Добавить события из DEFAULT_DATA, если такого ещё нет (тот же id или тот же предмет, тип и дата). */
+function addDefaultEvents(st, ids) {
+  for (const id of ids) {
     const fresh = DEFAULT_DATA.events.find((e) => e.id === id);
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 16 (27.10): контрольная по информатике в пятницу 30.10 (со слов); дорога в универ в этот день — учебная,
+ *  если день ещё не правили сами. */
+function upgradeTo16(st) {
+  addDefaultEvents(st, ['ev-inf-kr-2']);
+  st.dayOverrides = st.dayOverrides || {};
+  if (!st.dayOverrides['2026-10-30']) st.dayOverrides['2026-10-30'] = clone(DEFAULT_DATA.dayOverrides['2026-10-30']);
+}
+
+/** Версия 15 (26.10): контрольные по матлогике и матану в четверг 29.10 (со слов). */
+function upgradeTo15(st) {
+  addDefaultEvents(st, ['ev-matlog-kr-2', 'ev-matan-kr-2']);
 }
 
 /** Версия 14 (25.10): сессия в начале января, а не 22 декабря. Если дату поправили сами — не трогаем. */

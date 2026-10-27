@@ -708,7 +708,8 @@ function layoutSmall(state, info, w, start, items, ctx, mk) {
     out.push(mk(isAm ? 'ride' : 'free', t, t + lead, { title: isAm ? 'Сесть, проснуться' : 'Перейти, устроиться', place: w.kind }));
     t += lead;
   }
-  const chunk = pickChunk(items, ctx, isAm ? 'light' : 'any', w.end, cap);
+  // в утренней дороге блок кончается не позже t + cap: в день КР повторить можно, если до неё ещё 30+ минут
+  const chunk = pickChunk(items, ctx, isAm ? 'light' : 'any', isAm ? t + cap : w.end, cap);
   if (chunk) {
     commit(chunk, ctx);
     const end = t + (isAm ? chunk.min : wallFor(chunk.min));

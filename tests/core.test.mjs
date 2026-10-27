@@ -16,7 +16,7 @@ import { defaultState, migrate, parseBackup } from '../js/store.js';
 
 const TODAY = '2026-10-17'; // суббота
 // Состояние «как на 17.10» (опрос): без событий, о которых сказали позже, — иначе они сдвигают расчёты, привязанные к этой дате.
-const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2']);
+const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2']);
 const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); return st; };
 const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
 
@@ -664,12 +664,12 @@ test('обновление до версии 6: КР по информатике
   v5.events = v5.events.filter((e) => e.id !== 'ev-inf-kr');
   const m = migrate(JSON.parse(JSON.stringify(v5)));
   assert.equal(m.events.filter((e) => e.id === 'ev-inf-kr').length, 1);
-  assert.equal(migrate(m).events.filter((e) => e.type === 'kr' && e.subject === 'inf').length, 1, 'повторный запуск не дублирует');
+  assert.equal(migrate(m).events.filter((e) => e.type === 'kr' && e.subject === 'inf' && e.date === '2026-10-23').length, 1, 'повторный запуск не дублирует');
   // уже добавил сам (другой id, та же дата и предмет) — не дублируем
   const mine = JSON.parse(JSON.stringify(v5));
   mine.events.push({ id: 'ev-mine', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-23', time: '18:00', confirmed: true, note: '' });
   const m2 = migrate(mine);
-  assert.equal(m2.events.filter((e) => e.type === 'kr' && e.subject === 'inf').length, 1);
+  assert.equal(m2.events.filter((e) => e.type === 'kr' && e.subject === 'inf' && e.date === '2026-10-23').length, 1);
   assert.equal(m2.events.find((e) => e.id === 'ev-mine').time, '18:00', 'свои правки остаются');
 });
 
@@ -735,6 +735,38 @@ test('версия 14: сессия с 22 декабря переезжает н
   mine.events.find((e) => e.id === 'ev-session').date = '2027-01-15';
   mine.settings.sessionStart = '2027-01-15';
   assert.equal(migrate(mine).events.find((e) => e.id === 'ev-session').date, '2027-01-15');
+});
+
+test('версия 16: КР по информатике в пятницу 30.10 — один раз, дорога в этот день учебная', () => {
+  const v15 = defaultState();
+  v15.version = 15;
+  v15.settings.updateSeen = 12;
+  v15.events = v15.events.filter((e) => e.id !== 'ev-inf-kr-2');
+  delete v15.dayOverrides['2026-10-30'];
+  const m = migrate(JSON.parse(JSON.stringify(v15)));
+  assert.deepEqual(m.events.filter((e) => e.date === '2026-10-30' && e.type === 'kr').map((e) => [e.subject, e.time]), [['inf', '16:20']], 'время — по первой паре пятницы');
+  assert.equal(m.dayOverrides['2026-10-30']?.morningStudy, true);
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
+  assert.equal(migrate(m).events.filter((e) => e.date === '2026-10-30').length, 1, 'повторный запуск не дублирует');
+  // своё событие и свои правки дня не трогаем
+  const mine = JSON.parse(JSON.stringify(v15));
+  mine.events.push({ id: 'my-inf', subject: 'inf', type: 'kr', title: 'КР', date: '2026-10-30', time: '18:00', confirmed: true });
+  mine.dayOverrides['2026-10-30'] = { noGame: true };
+  const m2 = migrate(mine);
+  assert.equal(m2.events.filter((e) => e.subject === 'inf' && e.date === '2026-10-30').length, 1);
+  assert.deepEqual(m2.dayOverrides['2026-10-30'], { noGame: true });
+});
+
+test('КР в 16:20: в утренней дороге того же дня — повторение, сама дорога кончается к паре', () => {
+  const st = defaultState();
+  const day = simulate(st, '2026-10-30', 12 * 60 + 10, 1).plans['2026-10-30'];
+  const ride = day.blocks.find((b) => b.type === 'study' && b.eventId === 'ev-inf-kr-2' && b.start >= toMin('13:30') && b.end <= toMin('16:20'));
+  assert.ok(ride, 'информатика в дороге перед КР');
+  assert.ok(ride.end <= toMin('15:50'), 'заканчивается минимум за 30 минут до КР');
+  // без учебной дороги утром не учимся
+  delete st.dayOverrides['2026-10-30'];
+  const plain = simulate(st, '2026-10-30', 12 * 60 + 10, 1).plans['2026-10-30'];
+  assert.ok(!plain.blocks.some((b) => b.type === 'study' && b.end <= toMin('16:20')));
 });
 
 test('версия 15: контрольные по матлогике и матану в четверг 29.10 добавляются один раз', () => {
