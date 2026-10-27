@@ -394,7 +394,23 @@ test('шахматы на сайте: страница, своя chess.js, ба�
   for (const fx of ['ripple', 'sparks', 'comet', 'flash', 'shatter', 'fire', 'stars']) assert.ok(html.includes(`  ${fx}(e, m) {`), `эффект ${fx}`);
   for (const snd of ['stone', 'glass', 'soft', 'retro', 'space', 'arena']) assert.ok(html.includes(`  ${snd}: {\n    move(c, t)`), `звук ${snd}`);
   assert.ok(html.includes("r.dataset.pieces=l.pieces||'classic'"), 'набор фигур ставится до отрисовки');
+  // «Любой ход»: популярные ходы соперника до 8-го хода по моим четырём дебютам (партии Lichess + Stockfish)
+  const POPD = JSON.parse(html.match(/<script>const POP_DATA = (\{.*?\});<\/script>/)[1]);
+  for (const id of ['london', 'italian']) assert.ok(POPD[id], `дерево для ${id}`);
+  for (const [id, p] of Object.entries(POPD)) {
+    let depth = 0, n = 0;
+    const walk = (rows, d) => rows.forEach((r) => { n += 1; depth = Math.max(depth, d); assert.equal(r.length, 8, `${id}: строка дерева`); walk(r[7], d + 1); });
+    walk(p.rows, 1);
+    assert.ok(depth >= 7, `${id}: соперник ходит до 7–8-го хода (сейчас ${depth})`);
+    assert.ok(n >= 150, `${id}: популярных позиций много (сейчас ${n})`);
+  }
+  assert.ok(html.includes("if (AT.mode === 'pop') return popRound();"), 'тренировка «как угодно» — партия по дереву до 8-го хода');
   assert.ok(html.includes('function favAliases(k)'), 'избранное общее для «Тренировки» и «Все дебюты»');
+  // разбор партии как на chess.com: типы ходов, переход к ним, «зачем этот ход»
+  assert.ok(html.includes('try { revClassify(plies, fens, moves, an); }'), 'разбор размечает каждый ход');
+  for (const c of ['Блестящий', 'Замечательный', 'Лучший', 'Отличный', 'Хороший', 'Книжный', 'Неточность', 'Упущено', 'Ошибка', 'Зевок']) assert.ok(html.includes(`['${c}', `), `тип хода «${c}»`);
+  assert.ok(html.includes('ACT.revCat = d =>'), 'нажатие на число — к ходам этого типа');
+  assert.ok(html.includes("if (ENG.next && route.v === 'live' && !REV)"), 'разбор не зависает, когда догружается Stockfish');
   const pros = [...html.matchAll(/fetch\('pro\/' \+ id \+ '\.json'\)/g)];
   assert.equal(pros.length, 1);
   const seed = JSON.parse(readFileSync(file('modules/chess/seed.json'), 'utf8'));
