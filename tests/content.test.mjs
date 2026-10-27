@@ -396,13 +396,13 @@ test('шахматы на сайте: страница, своя chess.js, ба�
   assert.ok(html.includes("r.dataset.pieces=l.pieces||'classic'"), 'набор фигур ставится до отрисовки');
   // «Любой ход»: популярные ходы соперника до 8-го хода по моим четырём дебютам (партии Lichess + Stockfish)
   const POPD = JSON.parse(html.match(/<script>const POP_DATA = (\{.*?\});<\/script>/)[1]);
-  for (const id of ['london', 'italian']) assert.ok(POPD[id], `дерево для ${id}`);
+  assert.deepEqual(Object.keys(POPD).sort(), ['carokann', 'italian', 'london', 'twoknights'], 'деревья для всех четырёх дебютов');
   for (const [id, p] of Object.entries(POPD)) {
     let depth = 0, n = 0;
     const walk = (rows, d) => rows.forEach((r) => { n += 1; depth = Math.max(depth, d); assert.equal(r.length, 8, `${id}: строка дерева`); walk(r[7], d + 1); });
     walk(p.rows, 1);
-    assert.ok(depth >= 7, `${id}: соперник ходит до 7–8-го хода (сейчас ${depth})`);
-    assert.ok(n >= 150, `${id}: популярных позиций много (сейчас ${n})`);
+    assert.ok(depth >= 8, `${id}: соперник ходит до 8-го хода (сейчас ${depth})`);
+    assert.ok(n >= 1500, `${id}: популярных позиций много (сейчас ${n})`);
   }
   assert.ok(html.includes("if (AT.mode === 'pop') return popRound();"), 'тренировка «как угодно» — партия по дереву до 8-го хода');
   assert.ok(html.includes('function favAliases(k)'), 'избранное общее для «Тренировки» и «Все дебюты»');
