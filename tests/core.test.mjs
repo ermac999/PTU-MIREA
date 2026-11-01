@@ -803,6 +803,11 @@ test('кинематика к задачнику: теория про средн
   assert.equal(bank.cards.filter((x) => x.id.startsWith('phs-')).length, 4);
 });
 
+test('динамика: «подробно» объясняет, откуда берутся формулы (вывод E_k, импульса, M = J·ε)', () => {
+  const th = JSON.parse(readFileSync(new URL('../data/theory.json', import.meta.url), 'utf8')).topics['phys-2'].detailed;
+  for (const mark of ['Откуда берутся остальные формулы', 'Кинетическая энергия', 'F = dp/dt', 'M = J·ε', 'Как понимать формулу']) assert.ok(th.includes(mark), mark);
+});
+
 test('формулы механики: 50 карточек для диктанта по темам физики, у тем есть шпаргалка', async () => {
   const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
   const cards = bank.cards.filter((c) => c.id.startsWith('phf-'));
