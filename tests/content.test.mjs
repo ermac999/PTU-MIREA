@@ -203,8 +203,8 @@ test('обновление до версии 9: «Кинематика» — н�
   v8.topics.find((t) => t.id === 'phys-1').name = 'Кинематика точки';
   assert.equal(migrate(JSON.parse(JSON.stringify(v8))).topics.find((t) => t.id === 'phys-1').example, true, 'свою правку не трогаем');
   const fresh = defaultState().topics.filter((t) => t.subject === 'phys');
-  assert.deepEqual(fresh.map((t) => t.id), ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-5'], 'id тем физики прежние');
-  assert.deepEqual(fresh.map((t) => t.example), [false, true, true, true, true]);
+  assert.deepEqual(fresh.map((t) => t.id).sort(), ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-5', 'phys-6'], 'id тем физики прежние, плюс phys-6 (вращение)');
+  assert.deepEqual(fresh.filter((t) => t.example).map((t) => t.id), ['phys-5'], 'настоящие темы — по листу «Механика»; примерная — только погрешности');
 });
 
 test('бит за битом: прогресс по всей игре и по практике, уровни совпадают с игрой', () => {

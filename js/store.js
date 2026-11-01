@@ -77,6 +77,7 @@ export function migrate(raw) {
   if (from < 15) upgradeTo15(st);
   if (from < 16) upgradeTo16(st);
   if (from < 17) upgradeTo17(st);
+  if (from < 18) upgradeTo18(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -138,6 +139,26 @@ function addDefaultEvents(st, ids) {
     const fresh = DEFAULT_DATA.events.find((e) => e.id === id);
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
+  }
+}
+
+/** Версия 18 (1.11): физика по листу «Механика. Итоговые формулы» — темы динамики стали настоящими, добавлена тема про вращение,
+ *  в КР по физике отмечены темы (если сам не отмечал). */
+function upgradeTo18(st) {
+  for (const id of ['phys-2', 'phys-3', 'phys-4']) {
+    const t = st.topics.find((x) => x.id === id);
+    const fresh = defaultTopics('phys').find((x) => x.id === id);
+    if (t && fresh && t.example && t.name === fresh.name) t.example = false;
+  }
+  if (!st.topics.some((x) => x.id === 'phys-6')) {
+    const add = defaultTopics('phys').find((x) => x.id === 'phys-6');
+    const at = st.topics.findIndex((x) => x.id === 'phys-4');
+    st.topics.splice(at < 0 ? st.topics.length : at + 1, 0, add);
+  }
+  const ev = st.events.find((e) => e.id === 'ev-phys-kr');
+  if (ev && !(Array.isArray(ev.topics) && ev.topics.length)) {
+    ev.topics = clone(DEFAULT_DATA.events.find((e) => e.id === 'ev-phys-kr').topics);
+    if (!ev.format) ev.format = DEFAULT_DATA.events.find((e) => e.id === 'ev-phys-kr').format;
   }
 }
 

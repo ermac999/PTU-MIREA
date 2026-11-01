@@ -737,6 +737,39 @@ test('версия 14: сессия с 22 декабря переезжает н
   assert.equal(migrate(mine).events.find((e) => e.id === 'ev-session').date, '2027-01-15');
 });
 
+test('версия 18: темы физики по листу «Механика», в КР отмечены темы; своё не трогаем', () => {
+  const v17 = defaultState();
+  v17.version = 17;
+  v17.settings.updateSeen = 14;
+  v17.topics = v17.topics.filter((t) => t.id !== 'phys-6');
+  for (const id of ['phys-2', 'phys-3', 'phys-4']) v17.topics.find((t) => t.id === id).example = true;
+  v17.events.find((e) => e.id === 'ev-phys-kr').topics = [];
+  const m = migrate(JSON.parse(JSON.stringify(v17)));
+  const ph = m.topics.filter((t) => t.subject === 'phys').map((t) => t.id);
+  assert.deepEqual(ph, ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-5']);
+  assert.deepEqual(['phys-2', 'phys-3', 'phys-4'].map((id) => m.topics.find((t) => t.id === id).example), [false, false, false]);
+  assert.deepEqual(m.events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6']);
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
+  assert.deepEqual(migrate(m).topics.filter((t) => t.id === 'phys-6').length, 1, 'повторный запуск не дублирует');
+  const mine = JSON.parse(JSON.stringify(v17));
+  mine.topics.find((t) => t.id === 'phys-2').name = 'Законы Ньютона (моё)';
+  mine.events.find((e) => e.id === 'ev-phys-kr').topics = ['phys-1'];
+  const m2 = migrate(mine);
+  assert.equal(m2.topics.find((t) => t.id === 'phys-2').example, true, 'переименованную тему не трогаем');
+  assert.deepEqual(m2.events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1'], 'свои отметки КР остаются');
+});
+
+test('формулы механики: 50 карточек для диктанта по темам физики, у тем есть шпаргалка', async () => {
+  const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
+  const cards = bank.cards.filter((c) => c.id.startsWith('phf-'));
+  assert.equal(cards.length, 50);
+  const topics = new Set(defaultState().topics.filter((t) => t.subject === 'phys').map((t) => t.id));
+  assert.ok(cards.every((c) => c.subject === 'phys' && topics.has(c.topic) && c.q && c.a && !c.example), 'карточки привязаны к темам физики');
+  for (const t of ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6']) assert.ok(cards.some((c) => c.topic === t), `есть карточки: ${t}`);
+  const theory = JSON.parse(readFileSync(new URL('../data/theory.json', import.meta.url), 'utf8'));
+  for (const t of ['phys-2', 'phys-3', 'phys-4', 'phys-6']) assert.ok(theory.topics[t]?.brief && theory.topics[t]?.detailed, `теория: ${t}`);
+});
+
 test('версия 17: КР по физике в среду 4.11 — один раз; пн–вт только подготовка к ней', () => {
   const v16 = defaultState();
   v16.version = 16;
