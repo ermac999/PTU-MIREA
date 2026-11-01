@@ -796,6 +796,13 @@ test('задачник по механике: 79 задач с проверко�
   for (const bad of ['5.3', '5.4', '5.5', '5.8']) assert.ok(!ids.includes(bad), `№${bad} в задачнике нет`);
 });
 
+test('кинематика к задачнику: теория про среднюю скорость и реку, 4 карточки', () => {
+  const theory = JSON.parse(readFileSync(new URL('../data/theory.json', import.meta.url), 'utf8')).topics['phys-1'];
+  for (const part of [theory.brief, theory.detailed]) assert.ok(/Средняя скорость/.test(part) && /Скорости на реке|Скорости на реке/.test(part));
+  const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
+  assert.equal(bank.cards.filter((x) => x.id.startsWith('phs-')).length, 4);
+});
+
 test('формулы механики: 50 карточек для диктанта по темам физики, у тем есть шпаргалка', async () => {
   const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
   const cards = bank.cards.filter((c) => c.id.startsWith('phf-'));
