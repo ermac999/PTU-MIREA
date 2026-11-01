@@ -781,6 +781,21 @@ test('версия 20: формат КР по физике — диктант и
   for (const tp of ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6']) assert.ok(tasks.filter((x) => x.topic === tp).length >= 2, `задачи: ${tp}`);
 });
 
+test('задачник по механике: 79 задач с проверкой и 7 карточек «реши и сверь», по темам физики', () => {
+  const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
+  const tasks = bank.tasks.filter((x) => x.id.startsWith('phz-')), cards = bank.cards.filter((x) => x.id.startsWith('phzc-'));
+  assert.equal(tasks.length, 79);
+  assert.equal(cards.length, 7);
+  const topics = new Set(defaultState().topics.filter((x) => x.subject === 'phys').map((x) => x.id));
+  assert.ok([...tasks, ...cards].every((x) => topics.has(x.topic) && x.from.startsWith('Задачник по механике')), 'задачи привязаны к темам физики');
+  assert.ok(tasks.every((x) => x.type === 'number' && x.answers.length && x.tolerance > 0 && x.explain), 'у каждой задачи ответ, допуск и разбор');
+  // все 86 номеров из задачника (1.1–8.14, без пропущенных в файле 5.3–5.5, 5.8) на месте, каждый один раз
+  const ids = [...tasks.map((x) => x.id.slice(4)), ...cards.map((x) => x.id.slice(5))];
+  assert.equal(new Set(ids).size, 86);
+  for (const need of ['1.1', '2.10', '3.12', '4.11', '5.17', '6.11', '7.5', '8.14']) assert.ok(ids.includes(need), `№${need}`);
+  for (const bad of ['5.3', '5.4', '5.5', '5.8']) assert.ok(!ids.includes(bad), `№${bad} в задачнике нет`);
+});
+
 test('формулы механики: 50 карточек для диктанта по темам физики, у тем есть шпаргалка', async () => {
   const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
   const cards = bank.cards.filter((c) => c.id.startsWith('phf-'));
