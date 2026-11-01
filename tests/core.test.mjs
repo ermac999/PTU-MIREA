@@ -748,7 +748,7 @@ test('версия 18: темы физики по листу «Механика�
   const ph = m.topics.filter((t) => t.subject === 'phys').map((t) => t.id);
   assert.deepEqual(ph, ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-5']);
   assert.deepEqual(['phys-2', 'phys-3', 'phys-4'].map((id) => m.topics.find((t) => t.id === id).example), [false, false, false]);
-  assert.deepEqual(m.events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6']);
+  assert.deepEqual(m.events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-1']);
   assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
   assert.deepEqual(migrate(m).topics.filter((t) => t.id === 'phys-6').length, 1, 'повторный запуск не дублирует');
   const mine = JSON.parse(JSON.stringify(v17));
@@ -757,6 +757,16 @@ test('версия 18: темы физики по листу «Механика�
   const m2 = migrate(mine);
   assert.equal(m2.topics.find((t) => t.id === 'phys-2').example, true, 'переименованную тему не трогаем');
   assert.deepEqual(m2.events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1'], 'свои отметки КР остаются');
+});
+
+test('версия 19: тема КР по физике — с динамики, кинематика последней; свой порядок не трогаем', () => {
+  const v18 = defaultState();
+  v18.version = 18;
+  v18.settings.updateSeen = 15;
+  v18.events.find((e) => e.id === 'ev-phys-kr').topics = ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6'];
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(v18))).events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-1']);
+  v18.events.find((e) => e.id === 'ev-phys-kr').topics = ['phys-1', 'phys-3'];
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(v18))).events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1', 'phys-3'], 'свои отметки остаются');
 });
 
 test('формулы механики: 50 карточек для диктанта по темам физики, у тем есть шпаргалка', async () => {

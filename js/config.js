@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 18,
-  noteVersion: 15,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 19,
+  noteVersion: 16,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -264,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 15,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 16,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -339,7 +339,7 @@ export const DEFAULT_DATA = {
     { id: 'ev-phys-kr', subject: 'phys', type: 'kr', title: 'Контрольная', date: '2026-11-04', time: '09:00', timeAssumed: true,
       format: 'диктант по формулам механики + задачи', phone: '?', confirmed: true, prepFrom: '2026-11-02',
       note: 'Со слов 1.11: диктант по формулам с листа «Механика. Итоговые формулы». Темы отмечены по этому листу — поправь, если КР уже. Время — по паре физики в среду.',
-      topics: ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6'] },
+      topics: ['phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-1'] }, // кинематику уже знаешь — она последней, на повторение
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab3', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-12-15', time: '12:40',

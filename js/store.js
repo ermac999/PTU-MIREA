@@ -78,6 +78,7 @@ export function migrate(raw) {
   if (from < 16) upgradeTo16(st);
   if (from < 17) upgradeTo17(st);
   if (from < 18) upgradeTo18(st);
+  if (from < 19) upgradeTo19(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -139,6 +140,15 @@ function addDefaultEvents(st, ids) {
     const fresh = DEFAULT_DATA.events.find((e) => e.id === id);
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
+  }
+}
+
+/** Версия 19 (1.11): подготовка к КР по физике идёт с динамики, кинематика — последней (повторение). Только если темы КР не правили. */
+function upgradeTo19(st) {
+  const ev = st.events.find((e) => e.id === 'ev-phys-kr');
+  const old = ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6'];
+  if (ev && Array.isArray(ev.topics) && ev.topics.length === old.length && ev.topics.every((id, i) => id === old[i])) {
+    ev.topics = clone(DEFAULT_DATA.events.find((e) => e.id === 'ev-phys-kr').topics);
   }
 }
 
