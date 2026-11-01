@@ -769,6 +769,18 @@ test('версия 19: тема КР по физике — с динамики, 
   assert.deepEqual(migrate(JSON.parse(JSON.stringify(v18))).events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1', 'phys-3'], 'свои отметки остаются');
 });
 
+test('версия 20: формат КР по физике — диктант и 5 задач; своё не трогаем; 20 типовых задач к КР', () => {
+  const v19 = defaultState(); v19.version = 19;
+  v19.events.find((e) => e.id === 'ev-phys-kr').format = 'диктант по формулам механики + задачи';
+  assert.equal(migrate(JSON.parse(JSON.stringify(v19))).events.find((e) => e.id === 'ev-phys-kr').format, 'диктант по формулам механики + 5 задач');
+  v19.events.find((e) => e.id === 'ev-phys-kr').format = 'устно';
+  assert.equal(migrate(JSON.parse(JSON.stringify(v19))).events.find((e) => e.id === 'ev-phys-kr').format, 'устно');
+  const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
+  const tasks = bank.tasks.filter((x) => x.id.startsWith('phft-'));
+  assert.equal(tasks.length, 20);
+  for (const tp of ['phys-1', 'phys-2', 'phys-3', 'phys-4', 'phys-6']) assert.ok(tasks.filter((x) => x.topic === tp).length >= 2, `задачи: ${tp}`);
+});
+
 test('формулы механики: 50 карточек для диктанта по темам физики, у тем есть шпаргалка', async () => {
   const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
   const cards = bank.cards.filter((c) => c.id.startsWith('phf-'));

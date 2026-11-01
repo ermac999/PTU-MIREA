@@ -14,7 +14,7 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 19,
+  dataVersion: 20,
   noteVersion: 16,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
@@ -337,7 +337,7 @@ export const DEFAULT_DATA = {
     { id: 'ev-inf-kr-2', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-30', time: '16:20', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Со слов 27.10. Темы и формат — уточнить. Время — по первой паре; если КР на второй, поправь на 18:00.' },
     { id: 'ev-phys-kr', subject: 'phys', type: 'kr', title: 'Контрольная', date: '2026-11-04', time: '09:00', timeAssumed: true,
-      format: 'диктант по формулам механики + задачи', phone: '?', confirmed: true, prepFrom: '2026-11-02',
+      format: 'диктант по формулам механики + 5 задач', phone: '?', confirmed: true, prepFrom: '2026-11-02',
       note: 'Со слов 1.11: диктант по формулам с листа «Механика. Итоговые формулы». Темы отмечены по этому листу — поправь, если КР уже. Время — по паре физики в среду.',
       topics: ['phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-1'] }, // кинематику уже знаешь — она последней, на повторение
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',

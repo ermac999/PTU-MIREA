@@ -79,6 +79,7 @@ export function migrate(raw) {
   if (from < 17) upgradeTo17(st);
   if (from < 18) upgradeTo18(st);
   if (from < 19) upgradeTo19(st);
+  if (from < 20) upgradeTo20(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -141,6 +142,12 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 20 (1.11): в КР по физике — диктант по формулам и 5 задач (со слов). Свой формат не трогаем. */
+function upgradeTo20(st) {
+  const ev = st.events.find((e) => e.id === 'ev-phys-kr');
+  if (ev && (!ev.format || ev.format === 'диктант по формулам механики + задачи')) ev.format = DEFAULT_DATA.events.find((e) => e.id === 'ev-phys-kr').format;
 }
 
 /** Версия 19 (1.11): подготовка к КР по физике идёт с динамики, кинематика — последней (повторение). Только если темы КР не правили. */
