@@ -769,6 +769,18 @@ test('версия 19: тема КР по физике — с динамики, 
   assert.deepEqual(migrate(JSON.parse(JSON.stringify(v18))).events.find((e) => e.id === 'ev-phys-kr').topics, ['phys-1', 'phys-3'], 'свои отметки остаются');
 });
 
+test('версия 21: 4.11 — праздник, пар нет; свои правки дня не трогаем', () => {
+  const v20 = defaultState(); v20.version = 20; v20.settings.updateSeen = 17;
+  delete v20.dayOverrides['2026-11-04'];
+  const m = migrate(JSON.parse(JSON.stringify(v20)));
+  assert.equal(m.dayOverrides['2026-11-04']?.noClasses, true);
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
+  assert.equal(classesOn(m, '2026-11-04').length, 0, 'пар в этот день нет');
+  assert.ok(classesOn(m, '2026-11-11').length > 0, 'через неделю пары есть');
+  v20.dayOverrides['2026-11-04'] = { noGame: true };
+  assert.deepEqual(migrate(JSON.parse(JSON.stringify(v20))).dayOverrides['2026-11-04'], { noGame: true });
+});
+
 test('версия 20: формат КР по физике — диктант и 5 задач; своё не трогаем; 20 типовых задач к КР', () => {
   const v19 = defaultState(); v19.version = 19;
   v19.events.find((e) => e.id === 'ev-phys-kr').format = 'диктант по формулам механики + задачи';

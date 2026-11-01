@@ -80,6 +80,7 @@ export function migrate(raw) {
   if (from < 18) upgradeTo18(st);
   if (from < 19) upgradeTo19(st);
   if (from < 20) upgradeTo20(st);
+  if (from < 21) upgradeTo21(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -142,6 +143,12 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 21 (1.11): 4 ноября — праздник, пар нет. Если день правили сами — не трогаем. */
+function upgradeTo21(st) {
+  st.dayOverrides = st.dayOverrides || {};
+  if (!st.dayOverrides['2026-11-04']) st.dayOverrides['2026-11-04'] = clone(DEFAULT_DATA.dayOverrides['2026-11-04']);
 }
 
 /** Версия 20 (1.11): в КР по физике — диктант по формулам и 5 задач (со слов). Свой формат не трогаем. */
