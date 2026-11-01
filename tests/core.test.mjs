@@ -16,8 +16,8 @@ import { defaultState, migrate, parseBackup } from '../js/store.js';
 
 const TODAY = '2026-10-17'; // суббота
 // Состояние «как на 17.10» (опрос): без событий, о которых сказали позже, — иначе они сдвигают расчёты, привязанные к этой дате.
-const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2']);
-const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); return st; };
+const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr']);
+const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); for (const k of ['2026-10-30', '2026-11-02', '2026-11-03']) delete st.dayOverrides[k]; return st; };
 const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
 
 /* ---------- util ---------- */
@@ -735,6 +735,33 @@ test('версия 14: сессия с 22 декабря переезжает н
   mine.events.find((e) => e.id === 'ev-session').date = '2027-01-15';
   mine.settings.sessionStart = '2027-01-15';
   assert.equal(migrate(mine).events.find((e) => e.id === 'ev-session').date, '2027-01-15');
+});
+
+test('версия 17: КР по физике в среду 4.11 — один раз; пн–вт только подготовка к ней', () => {
+  const v16 = defaultState();
+  v16.version = 16;
+  v16.settings.updateSeen = 13;
+  v16.events = v16.events.filter((e) => e.id !== 'ev-phys-kr');
+  delete v16.dayOverrides['2026-11-02']; delete v16.dayOverrides['2026-11-03'];
+  const m = migrate(JSON.parse(JSON.stringify(v16)));
+  assert.deepEqual(m.events.filter((e) => e.date === '2026-11-04' && e.type === 'kr').map((e) => [e.subject, e.time]), [['phys', '09:00']], 'время — по паре физики в среду');
+  assert.equal(m.dayOverrides['2026-11-02']?.onlyPrep, true);
+  assert.equal(m.dayOverrides['2026-11-03']?.onlyPrep, true);
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
+  assert.equal(migrate(m).events.filter((e) => e.date === '2026-11-04' && e.type === 'kr').length, 1, 'повторный запуск не дублирует');
+  const mine = JSON.parse(JSON.stringify(v16));
+  mine.dayOverrides['2026-11-02'] = { noGame: true };
+  assert.deepEqual(migrate(mine).dayOverrides['2026-11-02'], { noGame: true }, 'свои правки дня не трогаем');
+});
+
+test('день «только подготовка»: к ближайшей КР, без догоняния и без чужих дедлайнов', () => {
+  const st = defaultState();
+  const sim = simulate(st, '2026-11-01', 12 * 60, 4);
+  for (const k of ['2026-11-02', '2026-11-03']) {
+    const study = sim.plans[k].blocks.filter((b) => b.type === 'study');
+    assert.ok(study.length && study.every((b) => b.eventId === 'ev-phys-kr'), `${k}: только физика к КР`);
+  }
+  assert.ok(sim.plans['2026-11-04'].blocks.some((b) => b.type === 'study' && b.catchUp), 'в среду после КР догоняние возвращается');
 });
 
 test('версия 16: КР по информатике в пятницу 30.10 — один раз, дорога в этот день учебная', () => {

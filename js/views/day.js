@@ -136,6 +136,7 @@ function openEdit(key) {
       ${switchBtn('noClasses', 'Пар нет (выходной, отмена)', !!ov.noClasses)}
       ${!cur.classes.length || ov.study ? switchBtn('study', 'Учиться в этот выходной (до 2–3 ч после обеда)', !!ov.study) : ''}
       ${cur.classes.length || ov.morningStudy ? switchBtn('morningStudy', 'Учиться в утренней дороге', !!ov.morningStudy) : ''}
+      ${switchBtn('onlyPrep', 'Только подготовка к ближайшей контрольной (без догоняния)', !!ov.onlyPrep)}
       ${switchBtn('noGame', 'Без игры в этот день', !!ov.noGame)}
       ${st.settings.gym && (st.settings.gymDays || []).includes(cur.wd) ? switchBtn('noGym', 'Сегодня без зала', !!ov.noGym) : ''}
       <div class="row">
@@ -167,7 +168,7 @@ function openEdit(key) {
           else delete o[f];
         }
         delete o.homeShift; // точное время «дома в» важнее сдвига
-        for (const sw of ['noClasses', 'morningStudy', 'noGame', 'study', 'noGym']) {
+        for (const sw of ['noClasses', 'morningStudy', 'onlyPrep', 'noGame', 'study', 'noGym']) {
           if (switchValue(body, sw)) o[sw] = true;
           else delete o[sw];
         }

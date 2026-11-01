@@ -292,8 +292,9 @@ export function buildItems(state, today) {
 }
 
 /** Можно ли делать задачу в этот день и в окно, которое кончается в slotEnd. */
-function eligible(it, key, slotEnd) {
+function eligible(it, key, slotEnd, prepUntil) {
   if (it.remaining <= 0) return false;
+  if (prepUntil && (it.maint || it.catchUp || it.deadline > prepUntil)) return false; // день «только подготовка»: к ближайшему дедлайну, без догоняния и поддержки
   if (it.maint || it.catchUp) return key >= it.from && key <= it.until;
   if (it.from && key < it.from) return false; // «готовиться не раньше»
   if (it.deadline > key) return true;
@@ -343,7 +344,7 @@ function compareItems(a, b, ctx) {
 /** Выбрать задачу и её объём для окна с лимитом capNet минут. */
 function pickChunk(items, ctx, kindFilter, slotEnd, capNet) {
   if (ctx.tasksLeft <= 0 || capNet < 10) return null;
-  const cands = items.filter((it) => (kindFilter === 'any' || it.kind === kindFilter) && eligible(it, ctx.key, slotEnd));
+  const cands = items.filter((it) => (kindFilter === 'any' || it.kind === kindFilter) && eligible(it, ctx.key, slotEnd, ctx.prepUntil));
   if (!cands.length) return null;
   cands.sort((a, b) => compareItems(a, b, ctx));
   const it = cands[0];
@@ -741,6 +742,7 @@ export function planDay(state, key, items, opts = {}) {
   const keptStudy = keep.filter((b) => b.type === 'study' && b.status !== 'skipped');
   const ctx = {
     key, hot, preferHeavy: false,
+    prepUntil: info.ov.onlyPrep ? items.filter((i) => !i.maint && !i.catchUp && i.remaining > 0 && i.deadline >= key).map((i) => i.deadline).sort()[0] || null : null,
     tasksLeft: CONFIG.maxTasksPerDay - keptStudy.length,
     levelOf: (id) => Number(subjectOf(state, id)?.level) || 3,
   };

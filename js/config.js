@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 16,
-  noteVersion: 13,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 17,
+  noteVersion: 14,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -264,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 13,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 14,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -336,6 +336,8 @@ export const DEFAULT_DATA = {
       format: '', phone: '?', confirmed: true, note: 'Со слов 26.10. Темы и формат — уточнить.' },
     { id: 'ev-inf-kr-2', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-30', time: '16:20', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Со слов 27.10. Темы и формат — уточнить. Время — по первой паре; если КР на второй, поправь на 18:00.' },
+    { id: 'ev-phys-kr', subject: 'phys', type: 'kr', title: 'Контрольная', date: '2026-11-04', time: '09:00', timeAssumed: true,
+      format: '', phone: '?', confirmed: true, note: 'Со слов 1.11. Темы и формат — уточнить. Время — по паре физики в среду.' },
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
     { id: 'ev-phys-lab3', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-12-15', time: '12:40',
@@ -350,6 +352,8 @@ export const DEFAULT_DATA = {
   dayOverrides: {
     '2026-10-18': { study: true, studyMin: 300, hot: ['ev-linal-kr', 'ev-inf-kr'] }, // вс: до обеда информатика, после — линал
     '2026-10-30': { morningStudy: true }, // пт: КР по информатике в 16:20, встаёшь в 12:10 — дорога в универ учебная
+    '2026-11-02': { onlyPrep: true }, // пн–вт: только подготовка к КР по физике в среду (без догоняния)
+    '2026-11-03': { onlyPrep: true },
   },
 
   /* Темы. Строка — примерная тема (замените по программе), объект — настоящая тема с курса. */

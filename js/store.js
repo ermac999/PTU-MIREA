@@ -76,6 +76,7 @@ export function migrate(raw) {
   if (from < 14) upgradeTo14(st);
   if (from < 15) upgradeTo15(st);
   if (from < 16) upgradeTo16(st);
+  if (from < 17) upgradeTo17(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -138,6 +139,13 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 17 (1.11): контрольная по физике в среду 4.11 (со слов). */
+function upgradeTo17(st) {
+  addDefaultEvents(st, ['ev-phys-kr']);
+  st.dayOverrides = st.dayOverrides || {};
+  for (const k of ['2026-11-02', '2026-11-03']) if (!st.dayOverrides[k]) st.dayOverrides[k] = clone(DEFAULT_DATA.dayOverrides[k]);
 }
 
 /** Версия 16 (27.10): контрольная по информатике в пятницу 30.10 (со слов); дорога в универ в этот день — учебная,
