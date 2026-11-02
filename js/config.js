@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 21,
-  noteVersion: 18,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 22,
+  noteVersion: 19,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -264,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 18,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 19,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -336,9 +336,9 @@ export const DEFAULT_DATA = {
       format: '', phone: '?', confirmed: true, note: 'Со слов 26.10. Темы и формат — уточнить.' },
     { id: 'ev-inf-kr-2', subject: 'inf', type: 'kr', title: 'Контрольная', date: '2026-10-30', time: '16:20', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Со слов 27.10. Темы и формат — уточнить. Время — по первой паре; если КР на второй, поправь на 18:00.' },
-    { id: 'ev-phys-kr', subject: 'phys', type: 'kr', title: 'Контрольная', date: '2026-11-04', time: '09:00', timeAssumed: true,
+    { id: 'ev-phys-kr', subject: 'phys', type: 'kr', title: 'Контрольная', date: '2026-11-11', time: '09:00', timeAssumed: true,
       format: 'диктант по формулам механики + 5 задач', phone: '?', confirmed: true, prepFrom: '2026-11-02',
-      note: 'Со слов 1.11: диктант по формулам с листа «Механика. Итоговые формулы». Темы отмечены по этому листу — поправь, если КР уже. Время — по паре физики в среду.',
+      note: 'Со слов 2.11: перенесена со среды 4.11 (праздник) на 11.11. Диктант по формулам с листа «Механика. Итоговые формулы» и 5 задач (темы 1–8 задачника). Время — по паре физики в среду.',
       topics: ['phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-1'] }, // кинематику уже знаешь — она последней, на повторение
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
       format: 'две пары подряд', phone: '?', confirmed: true, note: LAB_NOTE },
@@ -354,8 +354,6 @@ export const DEFAULT_DATA = {
   dayOverrides: {
     '2026-10-18': { study: true, studyMin: 300, hot: ['ev-linal-kr', 'ev-inf-kr'] }, // вс: до обеда информатика, после — линал
     '2026-10-30': { morningStudy: true }, // пт: КР по информатике в 16:20, встаёшь в 12:10 — дорога в универ учебная
-    '2026-11-02': { onlyPrep: true }, // пн–вт: только подготовка к КР по физике в среду (без догоняния)
-    '2026-11-03': { onlyPrep: true },
     '2026-11-04': { noClasses: true }, // День народного единства: пар нет
   },
 

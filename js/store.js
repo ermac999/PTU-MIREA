@@ -81,6 +81,7 @@ export function migrate(raw) {
   if (from < 19) upgradeTo19(st);
   if (from < 20) upgradeTo20(st);
   if (from < 21) upgradeTo21(st);
+  if (from < 22) upgradeTo22(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -145,6 +146,18 @@ function addDefaultEvents(st, ids) {
   }
 }
 
+/** Версия 22 (2.11): КР по физике перенесена со среды 4.11 (праздник) на 11.11; дни «только подготовка» на пн–вт больше не нужны.
+ *  Дату и дни, которые правили сами, не трогаем. */
+function upgradeTo22(st) {
+  const ev = st.events.find((e) => e.id === 'ev-phys-kr');
+  const fresh = DEFAULT_DATA.events.find((e) => e.id === 'ev-phys-kr');
+  if (ev && ev.date === '2026-11-04') { ev.date = fresh.date; ev.note = fresh.note; }
+  for (const k of ['2026-11-02', '2026-11-03']) {
+    const o = st.dayOverrides?.[k];
+    if (o && Object.keys(o).length === 1 && o.onlyPrep === true) delete st.dayOverrides[k];
+  }
+}
+
 /** Версия 21 (1.11): 4 ноября — праздник, пар нет. Если день правили сами — не трогаем. */
 function upgradeTo21(st) {
   st.dayOverrides = st.dayOverrides || {};
@@ -190,7 +203,7 @@ function upgradeTo18(st) {
 function upgradeTo17(st) {
   addDefaultEvents(st, ['ev-phys-kr']);
   st.dayOverrides = st.dayOverrides || {};
-  for (const k of ['2026-11-02', '2026-11-03']) if (!st.dayOverrides[k]) st.dayOverrides[k] = clone(DEFAULT_DATA.dayOverrides[k]);
+  for (const k of ['2026-11-02', '2026-11-03']) if (!st.dayOverrides[k]) st.dayOverrides[k] = { onlyPrep: true }; // позже, в v22, их уберёт перенос КР
 }
 
 /** Версия 16 (27.10): контрольная по информатике в пятницу 30.10 (со слов); дорога в универ в этот день — учебная,

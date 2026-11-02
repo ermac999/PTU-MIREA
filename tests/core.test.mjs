@@ -831,31 +831,46 @@ test('формулы механики: 50 карточек для диктант
   for (const t of ['phys-2', 'phys-3', 'phys-4', 'phys-6']) assert.ok(theory.topics[t]?.brief && theory.topics[t]?.detailed, `теория: ${t}`);
 });
 
-test('версия 17: КР по физике в среду 4.11 — один раз; пн–вт только подготовка к ней', () => {
+test('версия 17 → 22: КР по физике добавляется один раз и переезжает на 11.11; свои правки дня не трогаем', () => {
   const v16 = defaultState();
   v16.version = 16;
   v16.settings.updateSeen = 13;
   v16.events = v16.events.filter((e) => e.id !== 'ev-phys-kr');
-  delete v16.dayOverrides['2026-11-02']; delete v16.dayOverrides['2026-11-03'];
   const m = migrate(JSON.parse(JSON.stringify(v16)));
-  assert.deepEqual(m.events.filter((e) => e.date === '2026-11-04' && e.type === 'kr').map((e) => [e.subject, e.time]), [['phys', '09:00']], 'время — по паре физики в среду');
-  assert.equal(m.dayOverrides['2026-11-02']?.onlyPrep, true);
-  assert.equal(m.dayOverrides['2026-11-03']?.onlyPrep, true);
+  assert.deepEqual(m.events.filter((e) => e.type === 'kr' && e.subject === 'phys').map((e) => [e.date, e.time]), [['2026-11-11', '09:00']], 'после переноса — среда 11.11, по паре физики');
+  assert.equal(m.dayOverrides['2026-11-02'], undefined, 'режим «только подготовка» на пн–вт убран переносом');
+  assert.equal(m.dayOverrides['2026-11-03'], undefined);
   assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
-  assert.equal(migrate(m).events.filter((e) => e.date === '2026-11-04' && e.type === 'kr').length, 1, 'повторный запуск не дублирует');
+  assert.equal(migrate(m).events.filter((e) => e.type === 'kr' && e.subject === 'phys').length, 1, 'повторный запуск не дублирует');
   const mine = JSON.parse(JSON.stringify(v16));
   mine.dayOverrides['2026-11-02'] = { noGame: true };
   assert.deepEqual(migrate(mine).dayOverrides['2026-11-02'], { noGame: true }, 'свои правки дня не трогаем');
+  // дату поменял сам — не трогаем
+  const own = JSON.parse(JSON.stringify(v16)); own.version = 21;
+  own.events.push({ id: 'ev-phys-kr', subject: 'phys', type: 'kr', title: 'КР', date: '2026-11-13', time: '12:40', confirmed: true });
+  assert.equal(migrate(own).events.find((e) => e.id === 'ev-phys-kr').date, '2026-11-13');
+});
+
+test('версия 22: КР, перенесённая со среды 4.11, уезжает на 11.11, свои дни остаются', () => {
+  const v21 = defaultState(); v21.version = 21; v21.settings.updateSeen = 18;
+  v21.events.find((e) => e.id === 'ev-phys-kr').date = '2026-11-04';
+  v21.dayOverrides['2026-11-02'] = { onlyPrep: true }; v21.dayOverrides['2026-11-03'] = { onlyPrep: true, noGame: true };
+  const m = migrate(JSON.parse(JSON.stringify(v21)));
+  assert.equal(m.events.find((e) => e.id === 'ev-phys-kr').date, '2026-11-11');
+  assert.equal(m.dayOverrides['2026-11-02'], undefined);
+  assert.deepEqual(m.dayOverrides['2026-11-03'], { onlyPrep: true, noGame: true }, 'если есть свои пометки — оставляем');
+  assert.ok(m.settings.updateSeen < CONFIG.noteVersion);
 });
 
 test('день «только подготовка»: к ближайшей КР, без догоняния и без чужих дедлайнов', () => {
   const st = defaultState();
-  const sim = simulate(st, '2026-11-01', 12 * 60, 4);
+  st.dayOverrides['2026-11-02'] = { onlyPrep: true }; st.dayOverrides['2026-11-03'] = { onlyPrep: true };
+  const sim = simulate(st, '2026-11-02', 12 * 60, 4);
   for (const k of ['2026-11-02', '2026-11-03']) {
     const study = sim.plans[k].blocks.filter((b) => b.type === 'study');
     assert.ok(study.length && study.every((b) => b.eventId === 'ev-phys-kr'), `${k}: только физика к КР`);
   }
-  assert.ok(sim.plans['2026-11-04'].blocks.some((b) => b.type === 'study' && b.catchUp), 'в среду после КР догоняние возвращается');
+  assert.ok(sim.plans['2026-11-05'].blocks.some((b) => b.type === 'study' && b.catchUp), 'без пометки догоняние возвращается');
 });
 
 test('версия 16: КР по информатике в пятницу 30.10 — один раз, дорога в этот день учебная', () => {
