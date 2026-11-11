@@ -82,6 +82,7 @@ export function migrate(raw) {
   if (from < 20) upgradeTo20(st);
   if (from < 21) upgradeTo21(st);
   if (from < 22) upgradeTo22(st);
+  if (from < 23) upgradeTo23(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -144,6 +145,11 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 23 (11.11): КР по линалу 23.11 и по матлогике ≈3.12 (со слов). */
+function upgradeTo23(st) {
+  addDefaultEvents(st, ['ev-linal-kr-2', 'ev-matlog-kr-3']);
 }
 
 /** Версия 22 (2.11): КР по физике перенесена со среды 4.11 (праздник) на 11.11; дни «только подготовка» на пн–вт больше не нужны.

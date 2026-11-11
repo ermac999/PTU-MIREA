@@ -16,7 +16,7 @@ import { defaultState, migrate, parseBackup } from '../js/store.js';
 
 const TODAY = '2026-10-17'; // суббота
 // Состояние «как на 17.10» (опрос): без событий, о которых сказали позже, — иначе они сдвигают расчёты, привязанные к этой дате.
-const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr']);
+const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr', 'ev-linal-kr-2', 'ev-matlog-kr-3']);
 const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); for (const k of ['2026-10-30', '2026-11-02', '2026-11-03']) delete st.dayOverrides[k]; return st; };
 const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
 
@@ -926,4 +926,16 @@ test('версия 15: контрольные по матлогике и мат�
   const fresh = defaultState();
   assert.equal(fresh.events.filter((e) => e.date === '2026-10-29' && e.type === 'kr').length, 2);
   assert.ok(fresh.settings.updateSeen >= CONFIG.noteVersion);
+});
+
+test('версия 22 → 23: КР по линалу 23.11 и матлогике 3.12 добавляются один раз', () => {
+  const v22 = defaultState();
+  v22.version = 22;
+  v22.events = v22.events.filter((e) => e.id !== 'ev-linal-kr-2' && e.id !== 'ev-matlog-kr-3');
+  const m = migrate(JSON.parse(JSON.stringify(v22)));
+  const krs = (subj) => m.events.filter((e) => e.type === 'kr' && e.subject === subj).map((e) => e.date);
+  assert.ok(krs('linal').includes('2026-11-23'));
+  assert.ok(krs('matlog').includes('2026-12-03'));
+  const again = migrate(JSON.parse(JSON.stringify(m)));
+  assert.equal(again.events.length, m.events.length, 'повторно не дублируются');
 });
