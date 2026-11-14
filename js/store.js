@@ -83,6 +83,7 @@ export function migrate(raw) {
   if (from < 21) upgradeTo21(st);
   if (from < 22) upgradeTo22(st);
   if (from < 23) upgradeTo23(st);
+  if (from < 24) upgradeTo24(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -145,6 +146,11 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 24 (15.11): КР №2 по матану (производные) в четверг 26.11 (со слов). */
+function upgradeTo24(st) {
+  addDefaultEvents(st, ['ev-matan-kr-3']);
 }
 
 /** Версия 23 (11.11): КР по линалу 23.11 и по матлогике ≈3.12 (со слов). */

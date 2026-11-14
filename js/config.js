@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 23,
-  noteVersion: 20,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 24,
+  noteVersion: 21,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -264,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 20,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 21,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -342,6 +342,9 @@ export const DEFAULT_DATA = {
       topics: ['phys-2', 'phys-3', 'phys-4', 'phys-6', 'phys-1'] }, // кинематику уже знаешь — она последней, на повторение
     { id: 'ev-linal-kr-2', subject: 'linal', type: 'kr', title: 'Контрольная', date: '2026-11-23', time: '09:00', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Со слов 11.11: понедельник 23.11. Темы и формат — уточнить. Время — по практике в понедельник.' },
+    { id: 'ev-matan-kr-3', subject: 'matan', type: 'kr', title: 'Контрольная', date: '2026-11-26', time: '18:00', timeAssumed: true,
+      format: 'производные: 5 производных, параметрическая, неявная, касательная и нормаль, 2 предела', phone: '?', confirmed: true,
+      note: 'Со слов 15.11: КР №2 («через один четверг»), демо — 10 заданий. Время — по практике матана в четверг.' },
     { id: 'ev-matlog-kr-3', subject: 'matlog', type: 'kr', title: 'Контрольная', date: '2026-12-03', time: '14:20', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Со слов 11.11: «через 3 недели». Дата примерная — четверг 3.12, по практике. Уточни день и время.' },
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',
