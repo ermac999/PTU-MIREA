@@ -85,6 +85,7 @@ export function migrate(raw) {
   if (from < 23) upgradeTo23(st);
   if (from < 24) upgradeTo24(st);
   if (from < 25) upgradeTo25(st);
+  if (from < 26) upgradeTo26(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -147,6 +148,11 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 26 (18.11): КР по немецкому 2.12 (со слов). */
+function upgradeTo26(st) {
+  addDefaultEvents(st, ['ev-de-kr']);
 }
 
 /** Версия 25 (18.11): расписание физики с доски: КР по МКТ и термодинамике 16.12, подведение итогов 21.12. */

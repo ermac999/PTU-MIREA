@@ -14,8 +14,8 @@
 export const CONFIG = {
   appName: 'Рамки',
   storageKey: 'ramki.v1',
-  dataVersion: 25,
-  noteVersion: 22,              // номер последней заметки «что нового» (отдельно от версии данных)
+  dataVersion: 26,
+  noteVersion: 23,              // номер последней заметки «что нового» (отдельно от версии данных)
 
   /* ---------- Сон: жёсткие границы ---------- */
   minSleepHours: 7,            // план никогда не ставит сон меньше этого
@@ -264,7 +264,7 @@ export const DEFAULT_DATA = {
     lastBackupAt: null,
     backupSnoozeUntil: null,
     introSeen: false,            // подсказка «данные из опроса уже внутри» показана
-    updateSeen: 22,               // последнее обновление, о котором приложение рассказало
+    updateSeen: 23,               // последнее обновление, о котором приложение рассказало
   },
 
   /* Режим недели. assumed — значения, которые я предположил, а вы не подтверждали. */
@@ -351,6 +351,9 @@ export const DEFAULT_DATA = {
     { id: 'ev-phys-itogi', subject: 'phys', type: 'dz', title: 'Подведение итогов и баллов', date: '2026-12-21', time: null,
       format: 'задачник: блоки 1–10, защита ДЗ', phone: '?', confirmed: true,
       note: 'С доски группы: 21.12 подведение итогов и баллов. К этому времени сделать все задачи задачника (механика 1–8 и блоки 9–10) и быть готовым защитить ДЗ.' },
+    { id: 'ev-de-kr', subject: 'de', type: 'kr', title: 'Контрольная', date: '2026-12-02', time: '10:40', timeAssumed: true,
+      format: '', phone: '?', confirmed: true,
+      note: 'Со слов 18.11: КР 2 декабря. Нужно выучить текст (до какого места — уточнить) и карточку по 4-му номеру (что это — уточнить). Время — по паре немецкого в среду.' },
     { id: 'ev-matlog-kr-3', subject: 'matlog', type: 'kr', title: 'Контрольная', date: '2026-12-03', time: '14:20', timeAssumed: true,
       format: '', phone: '?', confirmed: true, note: 'Со слов 11.11: «через 3 недели». Дата примерная — четверг 3.12, по практике. Уточни день и время.' },
     { id: 'ev-phys-lab2', subject: 'phys', type: 'lab', title: 'Лабораторная', date: '2026-11-17', time: '12:40',

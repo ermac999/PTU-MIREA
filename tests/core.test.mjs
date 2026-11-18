@@ -16,7 +16,7 @@ import { defaultState, migrate, parseBackup } from '../js/store.js';
 
 const TODAY = '2026-10-17'; // суббота
 // Состояние «как на 17.10» (опрос): без событий, о которых сказали позже, — иначе они сдвигают расчёты, привязанные к этой дате.
-const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr', 'ev-linal-kr-2', 'ev-matlog-kr-3', 'ev-matan-kr-3', 'ev-phys-kr-2', 'ev-phys-itogi']);
+const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr', 'ev-linal-kr-2', 'ev-matlog-kr-3', 'ev-matan-kr-3', 'ev-phys-kr-2', 'ev-phys-itogi', 'ev-de-kr']);
 const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); for (const k of ['2026-10-30', '2026-11-02', '2026-11-03']) delete st.dayOverrides[k]; return st; };
 const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
 
@@ -959,4 +959,14 @@ test('версия 24 → 25: КР по физике 16.12 и подведени
   assert.ok(m.events.some((e) => e.id === 'ev-phys-itogi' && e.date === '2026-12-21'));
   const again = migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(again.events.length, m.events.length, 'повторно не дублируются');
+});
+
+test('версия 25 → 26: КР по немецкому 2.12 добавляется один раз', () => {
+  const v25 = defaultState();
+  v25.version = 25;
+  v25.events = v25.events.filter((e) => e.id !== 'ev-de-kr');
+  const m = migrate(JSON.parse(JSON.stringify(v25)));
+  assert.ok(m.events.some((e) => e.type === 'kr' && e.subject === 'de' && e.date === '2026-12-02'));
+  const again = migrate(JSON.parse(JSON.stringify(m)));
+  assert.equal(again.events.length, m.events.length, 'повторно не дублируется');
 });
