@@ -84,6 +84,7 @@ export function migrate(raw) {
   if (from < 22) upgradeTo22(st);
   if (from < 23) upgradeTo23(st);
   if (from < 24) upgradeTo24(st);
+  if (from < 25) upgradeTo25(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -146,6 +147,11 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 25 (18.11): расписание физики с доски: КР по МКТ и термодинамике 16.12, подведение итогов 21.12. */
+function upgradeTo25(st) {
+  addDefaultEvents(st, ['ev-phys-kr-2', 'ev-phys-itogi']);
 }
 
 /** Версия 24 (15.11): КР №2 по матану (производные) в четверг 26.11 (со слов). */

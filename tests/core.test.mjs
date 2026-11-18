@@ -16,7 +16,7 @@ import { defaultState, migrate, parseBackup } from '../js/store.js';
 
 const TODAY = '2026-10-17'; // суббота
 // Состояние «как на 17.10» (опрос): без событий, о которых сказали позже, — иначе они сдвигают расчёты, привязанные к этой дате.
-const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr', 'ev-linal-kr-2', 'ev-matlog-kr-3', 'ev-matan-kr-3']);
+const LATER_EVENTS = new Set(['ev-matlog-kr-2', 'ev-matan-kr-2', 'ev-inf-kr-2', 'ev-phys-kr', 'ev-linal-kr-2', 'ev-matlog-kr-3', 'ev-matan-kr-3', 'ev-phys-kr-2', 'ev-phys-itogi']);
 const surveyState = () => { const st = defaultState(); st.events = st.events.filter((e) => !LATER_EVENTS.has(e.id)); for (const k of ['2026-10-30', '2026-11-02', '2026-11-03']) delete st.dayOverrides[k]; return st; };
 const bank = JSON.parse(readFileSync(new URL('../data/bank.json', import.meta.url), 'utf8'));
 
@@ -837,11 +837,11 @@ test('версия 17 → 22: КР по физике добавляется од
   v16.settings.updateSeen = 13;
   v16.events = v16.events.filter((e) => e.id !== 'ev-phys-kr');
   const m = migrate(JSON.parse(JSON.stringify(v16)));
-  assert.deepEqual(m.events.filter((e) => e.type === 'kr' && e.subject === 'phys').map((e) => [e.date, e.time]), [['2026-11-11', '09:00']], 'после переноса — среда 11.11, по паре физики');
+  assert.deepEqual(m.events.filter((e) => e.type === 'kr' && e.subject === 'phys' && e.date < '2026-12-01').map((e) => [e.date, e.time]), [['2026-11-11', '09:00']], 'после переноса — среда 11.11, по паре физики');
   assert.equal(m.dayOverrides['2026-11-02'], undefined, 'режим «только подготовка» на пн–вт убран переносом');
   assert.equal(m.dayOverrides['2026-11-03'], undefined);
   assert.ok(m.settings.updateSeen < CONFIG.noteVersion, 'покажется заметка');
-  assert.equal(migrate(m).events.filter((e) => e.type === 'kr' && e.subject === 'phys').length, 1, 'повторный запуск не дублирует');
+  assert.equal(migrate(m).events.filter((e) => e.type === 'kr' && e.subject === 'phys' && e.date < '2026-12-01').length, 1, 'повторный запуск не дублирует');
   const mine = JSON.parse(JSON.stringify(v16));
   mine.dayOverrides['2026-11-02'] = { noGame: true };
   assert.deepEqual(migrate(mine).dayOverrides['2026-11-02'], { noGame: true }, 'свои правки дня не трогаем');
@@ -948,4 +948,15 @@ test('версия 23 → 24: КР №2 по матану 26.11 добавляе
   assert.ok(m.events.some((e) => e.type === 'kr' && e.subject === 'matan' && e.date === '2026-11-26'));
   const again = migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(again.events.length, m.events.length, 'повторно не дублируется');
+});
+
+test('версия 24 → 25: КР по физике 16.12 и подведение итогов 21.12 добавляются один раз', () => {
+  const v24 = defaultState();
+  v24.version = 24;
+  v24.events = v24.events.filter((e) => e.id !== 'ev-phys-kr-2' && e.id !== 'ev-phys-itogi');
+  const m = migrate(JSON.parse(JSON.stringify(v24)));
+  assert.ok(m.events.some((e) => e.type === 'kr' && e.subject === 'phys' && e.date === '2026-12-16'));
+  assert.ok(m.events.some((e) => e.id === 'ev-phys-itogi' && e.date === '2026-12-21'));
+  const again = migrate(JSON.parse(JSON.stringify(m)));
+  assert.equal(again.events.length, m.events.length, 'повторно не дублируются');
 });
