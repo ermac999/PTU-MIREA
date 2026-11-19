@@ -86,6 +86,7 @@ export function migrate(raw) {
   if (from < 24) upgradeTo24(st);
   if (from < 25) upgradeTo25(st);
   if (from < 26) upgradeTo26(st);
+  if (from < 27) upgradeTo27(st);
   st.version = CONFIG.dataVersion;
   st.app = 'ramki';
   return st;
@@ -148,6 +149,13 @@ function addDefaultEvents(st, ids) {
     const has = st.events.some((e) => e.id === fresh.id || (e.subject === fresh.subject && e.type === fresh.type && e.date === fresh.date));
     if (!has) st.events.push(clone(fresh));
   }
+}
+
+/** Версия 27 (19.11): КР №2 по матану перенесли с 26.11 на 3.12. Если дату правили сами — не трогаем. */
+function upgradeTo27(st) {
+  const ev = st.events.find((e) => e.id === 'ev-matan-kr-3');
+  const fresh = DEFAULT_DATA.events.find((e) => e.id === 'ev-matan-kr-3');
+  if (ev && ev.date === '2026-11-26') { ev.date = fresh.date; ev.note = fresh.note; }
 }
 
 /** Версия 26 (18.11): КР по немецкому 2.12 (со слов). */

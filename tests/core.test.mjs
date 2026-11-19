@@ -945,7 +945,7 @@ test('версия 23 → 24: КР №2 по матану 26.11 добавляе
   v23.version = 23;
   v23.events = v23.events.filter((e) => e.id !== 'ev-matan-kr-3');
   const m = migrate(JSON.parse(JSON.stringify(v23)));
-  assert.ok(m.events.some((e) => e.type === 'kr' && e.subject === 'matan' && e.date === '2026-11-26'));
+  assert.ok(m.events.some((e) => e.type === 'kr' && e.subject === 'matan' && e.date === '2026-12-03'));
   const again = migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(again.events.length, m.events.length, 'повторно не дублируется');
 });
@@ -969,4 +969,14 @@ test('версия 25 → 26: КР по немецкому 2.12 добавляе
   assert.ok(m.events.some((e) => e.type === 'kr' && e.subject === 'de' && e.date === '2026-12-02'));
   const again = migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(again.events.length, m.events.length, 'повторно не дублируется');
+});
+
+test('версия 26 → 27: КР №2 по матану переезжает на 3.12, своя дата остаётся', () => {
+  const v26 = defaultState();
+  v26.version = 26;
+  v26.events.find((e) => e.id === 'ev-matan-kr-3').date = '2026-11-26';
+  const m = migrate(JSON.parse(JSON.stringify(v26)));
+  assert.equal(m.events.find((e) => e.id === 'ev-matan-kr-3').date, '2026-12-03');
+  v26.events.find((e) => e.id === 'ev-matan-kr-3').date = '2026-11-30';
+  assert.equal(migrate(JSON.parse(JSON.stringify(v26))).events.find((e) => e.id === 'ev-matan-kr-3').date, '2026-11-30', 'своя дата остаётся');
 });
